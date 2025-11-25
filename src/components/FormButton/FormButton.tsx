@@ -1,5 +1,5 @@
+'use client';
 import { Button } from '@mui/material';
-import { Palette } from '../MainTheme/colors/colors';
 import { StyledFormButton } from './styles';
 interface FormButtonProps {
   className?: string;

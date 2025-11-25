@@ -29,7 +29,6 @@ export default function VerifyEmailPage() {
         });
 
         const data = await res.json();
-        console.log(data);
 
         if (res.ok) {
           setStatus('success');
@@ -39,7 +38,6 @@ export default function VerifyEmailPage() {
           setMessage(data.error || 'Xác thực email thất bại');
         }
       } catch (error) {
-        console.error('Verify email error:', error);
         setStatus('error');
         setMessage('Có lỗi xảy ra khi xác thực email');
       }

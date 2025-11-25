@@ -6,11 +6,11 @@ import '@styles/setting/colors.scss';
 export const StyledFormTextField = styled('div')(
   () => css`
     .MuiOutlinedInput-root {
-      border-radius: 25px;
+      border-radius: 4px;
       background-color: #ffffff !important;
 
       & fieldset {
-        border-radius: 25px;
+        border-radius: 4px;
       }
 
       &:hover fieldset {
@@ -30,7 +30,7 @@ export const StyledFormTextField = styled('div')(
       /* Đảm bảo màu chữ input trong mọi trạng thái - ĐẶT Ở ĐÂY */
       .MuiInputBase-input {
         color: #37437d !important; /* Thêm !important để đảm bảo áp dụng */
-        border-radius: 25px;
+        border-radius: 4px;
       }
 
       /* Placeholder */

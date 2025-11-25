@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { useFormikContext } from 'formik';
 import { useEffect } from 'react';
 
-export default function RegisterPage() {
+export default function CustomerRegisterPage() {
   const router = useRouter();
 
   const handleSubmit = async (values: {
@@ -28,8 +28,7 @@ export default function RegisterPage() {
         body: JSON.stringify(values),
       });
 
-      const data = await res.json(); // ← THÊM DÒNG NÀY
-      console.log('Parsed data:', data);
+      const data = await res.json();
 
       if (res.ok) {
         router.push(`/verify-email/check-email?email=${encodeURIComponent(values.email)}`);
@@ -38,7 +37,6 @@ export default function RegisterPage() {
         alert(errorData.message || 'Đăng ký thất bại!');
       }
     } catch (error) {
-      console.error('Register error:', error);
       alert('Có lỗi xảy ra khi đăng ký!');
     }
   };

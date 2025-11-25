@@ -1,6 +1,7 @@
 // FormTextField.tsx
-import { CharacterKeyCode, KEY_CODE_IS_NOT_NUMERIC_VALUE } from '@/src/utils/constants/constant';
-import { TextField, TextFieldProps, Typography } from '@mui/material';
+'use client';
+import { CharacterKeyCode } from '@/src/utils/constants/constant';
+import { TextField, TextFieldProps, Typography, Autocomplete, InputLabelProps } from '@mui/material';
 import { Field, FieldProps, useFormikContext } from 'formik';
 import { useEffect } from 'react';
 import { StyledFormTextField } from './styles';
@@ -19,8 +20,25 @@ interface FormTextFieldProps {
   disabledAutoTrimTextValueWhenOutFocus?: boolean;
   variant?: TextFieldProps['variant'];
   margin?: TextFieldProps['margin'];
-  placeholder: string;
+  placeholder?: string;
   fullWidth?: boolean;
+  select?: boolean;
+  children?: React.ReactNode;
+
+  // Additional props for direct usage
+  value?: any;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyPress?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+
+  // Thêm các props mới
+  autoComplete?: string;
+
+  // Props cho Autocomplete
+  autocomplete?: boolean;
+  options?: any[];
+  getOptionLabel?: (option: any) => string;
+  isOptionEqualToValue?: (option: any, value: any) => boolean;
+  freeSolo?: boolean;
 }
 
 const FormTextField = ({
@@ -39,6 +57,20 @@ const FormTextField = ({
   margin = 'normal',
   placeholder,
   fullWidth = true,
+  select = false,
+  children,
+  value,
+  onChange,
+  onKeyPress,
+  autoComplete = 'new-password',
+
+  // Autocomplete props
+  autocomplete = false,
+  options = [],
+  getOptionLabel,
+  isOptionEqualToValue,
+  freeSolo = false,
+  ...props
 }: FormTextFieldProps) => {
   const onKeyDown = (e: any) => {
     if (e.target.type === 'number' && e.target.nodeName === 'INPUT') {
@@ -54,6 +86,7 @@ const FormTextField = ({
     }
     return;
   };
+
   const { setFieldValue } = useFormikContext();
 
   useEffect(() => {
@@ -62,15 +95,172 @@ const FormTextField = ({
     return function () {
       inputElement?.removeEventListener('keydown', onKeyDown);
     };
-  }, []);
+  }, [id]);
+
   const handleBlur = (field: any) => (e: React.FocusEvent<HTMLInputElement>) => {
     field.onBlur(e);
+
     if (!disabledAutoTrimTextValueWhenOutFocus && type !== 'number') {
-      const trimmedValue = e.target.value.trim();
-      setFieldValue(name, trimmedValue);
+      const value = e.target.value;
+      if (typeof value === 'string') {
+        const trimmedValue = value.trim();
+        setFieldValue(name, trimmedValue);
+      }
     }
   };
 
+  // Common slotProps configuration
+  const slotPropsConfig = {
+    htmlInput: {
+      autoComplete: autoComplete,
+      suppressHydrationWarning: true,
+    },
+  };
+
+  // Nếu là Autocomplete
+  if (autocomplete) {
+    // Controlled component (không dùng Formik)
+    if (value !== undefined && onChange) {
+      return (
+        <StyledFormTextField>
+          <Typography
+            variant="body1"
+            component="label"
+            htmlFor={id}
+            sx={{
+              display: 'block',
+              fontWeight: '540',
+              color: '#37437D',
+              fontSize: '16px',
+            }}
+          >
+            {label}
+          </Typography>
+          <Autocomplete
+            id={id}
+            options={options}
+            value={value}
+            onChange={(event, newValue) => {
+              // Tạo synthetic event để tương thích với onChange
+              const syntheticEvent = {
+                target: { name, value: newValue },
+              } as React.ChangeEvent<HTMLInputElement>;
+              onChange(syntheticEvent);
+            }}
+            disabled={disabled}
+            getOptionLabel={getOptionLabel}
+            isOptionEqualToValue={isOptionEqualToValue}
+            freeSolo={freeSolo}
+            fullWidth={fullWidth}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                required={required}
+                placeholder={placeholder}
+                variant={variant}
+                margin={margin}
+                slotProps={slotPropsConfig}
+                {...props}
+              />
+            )}
+          />
+        </StyledFormTextField>
+      );
+    }
+
+    // Dùng với Formik
+    return (
+      <StyledFormTextField>
+        <Typography
+          variant="body1"
+          component="label"
+          htmlFor={id}
+          sx={{
+            display: 'block',
+            fontWeight: '540',
+            color: '#37437D',
+            fontSize: '16px',
+          }}
+        >
+          {label}
+        </Typography>
+        <Field name={name}>
+          {({ field, meta }: FieldProps) => (
+            <Autocomplete
+              {...field}
+              id={id}
+              options={options}
+              disabled={disabled}
+              getOptionLabel={getOptionLabel}
+              isOptionEqualToValue={isOptionEqualToValue}
+              freeSolo={freeSolo}
+              onChange={(event, newValue) => {
+                setFieldValue(name, newValue);
+              }}
+              onBlur={field.onBlur}
+              fullWidth={fullWidth}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required={required}
+                  placeholder={placeholder}
+                  variant={variant}
+                  margin={margin}
+                  error={meta.touched && Boolean(meta.error)}
+                  helperText={meta.touched && meta.error}
+                  slotProps={slotPropsConfig}
+                  {...props}
+                />
+              )}
+            />
+          )}
+        </Field>
+      </StyledFormTextField>
+    );
+  }
+
+  // TextField thông thường
+  // Nếu có value và onChange props, sử dụng như controlled component độc lập
+  if (value !== undefined && onChange) {
+    return (
+      <StyledFormTextField>
+        <Typography
+          variant="body1"
+          component="label"
+          htmlFor={id}
+          sx={{
+            display: 'block',
+            fontWeight: '540',
+            color: '#37437D',
+            fontSize: '16px',
+          }}
+        >
+          {label}
+        </Typography>
+        <TextField
+          id={id}
+          name={name}
+          type={type}
+          required={required}
+          disabled={disabled}
+          variant={variant}
+          margin={margin}
+          value={value}
+          onChange={onChange}
+          onKeyPress={onKeyPress}
+          placeholder={placeholder}
+          fullWidth={fullWidth}
+          select={select}
+          slotProps={slotPropsConfig}
+          {...props}
+        >
+          {children}
+        </TextField>
+      </StyledFormTextField>
+    );
+  }
+
+  // Sử dụng với Formik (TextField thông thường)
   return (
     <StyledFormTextField>
       <Typography
@@ -102,7 +292,12 @@ const FormTextField = ({
             onBlur={handleBlur(field)}
             placeholder={placeholder}
             fullWidth={fullWidth}
-          />
+            select={select}
+            slotProps={slotPropsConfig}
+            {...props}
+          >
+            {children}
+          </TextField>
         )}
       </Field>
     </StyledFormTextField>
