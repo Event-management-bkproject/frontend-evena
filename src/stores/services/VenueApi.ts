@@ -3,7 +3,7 @@ import { baseQueryWithReAuth } from './baseQuery';
 import { ApiResponse, CreateVenueRequest, PaginatedResponse, VenueResponse } from '../types';
 
 export const VenueAPI = createApi({
-  reducerPath: 'venueAPI',
+  reducerPath: 'VenueAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Venue'],
   endpoints: (builder) => ({

@@ -11,7 +11,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   confirmPassword: string;
-  phone?: string;
+  phone: string;
 }
 
 export interface PasswordResetRequest {
@@ -55,4 +55,13 @@ export interface ApiResponse<T> {
   message?: string;
   data?: T;
   errors?: any;
+}
+
+export interface MeApiResponse extends ApiResponse<UserResponse> {
+  accessToken?: string | null;
+  refreshToken?: string | null;
+}
+
+export interface RegisterType {
+  type: 'customer' | 'organizer';
 }

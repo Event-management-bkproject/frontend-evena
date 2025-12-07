@@ -2,8 +2,15 @@
 'use client';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { setToken, setCredentials, clearCredentials, setAuthFromInitialization } from '../stores/slices/authSlice';
+import {
+  setToken,
+  setCredentials,
+  clearCredentials,
+  setAuthFromInitialization,
+  setRefreshToken,
+} from '../stores/slices/authSlice';
 import { RootState } from '../stores/store';
+import { AuthAPI } from '../stores/services/AuthApi';
 import { OrganizerAPI } from '../stores/services/OrganizerApi';
 import { EventAPI } from '../stores/services/EventApi';
 import { CategoryAPI } from '../stores/services/CategoryApi';
@@ -13,9 +20,12 @@ export const useAuth = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state: RootState) => state.auth);
 
-  const login = (accessToken: string, user: any, isInitialized: boolean = true) => {
-    console.debug('accessToken', accessToken, 'user', user);
-    // Clear cache trước khi login mới
+  // hook/useAuth.ts - Update login function
+  const login = (accessToken: string, refreshToken: string, user: any, isInitialized: boolean = true) => {
+    console.debug('Setting auth:', { accessToken, refreshToken, user });
+
+    // Clear cache before new login
+    dispatch(AuthAPI.util.resetApiState());
     dispatch(OrganizerAPI.util.resetApiState());
     dispatch(EventAPI.util.resetApiState());
     dispatch(CategoryAPI.util.resetApiState());
@@ -24,14 +34,22 @@ export const useAuth = () => {
     dispatch(
       setCredentials({
         accessToken,
+        refreshToken,
         user,
-        isInitialized, // Thêm property này
+        isInitialized,
       }),
     );
+
+    // Tokens are stored in httpOnly cookies by server-side API routes
+    // No need to set cookies from client side
   };
 
-  const setAuthFromInit = (accessToken: string | null, user: any | null) => {
-    dispatch(setAuthFromInitialization({ accessToken, user }));
+  const setAuthFromInit = (
+    accessToken: string | null,
+    refreshToken: string | null,
+    user: any | null,
+  ) => {
+    dispatch(setAuthFromInitialization({ accessToken, refreshToken, user }));
   };
 
   const setAuthToken = (token: string) => {
@@ -48,23 +66,36 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
-      // Clear tất cả cache trước khi logout
+      // Clear all cache before logout
+      dispatch(AuthAPI.util.resetApiState());
       dispatch(OrganizerAPI.util.resetApiState());
       dispatch(EventAPI.util.resetApiState());
       dispatch(CategoryAPI.util.resetApiState());
       dispatch(VenueAPI.util.resetApiState());
 
       dispatch(clearCredentials());
-      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
+      // Cookies are cleared by the server-side logout API
+      // No need to manually clear cookies from client side
     }
   };
 
   const checkAuth = async () => {
     try {
+      // Get token from Redux state
+      const token = auth.accessToken;
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add Authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
+        headers,
       });
 
       if (response.ok) {

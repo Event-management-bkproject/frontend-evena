@@ -88,6 +88,20 @@ export const EventAPI = createApi({
       }),
       providesTags: ['Event'],
     }),
+    getPublicEvents: builder.query<ApiResponse<PaginatedResponse<EventListResponse>>, { page?: number; size?: number }>({
+      query: (params = {}) => ({
+        url: '/events',
+        method: 'GET',
+        params: {
+          page: params.page || 0,
+          size: params.size || 1000, // Get all events for customer dashboard
+          status: 'PUBLISHED', // Only published events
+          sortBy: 'startAt',
+          sortDirection: 'ASC',
+        },
+      }),
+      providesTags: ['Event'],
+    }),
   }),
 });
 export const {
@@ -99,4 +113,5 @@ export const {
   usePublishEventMutation,
   useCancelEventMutation,
   useGetMyEventsQuery,
+  useGetPublicEventsQuery,
 } = EventAPI;

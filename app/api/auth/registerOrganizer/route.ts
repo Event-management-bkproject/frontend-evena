@@ -15,7 +15,8 @@ export async function POST(req: Request) {
     }
 
     // Gọi đến backend Spring Boot
-    const res = await fetch('http://localhost:8080/api/auth/registerOrganizer', {
+    const apiUrl = process.env.API_UR;
+    const res = await fetch(`${apiUrl}/auth/registerOrganizer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password, confirmPassword }),

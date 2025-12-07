@@ -1,18 +1,30 @@
 // app/api/auth/me/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+
+  // Try to get token from Authorization header first (for RTK Query requests)
+  const authHeader = request.headers.get('authorization');
+  let token = authHeader?.replace('Bearer ', '');
+
+  // Fallback to cookie if no Authorization header
+  if (!token) {
+    token = cookieStore.get('token')?.value;
+  }
 
   if (!token) {
     return NextResponse.json({ error: 'No token' }, { status: 401 });
   }
 
+  // Get refreshToken from cookie (needed for Redux state)
+  const refreshToken = cookieStore.get('refreshToken')?.value;
+
   try {
     // Gọi API /api/auth/me từ backend với token
-    const res = await fetch('http://localhost:8080/api/auth/me', {
+    const apiUrl = process.env.API_URL;
+    const res = await fetch(`${apiUrl}/auth/me`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -39,8 +51,10 @@ export async function GET() {
     const userData = await res.json();
 
     return NextResponse.json({
-      user: userData.data || userData,
+      success: true,
+      data: userData.data || userData,
       accessToken: token,
+      refreshToken: refreshToken || null, // Include refreshToken for Redux state
     });
   } catch (error) {
     console.error('Get user info error:', error);

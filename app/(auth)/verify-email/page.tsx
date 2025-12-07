@@ -68,7 +68,7 @@ export default function VerifyEmailPage() {
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <Image src="/logo.svg" alt="Evena Logo" width={150} height={50} priority />
+          <Image src="/logoOrg.svg" alt="Evena Logo" width={150} height={50} priority />
         </Box>
 
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#37437D' }}>

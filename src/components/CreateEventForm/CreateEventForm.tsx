@@ -30,6 +30,7 @@ interface CreateEventFormProps {
   organizers: Array<{ id: number; name: string }>;
   categories: Array<{ id: number; name: string }>;
   venues: Array<{ id: number; name: string }>;
+  isEdit?: boolean;
 }
 
 const CreateEventForm = ({
@@ -40,6 +41,7 @@ const CreateEventForm = ({
   organizers,
   categories,
   venues,
+  isEdit = false,
 }: CreateEventFormProps) => {
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>(initialValues?.imageUrls || []);
@@ -183,43 +185,118 @@ const CreateEventForm = ({
         </FormTextField>
 
         {/* Additional Image URLs */}
-        <Box>
+        <Box
+          sx={{
+            p: 3,
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            border: '1px solid #E0E0E0',
+          }}
+        >
           <Typography
-            variant="body1"
+            variant="subtitle1"
             component="label"
-            sx={{ display: 'block', mb: 1, fontWeight: 540, color: '#37437D' }}
+            sx={{
+              display: 'block',
+              mb: 2,
+              fontWeight: 600,
+              color: '#37437D',
+              fontSize: '1rem',
+            }}
           >
-            Additional Image URLs
+            Additional Image URLs (Optional)
           </Typography>
-          <Box display="flex" gap={1} mb={2}>
-            <FormTextField
-              id="event-imageUrl-input"
-              name="imageUrlInput"
-              label=""
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              value={imageUrlInput}
-              onChange={handleImageUrlChange}
-              onKeyPress={handleKeyPress}
-              fullWidth={true}
-            />
-            <Button onClick={handleAddImageUrl} variant="outlined" sx={{ minWidth: '100px', whiteSpace: 'nowrap' }}>
-              Add URL
+
+          <Box display="flex" gap={1.5} mb={2} alignItems="center">
+            <Box sx={{ flex: 1 }}>
+              <FormTextField
+                id="event-imageUrl-input"
+                name="imageUrlInput"
+                label=""
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrlInput}
+                onChange={handleImageUrlChange}
+                onKeyPress={handleKeyPress}
+                fullWidth={true}
+                size="medium"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '10px',
+                    height: '56px',
+                  },
+                }}
+              />
+            </Box>
+            <Button
+              onClick={handleAddImageUrl}
+              variant="contained"
+              disabled={!imageUrlInput.trim()}
+              sx={{
+                minWidth: 'auto',
+                px: 3,
+                whiteSpace: 'nowrap',
+                backgroundColor: '#f36bf9',
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                height: '56px',
+                '&:hover': {
+                  backgroundColor: '#e55ae0',
+                },
+                '&:disabled': {
+                  backgroundColor: '#cccccc',
+                },
+              }}
+            >
+              Add
             </Button>
           </Box>
 
           {/* Display added image URLs */}
           {imageUrls.length > 0 && (
-            <Box display="flex" flexWrap="wrap" gap={1}>
-              {imageUrls.map((url, index) => (
-                <Chip
-                  key={index}
-                  label={url.length > 30 ? `${url.substring(0, 30)}...` : url}
-                  onDelete={() => handleRemoveImageUrl(url)}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: 'white',
+                borderRadius: '10px',
+                border: '1px dashed #D0D0D0',
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  mb: 1.5,
+                  color: '#666',
+                  fontWeight: 500,
+                }}
+              >
+                {imageUrls.length} {imageUrls.length === 1 ? 'image' : 'images'} added
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={1}>
+                {imageUrls.map((url, index) => (
+                  <Chip
+                    key={index}
+                    label={url.length > 35 ? `${url.substring(0, 35)}...` : url}
+                    onDelete={() => handleRemoveImageUrl(url)}
+                    sx={{
+                      backgroundColor: '#E8F5E9',
+                      color: '#2E7D32',
+                      fontWeight: 500,
+                      fontSize: '13px',
+                      borderRadius: '8px',
+                      '& .MuiChip-deleteIcon': {
+                        color: '#2E7D32',
+                        '&:hover': {
+                          color: '#1B5E20',
+                        },
+                      },
+                    }}
+                  />
+                ))}
+              </Box>
             </Box>
           )}
         </Box>
@@ -263,7 +340,7 @@ const CreateEventForm = ({
               },
             }}
           >
-            {loading ? 'Creating...' : 'Create Event'}
+            {loading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Event' : 'Create Event')}
           </Button>
         </Box>
       </Box>

@@ -1,12 +1,14 @@
 // FormTextField.tsx
 'use client';
 import { CharacterKeyCode } from '@/src/utils/constants/constant';
-import { TextField, TextFieldProps, Typography, Autocomplete, InputLabelProps } from '@mui/material';
+import { TextField, TextFieldProps, Typography, Autocomplete, InputAdornment, IconButton } from '@mui/material';
 import { Field, FieldProps, useFormikContext } from 'formik';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyledFormTextField } from './styles';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
-interface FormTextFieldProps {
+interface FormTextFieldProps extends Omit<TextFieldProps, 'onChange'> {
   id: string;
   name: string;
   label: string;
@@ -62,7 +64,7 @@ const FormTextField = ({
   value,
   onChange,
   onKeyPress,
-  autoComplete = 'new-password',
+  autoComplete = 'off',
 
   // Autocomplete props
   autocomplete = false,
@@ -72,6 +74,17 @@ const FormTextField = ({
   freeSolo = false,
   ...props
 }: FormTextFieldProps) => {
+  // State for password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordField = type === 'password';
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
   const onKeyDown = (e: any) => {
     if (e.target.type === 'number' && e.target.nodeName === 'INPUT') {
       if (
@@ -109,12 +122,35 @@ const FormTextField = ({
     }
   };
 
-  // Common slotProps configuration
+  // Common slotProps configuration with password toggle
   const slotPropsConfig = {
     htmlInput: {
       autoComplete: autoComplete,
       suppressHydrationWarning: true,
     },
+    input: isPasswordField
+      ? {
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                onClick={handleTogglePassword}
+                onMouseDown={handleMouseDownPassword}
+                edge="end"
+                size="small"
+                sx={{
+                  backgroundColor: 'transparent',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                  },
+                }}
+              >
+                {showPassword ? <Visibility /> : <VisibilityOff />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }
+      : undefined,
   };
 
   // Nếu là Autocomplete
@@ -240,7 +276,7 @@ const FormTextField = ({
         <TextField
           id={id}
           name={name}
-          type={type}
+          type={isPasswordField && showPassword ? 'text' : type}
           required={required}
           disabled={disabled}
           variant={variant}
@@ -282,7 +318,7 @@ const FormTextField = ({
             {...field}
             id={id}
             name={name}
-            type={type}
+            type={isPasswordField && showPassword ? 'text' : type}
             required={required}
             disabled={disabled}
             variant={variant}

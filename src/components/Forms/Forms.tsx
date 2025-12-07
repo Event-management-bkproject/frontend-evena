@@ -3,20 +3,10 @@
 
 import { Formik, Form, FormikHelpers, FormikProps } from 'formik';
 import { ReactNode, useEffect } from 'react';
+import { FormsProps } from './types';
 
-// Định nghĩa type cho children function
+// Type cho children function
 type ChildrenFunction = (formikProps: FormikProps<any>) => ReactNode;
-
-interface FormsProps {
-  children: ReactNode | ChildrenFunction;
-  values: object;
-  onSubmit: (values: any, formikHelpers: FormikHelpers<any>) => void | Promise<any>;
-  validationSchema?: object;
-  keyValue?: string;
-  enableReinitialize?: boolean;
-  sx?: React.CSSProperties;
-  isRegister: boolean;
-}
 
 const Forms = ({
   children,

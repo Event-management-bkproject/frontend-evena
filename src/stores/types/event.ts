@@ -96,6 +96,8 @@ export interface OrganizationResponse {
   phone?: string;
   verified: boolean;
   totalEvents: number;
+  totalMembers?: number;
+  members?: OrganizationMemberResponse[];
 }
 
 export interface OrganizationMemberResponse {
@@ -150,16 +152,20 @@ export interface TicketTypeSummary {
 export interface EventListResponse {
   id: string;
   title: string;
+  description?: string;
   startAt: string;
   endAt: string;
   status: EventStatus;
   coverUrl?: string;
+  categoryId: number;
   categoryName: string;
   venueName: string;
   city: string;
   organizerName: string;
   minPrice: number;
   availableTickets: number;
+  soldPercentage: number;
+  createdAt: string;
 }
 
 export interface EventResponse {
@@ -178,4 +184,78 @@ export interface EventResponse {
   stats: EventStats;
   createdAt: string;
   updatedAt: string;
+}
+
+// TicketType DTOs
+export interface CreateTicketTypeRequest {
+  name: string;
+  description?: string;
+  price: number;
+  currency?: string;
+  total: number;
+  perUserLimit?: number;
+  salesStart: string;
+  salesEnd: string;
+  earlyBird?: boolean;
+  earlyBirdDiscount?: number;
+  visible?: boolean;
+}
+
+export interface UpdateTicketTypeRequest {
+  name?: string;
+  description?: string;
+  price?: number;
+  currency?: string;
+  total?: number;
+  perUserLimit?: number;
+  salesStart?: string;
+  salesEnd?: string;
+  earlyBird?: boolean;
+  earlyBirdDiscount?: number;
+  visible?: boolean;
+}
+
+export interface TicketTypeResponse {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  total: number;
+  sold: number;
+  available: number;
+  perUserLimit?: number;
+  salesStart: string;
+  salesEnd: string;
+  status: TicketTypeStatus;
+  earlyBird: boolean;
+  earlyBirdDiscount?: number;
+  visible: boolean;
+  soldPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TicketTypeListResponse {
+  id: number;
+  name: string;
+  price: number;
+  currency: string;
+  total: number;
+  sold: number;
+  available: number;
+  status: TicketTypeStatus;
+  salesStart: string;
+  salesEnd: string;
+  visible: boolean;
+}
+
+// OrganizationMember DTOs
+export interface InviteMemberRequest {
+  email: string;
+  role: OrganizationRole;
+}
+
+export interface UpdateMemberRoleRequest {
+  role: OrganizationRole;
 }

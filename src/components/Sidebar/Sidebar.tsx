@@ -89,13 +89,15 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
             {/* Logo thay thế chữ Menu */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Image
-                src="/logo.svg"
+                src="/logoOrg.svg"
                 alt="Logo"
                 width={40}
                 height={40}
                 priority
                 style={{
                   objectFit: 'contain',
+                  width: 'auto',
+                  height: 'auto',
                 }}
               />
               <Typography
@@ -172,31 +174,19 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
 
         {/* User Info and Logout Button for Mobile */}
         <Box sx={{ p: 2 }}>
-          {auth.user && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" fontWeight="bold" color="#2A3363">
-                {auth.user.name}
-              </Typography>
-              <Typography variant="body2" color="#2A3363">
-                {auth.user.email}
-              </Typography>
-            </Box>
-          )}
           <Button
             fullWidth
-            variant="outlined"
+            variant="text"
             startIcon={<LogoutIcon />}
             onClick={handleLogout}
             sx={{
               justifyContent: 'flex-start',
               textTransform: 'none',
-              borderRadius: 1,
+              borderRadius: '10px',
               color: '#36437C',
-              backgroundColor: '#E4E6F5',
-              borderColor: '#36437C',
+              backgroundColor: '#D8DAEB',
               '&:hover': {
-                backgroundColor: '#D8DAEB',
-                borderColor: '#36437C',
+                backgroundColor: '#C5CBDC',
               },
             }}
           >
@@ -218,6 +208,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
             display: 'flex',
             flexDirection: 'column',
             borderRadius: '20px',
+            height: 'calc(100vh - 20px)',
           },
         }}
         open
@@ -227,12 +218,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
             {/* Logo thay thế chữ Menu */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Image
-                src="/logo.svg"
+                src="/logoOrg.svg"
                 alt="Logo"
                 width={200}
                 height={50}
                 style={{
-                  objectFit: 'cover',
+                  objectFit: 'contain',
+                  width: 'auto',
+                  height: 'auto',
                 }}
               />
             </Box>
@@ -298,31 +291,19 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
 
         {/* User Info and Logout Button for Desktop */}
         <Box sx={{ p: 2 }}>
-          {auth.user && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" fontWeight="bold" color="#2A3363">
-                {auth.user.name}
-              </Typography>
-              <Typography variant="body2" color="#2A3363">
-                {auth.user.email}
-              </Typography>
-            </Box>
-          )}
           <Button
             fullWidth
-            variant="outlined"
+            variant="text"
             startIcon={<LogoutIcon />}
             onClick={handleLogout}
             sx={{
               justifyContent: 'center',
               textTransform: 'none',
-              borderRadius: 1,
+              borderRadius: '10px',
               color: '#36437C',
-              backgroundColor: '#E4E6F5',
-              borderColor: '#36437C',
+              backgroundColor: '#D8DAEB',
               '&:hover': {
-                backgroundColor: '#D8DAEB',
-                borderColor: '#36437C',
+                backgroundColor: '#C5CBDC',
               },
             }}
           >

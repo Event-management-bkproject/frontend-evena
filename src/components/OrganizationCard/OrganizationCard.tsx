@@ -13,8 +13,10 @@ import {
   MenuItem,
   CardActionArea,
   Avatar,
+  AvatarGroup,
+  Tooltip,
 } from '@mui/material';
-import { MoreVert, Email, Phone, Language, Edit, Delete, Event, Verified, Pending } from '@mui/icons-material';
+import { MoreVert, Email, Phone, Language, Edit, Delete, Event, Verified, Pending, Group } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
 
 interface OrganizationCardProps {
@@ -74,7 +76,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
 
   const cardContent = (
     <CardContent sx={{ p: variant === 'compact' ? 2 : 3, flex: 1 }}>
-      {/* Header with avatar, name and actions */}
+      {/* Header with avatar and name */}
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
         <Box display="flex" alignItems="center" gap={2} flex={1}>
           <Avatar
@@ -118,17 +120,6 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
             )}
           </Box>
         </Box>
-
-        {showActions && (
-          <Box
-            onClick={(e) => e.stopPropagation()} // Ngăn chặn click event lan ra ngoài
-            onMouseDown={(e) => e.stopPropagation()} // Ngăn chặn mouse down event
-          >
-            <IconButton size="small" onClick={handleMenuClick} sx={{ mt: -0.5 }}>
-              <MoreVert fontSize="small" />
-            </IconButton>
-          </Box>
-        )}
       </Box>
 
       {/* Status Chip */}
@@ -228,7 +219,47 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
             {organization.totalEvents || 0} events
           </Typography>
         </Box>
+
+        {/* Members Count */}
+        {organization.totalMembers !== undefined && (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Group sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary">
+              {organization.totalMembers || 0} members
+            </Typography>
+          </Box>
+        )}
       </Box>
+
+      {/* Members Avatars */}
+      {organization.members && organization.members.length > 0 && (
+        <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            Members
+          </Typography>
+          <AvatarGroup
+            max={variant === 'compact' ? 3 : 5}
+            sx={{
+              '& .MuiAvatar-root': {
+                width: variant === 'compact' ? 28 : 32,
+                height: variant === 'compact' ? 28 : 32,
+                fontSize: variant === 'compact' ? '0.75rem' : '0.875rem',
+                border: '2px solid white',
+              },
+            }}
+          >
+            {organization.members
+              .filter(member => member.invitationAccepted)
+              .map((member) => (
+                <Tooltip key={member.id} title={`${member.userName} (${member.role})`} arrow>
+                  <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                    {member.userName.charAt(0).toUpperCase()}
+                  </Avatar>
+                </Tooltip>
+              ))}
+          </AvatarGroup>
+        </Box>
+      )}
     </CardContent>
   );
 
@@ -239,6 +270,7 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
+          position: 'relative',
           transition: 'all 0.2s ease-in-out',
           border: '1px solid',
           borderColor: 'divider',
@@ -249,6 +281,27 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
           },
         }}
       >
+        {/* Action Menu Button - positioned absolutely to avoid nesting inside CardActionArea */}
+        {showActions && (
+          <IconButton
+            size="small"
+            onClick={handleMenuClick}
+            sx={{
+              position: 'absolute',
+              top: variant === 'compact' ? 8 : 12,
+              right: variant === 'compact' ? 8 : 12,
+              zIndex: 2,
+              backgroundColor: 'background.paper',
+              boxShadow: 1,
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+          >
+            <MoreVert fontSize="small" />
+          </IconButton>
+        )}
+
         {onClick ? (
           <CardActionArea onClick={handleCardClick} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             {cardContent}

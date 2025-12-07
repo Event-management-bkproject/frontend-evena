@@ -17,8 +17,8 @@ const modalWidths = {
   xs: 400,
   sm: 500,
   md: 600,
-  lg: 800,
-  xl: 1000,
+  lg: 1200,
+  xl: 1400,
 };
 
 const BaseModalV2 = ({ open, onClose, title, children, actions, maxWidth = 'lg' }: BaseModalProps) => {
@@ -51,10 +51,12 @@ const BaseModalV2 = ({ open, onClose, title, children, actions, maxWidth = 'lg' 
       <Paper
         sx={{
           width: modalWidths[maxWidth],
-          maxWidth: '90vw',
-          maxHeight: '90vh',
+          maxWidth: '95vw',
+          maxHeight: '95vh',
           borderRadius: '16px',
-          overflow: 'auto',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
           outline: 'none', // Quan trọng: remove outline
         }}
         elevation={8}
@@ -75,6 +77,7 @@ const BaseModalV2 = ({ open, onClose, title, children, actions, maxWidth = 'lg' 
               padding: '20px 24px 16px 24px',
               borderBottom: '1px solid',
               borderColor: 'divider',
+              flexShrink: 0,
             }}
           >
             {title && (
@@ -103,6 +106,8 @@ const BaseModalV2 = ({ open, onClose, title, children, actions, maxWidth = 'lg' 
         <Box
           sx={{
             padding: '24px',
+            flex: 1,
+            overflow: 'auto',
             '&:focus': {
               outline: 'none',
             },
@@ -123,6 +128,7 @@ const BaseModalV2 = ({ open, onClose, title, children, actions, maxWidth = 'lg' 
               display: 'flex',
               justifyContent: 'flex-end',
               gap: 2,
+              flexShrink: 0,
             }}
           >
             {actions}

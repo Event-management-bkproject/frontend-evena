@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Gọi backend Spring Boot endpoint
-    const res = await fetch(`http://localhost:8080/api/auth/verify-email?token=${token}`, {
+    const apiUrl = process.env.API_URL;
+    const res = await fetch(`${apiUrl}/auth/verify-email?token=${token}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

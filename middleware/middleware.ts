@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
 
   const token = request.cookies.get('token')?.value;
   const isAuthenticated = !!token;
-  const protectedRoutes = ['/dashboard'];
+  const protectedRoutes = ['/dashboard/organizer', '/dashboard/customer', '/dashboard'];
   const authRoutes = ['/login', '/register'];
 
   // Kiểm tra nếu đang truy cập protected route

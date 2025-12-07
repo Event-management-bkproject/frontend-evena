@@ -4,12 +4,14 @@ import { UserResponse } from '../types';
 
 interface AuthState {
   accessToken: string | null;
+  refreshToken: string | null;
   user: UserResponse | null;
   isInitialized: boolean;
 }
 
 const initialState: AuthState = {
   accessToken: null,
+  refreshToken: null,
   user: null,
   isInitialized: false,
 };
@@ -22,23 +24,30 @@ export const authSlice = createSlice({
       state,
       action: PayloadAction<{
         accessToken: string;
+        refreshToken: string;
         user: UserResponse;
-        isInitialized?: boolean; // Thêm optional
+        isInitialized?: boolean;
       }>,
     ) => {
       state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
-      state.isInitialized = action.payload.isInitialized ?? true; // Default true
+      state.isInitialized = action.payload.isInitialized ?? true;
     },
 
     clearCredentials: (state) => {
       state.accessToken = null;
+      state.refreshToken = null;
       state.user = null;
-      state.isInitialized = true; // Vẫn mark là initialized khi logout
+      state.isInitialized = true;
     },
 
     setToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
+    },
+
+    setRefreshToken: (state, action: PayloadAction<string>) => {
+      state.refreshToken = action.payload;
     },
 
     setUser: (state, action: PayloadAction<UserResponse>) => {
@@ -53,17 +62,26 @@ export const authSlice = createSlice({
       state,
       action: PayloadAction<{
         accessToken: string | null;
+        refreshToken: string | null;
         user: UserResponse | null;
       }>,
     ) => {
       state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
       state.isInitialized = true; // Luôn set true khi initialization hoàn tất
     },
   },
 });
 
-export const { setCredentials, clearCredentials, setToken, setUser, setInitialized, setAuthFromInitialization } =
-  authSlice.actions;
+export const {
+  setCredentials,
+  clearCredentials,
+  setToken,
+  setRefreshToken,
+  setUser,
+  setInitialized,
+  setAuthFromInitialization,
+} = authSlice.actions;
 
 export default authSlice.reducer;
