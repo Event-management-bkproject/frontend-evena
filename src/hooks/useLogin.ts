@@ -34,7 +34,14 @@ export function useLogin() {
         showSnackbar('Login successful!', 'success');
 
         // Redirect based on role
-        const redirectPath = user.roles.includes('ORGANIZER') ? '/dashboard/organizer' : '/dashboard';
+        let redirectPath;
+        if (user.roles.includes('ADMIN')) {
+          redirectPath = '/dashboard/admin';
+        } else if (user.roles.includes('ORGANIZER')) {
+          redirectPath = '/dashboard/organizer';
+        } else {
+          redirectPath = '/dashboard';
+        }
 
         router.push(redirectPath);
         return true;

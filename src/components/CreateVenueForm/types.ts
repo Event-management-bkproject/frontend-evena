@@ -12,6 +12,9 @@ export interface VenueFormData {
 
 export interface CreateVenueFormProps {
   open: boolean;
+  onSubmit: (data: VenueFormData) => void;
   onClose: () => void;
-  onSuccess?: () => void;
+  loading?: boolean;
+  initialValues?: Partial<VenueFormData>;
+  title?: string;
 }

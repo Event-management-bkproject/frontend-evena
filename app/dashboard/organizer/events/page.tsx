@@ -147,7 +147,16 @@ export default function EventsPage() {
       filtered = filtered.filter((event) => {
         const eventDate = new Date(event.startAt);
         const passes = eventDate >= startDate;
-        console.log('Event:', event.title, 'startAt:', event.startAt, 'eventDate:', eventDate.toISOString(), 'passes:', passes);
+        console.log(
+          'Event:',
+          event.title,
+          'startAt:',
+          event.startAt,
+          'eventDate:',
+          eventDate.toISOString(),
+          'passes:',
+          passes,
+        );
         return passes;
       });
 
@@ -287,11 +296,11 @@ export default function EventsPage() {
 
             {/* Warning if no organization */}
             {!canCreateEvent && !loadingOrganizers && (
-              <Box sx={{ mb: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
-                You need to create an organization first.{' '}
-                <a href="/dashboard/organizer/organizations" style={{ fontWeight: 600 }}>
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#FABABB', borderRadius: 1, color: '#FF5B5E' }}>
+                You need to create an organization first.
+                {/* <a href="/dashboard/organizer/organizations" style={{ fontWeight: 600 }}>
                   Go to Organizations
-                </a>
+                </a> */}
               </Box>
             )}
 
