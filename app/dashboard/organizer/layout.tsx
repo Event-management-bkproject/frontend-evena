@@ -22,17 +22,8 @@ export default function OrganizersTestLayout({ children }: { children: React.Rea
     router.push('/login');
   };
 
-  // Hiển thị loading trong khi đang khởi tạo auth
-  if (!auth.isInitialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Initializing authentication...</p>
-        </div>
-      </div>
-    );
-  }
+  // Auth initialization is handled by AuthInitializer component globally
+  // No need for separate loading UI here
 
   // Nếu không authenticated, hiển thị nothing (sẽ bị redirect)
   if (!isAuthenticated) {

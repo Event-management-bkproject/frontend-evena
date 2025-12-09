@@ -11,13 +11,13 @@ import { TicketTypeAPI } from './services/TicketTypeApi';
 import { OrganizationMemberAPI } from './services/OrganizationMemberApi';
 
 // Redux Persist configuration for auth slice
-// SECURITY: Do NOT persist tokens! They are stored in HTTPOnly cookies
-// Only persist non-sensitive user data
+// Updated: Now persisting accessToken (backend refresh token not implemented yet)
+// Note: When backend implements refresh token, move back to HTTPOnly cookies
 const persistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['user'], // Only persist user data, NOT tokens
-  blacklist: ['accessToken', 'refreshToken'], // Never persist tokens
+  whitelist: ['user', 'accessToken'], // Persist user data AND accessToken
+  // blacklist: ['refreshToken'], // COMMENTED OUT: Backend refresh token not implemented yet
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);

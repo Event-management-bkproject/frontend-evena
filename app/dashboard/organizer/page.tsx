@@ -233,7 +233,7 @@ export default function OrganizersTestPage() {
   const isLoading = loadingOrganizers || loadingEvents || loadingCategories || loadingVenues;
 
   return (
-    <ProtectedContent fallback={<div className="p-6">Initializing authentication...</div>}>
+    <ProtectedContent>
       <LayoutWithSidebar currentPage="organizations-test">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">

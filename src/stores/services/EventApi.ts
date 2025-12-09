@@ -102,6 +102,20 @@ export const EventAPI = createApi({
       }),
       providesTags: ['Event'],
     }),
+    getEventsByOrganizer: builder.query<
+      ApiResponse<PaginatedResponse<EventListResponse>>,
+      { organizerId: number; page?: number; size?: number }
+    >({
+      query: ({ organizerId, page = 0, size = 10 }) => ({
+        url: `/events/organizer/${organizerId}`,
+        method: 'GET',
+        params: {
+          page,
+          size,
+        },
+      }),
+      providesTags: ['Event'],
+    }),
   }),
 });
 export const {
@@ -114,4 +128,5 @@ export const {
   useCancelEventMutation,
   useGetMyEventsQuery,
   useGetPublicEventsQuery,
+  useGetEventsByOrganizerQuery,
 } = EventAPI;

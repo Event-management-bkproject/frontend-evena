@@ -2,28 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Paper,
-  Typography,
-  TextField,
-  Alert,
-  Snackbar,
-  Card,
-  CardContent,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Place as PlaceIcon,
-  Category as CategoryIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material';
+import { Box, Snackbar, Alert } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
 import { CreateCategoryRequest, CreateVenueRequest } from '@/src/stores/types';
@@ -36,14 +15,24 @@ import {
   useGetVenuesQuery,
   useUpdateCategoryMutation,
   useUpdateVenueMutation,
+  useGetOrganizationsQuery,
+  useVerifyOrganizationMutation,
+  useDeleteOrganizationMutation,
 } from '@/src/stores/services';
 
 import CreateCategoryForm from '@/src/components/CreateCategoryForm/CreateCategoryForm';
 import CreateVenueForm from '@/src/components/CreateVenueForm/CreateVenueForm';
-import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '@/src/hook/useAuth';
 import CategoryTable from '@/src/components/CategoryTable';
 import VenueTable from '@/src/components/VenueTable';
+import { AdminOrganizationTable } from '@/src/components/AdminOrganizationTable';
+import {
+  AdminHeader,
+  AdminStatsCards,
+  AdminTabBar,
+  AdminDeleteDialog,
+  AdminFormDialog,
+} from '@/src/components/AdminDashboard';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -66,6 +55,10 @@ export default function AdminPage() {
   const [deleteVenueDialogOpen, setDeleteVenueDialogOpen] = useState(false);
   const [venueToDelete, setVenueToDelete] = useState<number | null>(null);
 
+  // Organization Modal state
+  const [deleteOrganizationDialogOpen, setDeleteOrganizationDialogOpen] = useState(false);
+  const [organizationToDelete, setOrganizationToDelete] = useState<number | null>(null);
+
   // RTK Queries
   const { data: categoriesData, refetch: refetchCategories, isLoading: isLoadingCategories } = useGetCategoriesQuery();
   const {
@@ -73,6 +66,11 @@ export default function AdminPage() {
     refetch: refetchVenues,
     isLoading: isLoadingVenues,
   } = useGetVenuesQuery({ page: 0, size: 100 });
+  const {
+    data: organizationsData,
+    refetch: refetchOrganizations,
+    isLoading: isLoadingOrganizations,
+  } = useGetOrganizationsQuery({ page: 0, size: 100 });
 
   // Mutations
   const [createCategory, { isLoading: isCreatingCategory }] = useCreateCategoryMutation();
@@ -82,6 +80,9 @@ export default function AdminPage() {
   const [createVenue, { isLoading: isCreatingVenue }] = useCreateVenueMutation();
   const [updateVenue, { isLoading: isUpdatingVenue }] = useUpdateVenueMutation();
   const [deleteVenue, { isLoading: isDeletingVenue }] = useDeleteVenueMutation();
+
+  const [verifyOrganization, { isLoading: isVerifying }] = useVerifyOrganizationMutation();
+  const [deleteOrganization, { isLoading: isDeletingOrganization }] = useDeleteOrganizationMutation();
 
   const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
     setSnackbar({ open: true, message, severity });
@@ -196,147 +197,72 @@ export default function AdminPage() {
     }
   };
 
+  // Organization Handlers
+  const handleVerifyOrganization = async (id: number) => {
+    try {
+      await verifyOrganization(id).unwrap();
+      showSnackbar('Organization verified successfully');
+      refetchOrganizations();
+    } catch (error: any) {
+      showSnackbar(error?.data?.message || 'Verification failed', 'error');
+    }
+  };
+
+  const handleDeleteOrganizationClick = (id: number) => {
+    setOrganizationToDelete(id);
+    setDeleteOrganizationDialogOpen(true);
+  };
+
+  const handleDeleteOrganizationConfirm = async () => {
+    if (!organizationToDelete) return;
+
+    try {
+      await deleteOrganization(organizationToDelete).unwrap();
+      showSnackbar('Organization deleted successfully');
+      refetchOrganizations();
+    } catch (error: any) {
+      showSnackbar(error?.data?.message || 'Delete failed', 'error');
+    } finally {
+      setDeleteOrganizationDialogOpen(false);
+      setOrganizationToDelete(null);
+    }
+  };
+
+  const handleTabChange = (tab: number) => {
+    setActiveTab(tab);
+    setSearchTerm('');
+  };
+
+  const handleAddClick = () => {
+    if (activeTab === 0) {
+      openCreateCategory();
+    } else if (activeTab === 1) {
+      openCreateVenue();
+    }
+    // No add action for organizations (tab 2)
+  };
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 3 }}>
       {/* Header */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box>
-          <Typography variant="h4" fontWeight="bold" color="#2A3363" gutterBottom>
-            Admin Dashboard
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Manage categories and venues for the platform
-          </Typography>
-        </Box>
-
-        <Box>
-          <Button
-            onClick={handleLogout}
-            startIcon={<LogoutIcon />}
-            variant="outlined"
-            sx={{
-              borderRadius: '8px',
-              textTransform: 'none',
-              color: '#36437C',
-              borderColor: '#C5CBDC',
-              '&:hover': { backgroundColor: '#F3F4F8' },
-            }}
-          >
-            Logout
-          </Button>
-        </Box>
-      </Box>
+      <AdminHeader onLogout={handleLogout} />
 
       {/* Stats Cards */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)' },
-          gap: 3,
-          mb: 4,
-        }}
-      >
-        <Box>
-          <Card sx={{ bgcolor: '#2A3363', color: 'white' }}>
-            <CardContent>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <CategoryIcon fontSize="large" />
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {categoriesData?.data?.length || 0}
-                  </Typography>
-                  <Typography variant="body2">Total Categories</Typography>
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
-        <Box>
-          <Card sx={{ bgcolor: '#F36BF9', color: 'white' }}>
-            <CardContent>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <PlaceIcon fontSize="large" />
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {venuesData?.data?.totalElements || 0}
-                  </Typography>
-                  <Typography variant="body2">Total Venues</Typography>
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
-      </Box>
+      <AdminStatsCards
+        categoriesCount={categoriesData?.data?.length || 0}
+        venuesCount={venuesData?.data?.totalElements || 0}
+        organizationsCount={organizationsData?.data?.totalElements || 0}
+      />
 
       {/* Tabs and Search Bar */}
-      <Paper sx={{ mb: 3, p: 2 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 2,
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <Button
-              variant={activeTab === 0 ? 'contained' : 'text'}
-              onClick={() => setActiveTab(0)}
-              sx={{
-                mr: 2,
-                bgcolor: activeTab === 0 ? '#F36BF9' : undefined,
-                color: activeTab === 0 ? '#FFFFFF' : '#2A3363',
-                '&:hover': {
-                  bgcolor: activeTab === 0 ? '#F36BF9' : 'rgba(0,0,0,0.04)',
-                },
-              }}
-              startIcon={<CategoryIcon />}
-            >
-              Categories
-            </Button>
-            <Button
-              variant={activeTab === 1 ? 'contained' : 'text'}
-              onClick={() => setActiveTab(1)}
-              sx={{
-                bgcolor: activeTab === 1 ? '#F36BF9' : undefined,
-                color: activeTab === 1 ? '#FFFFFF' : '#2A3363',
-                '&:hover': {
-                  bgcolor: activeTab === 1 ? '#F36BF9' : 'rgba(0,0,0,0.04)',
-                },
-              }}
-              startIcon={<PlaceIcon />}
-            >
-              Venues
-            </Button>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <TextField
-              size="small"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
-              }}
-              sx={{ width: { xs: '100%', sm: 250 } }}
-            />
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => (activeTab === 0 ? openCreateCategory() : openCreateVenue())}
-              sx={{
-                bgcolor: '#F36BF9',
-                '&:hover': { bgcolor: '#e055e9' },
-              }}
-            >
-              Add {activeTab === 0 ? 'Category' : 'Venue'}
-            </Button>
-          </Box>
-        </Box>
-      </Paper>
+      <AdminTabBar
+        activeTab={activeTab}
+        searchTerm={searchTerm}
+        onTabChange={handleTabChange}
+        onSearchChange={setSearchTerm}
+        onAddClick={handleAddClick}
+        showAddButton={activeTab !== 2}
+      />
 
       {/* Category Tab Panel */}
       {activeTab === 0 && (
@@ -362,87 +288,104 @@ export default function AdminPage() {
         />
       )}
 
-      {/* Delete Confirmation Dialogs */}
-      <Dialog open={deleteCategoryDialogOpen} onClose={() => setDeleteCategoryDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to delete this category? This action cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteCategoryDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteCategoryConfirm} color="error" variant="contained" disabled={isDeletingCategory}>
-            {isDeletingCategory ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Organization Tab Panel */}
+      {activeTab === 2 && (
+        <AdminOrganizationTable
+          organizations={organizationsData?.data?.content || []}
+          isLoading={isLoadingOrganizations}
+          searchTerm={searchTerm}
+          isVerifying={isVerifying}
+          onEditOrganization={(org) => {
+            // TODO: Implement edit organization if needed
+            showSnackbar('Edit organization feature coming soon', 'error');
+          }}
+          onDeleteOrganization={handleDeleteOrganizationClick}
+          onVerifyOrganization={handleVerifyOrganization}
+        />
+      )}
 
-      <Dialog open={deleteVenueDialogOpen} onClose={() => setDeleteVenueDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to delete this venue? This action cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteVenueDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteVenueConfirm} color="error" variant="contained" disabled={isDeletingVenue}>
-            {isDeletingVenue ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Delete Confirmation Dialogs */}
+      <AdminDeleteDialog
+        open={deleteCategoryDialogOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        isDeleting={isDeletingCategory}
+        onClose={() => setDeleteCategoryDialogOpen(false)}
+        onConfirm={handleDeleteCategoryConfirm}
+      />
+
+      <AdminDeleteDialog
+        open={deleteVenueDialogOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this venue? This action cannot be undone."
+        isDeleting={isDeletingVenue}
+        onClose={() => setDeleteVenueDialogOpen(false)}
+        onConfirm={handleDeleteVenueConfirm}
+      />
+
+      <AdminDeleteDialog
+        open={deleteOrganizationDialogOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this organization? This action cannot be undone and will affect all associated events."
+        isDeleting={isDeletingOrganization}
+        onClose={() => setDeleteOrganizationDialogOpen(false)}
+        onConfirm={handleDeleteOrganizationConfirm}
+      />
 
       {/* Category Modal */}
       {categoryModalOpen && (
-        <Dialog open={categoryModalOpen} onClose={closeCategoryModal} maxWidth="sm" fullWidth>
-          <DialogTitle>{editingCategory ? 'Edit Category' : 'Create New Category'}</DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2 }}>
-              <CreateCategoryForm
-                open={categoryModalOpen}
-                onClose={closeCategoryModal}
-                onSubmit={handleSubmitCategory}
-                loading={isCreatingCategory || isUpdatingCategory}
-                initialValues={
-                  editingCategory
-                    ? {
-                        name: editingCategory.name,
-                        description: editingCategory.description || '',
-                        iconUrl: editingCategory.iconUrl || '',
-                      }
-                    : undefined
-                }
-              />
-            </Box>
-          </DialogContent>
-        </Dialog>
+        <AdminFormDialog
+          open={categoryModalOpen}
+          title={editingCategory ? 'Edit Category' : 'Create New Category'}
+          onClose={closeCategoryModal}
+          maxWidth="sm"
+        >
+          <CreateCategoryForm
+            open={categoryModalOpen}
+            onClose={closeCategoryModal}
+            onSubmit={handleSubmitCategory}
+            loading={isCreatingCategory || isUpdatingCategory}
+            initialValues={
+              editingCategory
+                ? {
+                    name: editingCategory.name,
+                    description: editingCategory.description || '',
+                    iconUrl: editingCategory.iconUrl || '',
+                  }
+                : undefined
+            }
+          />
+        </AdminFormDialog>
       )}
 
       {/* Venue Modal */}
       {venueModalOpen && (
-        <Dialog open={venueModalOpen} onClose={closeVenueModal} maxWidth="md" fullWidth>
-          <DialogTitle>{editingVenue ? 'Edit Venue' : 'Create New Venue'}</DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2 }}>
-              <CreateVenueForm
-                open={venueModalOpen}
-                onClose={closeVenueModal}
-                onSubmit={handleSubmitVenue}
-                loading={isCreatingVenue || isUpdatingVenue}
-                initialValues={
-                  editingVenue
-                    ? {
-                        name: editingVenue.name,
-                        address: editingVenue.address,
-                        city: editingVenue.city,
-                        capacity: editingVenue.capacity,
-                        description: editingVenue.description || '',
-                        lat: editingVenue.lat,
-                        lng: editingVenue.lng,
-                      }
-                    : undefined
-                }
-              />
-            </Box>
-          </DialogContent>
-        </Dialog>
+        <AdminFormDialog
+          open={venueModalOpen}
+          title={editingVenue ? 'Edit Venue' : 'Create New Venue'}
+          onClose={closeVenueModal}
+          maxWidth="md"
+        >
+          <CreateVenueForm
+            open={venueModalOpen}
+            onClose={closeVenueModal}
+            onSubmit={handleSubmitVenue}
+            loading={isCreatingVenue || isUpdatingVenue}
+            initialValues={
+              editingVenue
+                ? {
+                    name: editingVenue.name,
+                    address: editingVenue.address,
+                    city: editingVenue.city,
+                    capacity: editingVenue.capacity,
+                    description: editingVenue.description || '',
+                    lat: editingVenue.lat,
+                    lng: editingVenue.lng,
+                  }
+                : undefined
+            }
+          />
+        </AdminFormDialog>
       )}
 
       {/* Snackbar */}

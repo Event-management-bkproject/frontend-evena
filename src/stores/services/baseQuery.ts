@@ -37,46 +37,53 @@ export const baseQueryWithReAuth: BaseQueryFn<string | FetchArgs, unknown, Fetch
   // Make the initial request
   let result = await baseQuery(modifiedArgs, api, extraOptions);
 
-  // If request failed with 401, try to refresh token
+  // TODO: Backend refresh token not implemented yet
+  // If request failed with 401, clear credentials (no refresh logic)
   if (result.error && result.error.status === 401) {
-    const refreshToken = state.auth?.refreshToken;
-
-    // Only try to refresh if we have a refresh token
-    if (refreshToken) {
-      try {
-        // Call Next.js API route to refresh token (HTTPOnly cookies)
-        const refreshResponse = await fetch('/api/auth/refresh', {
-          method: 'POST',
-          credentials: 'include',
-        });
-
-        if (refreshResponse.ok) {
-          const refreshData = await refreshResponse.json();
-
-          if (refreshData.success && refreshData.accessToken) {
-            // Store the new token in Redux
-            api.dispatch(setToken(refreshData.accessToken));
-
-            // Retry the original request with new token
-            (modifiedArgs.headers as Record<string, string>)['Authorization'] = `Bearer ${refreshData.accessToken}`;
-            result = await baseQuery(modifiedArgs, api, extraOptions);
-          } else {
-            // Refresh failed, clear credentials
-            api.dispatch(clearCredentials());
-          }
-        } else {
-          // Refresh failed, clear credentials
-          api.dispatch(clearCredentials());
-        }
-      } catch (error) {
-        console.error('Token refresh error:', error);
-        api.dispatch(clearCredentials());
-      }
-    } else {
-      // No refresh token, clear credentials
-      api.dispatch(clearCredentials());
-    }
+    // Clear credentials on 401 (user needs to login again)
+    api.dispatch(clearCredentials());
   }
+
+  // COMMENTED OUT: Refresh token logic (backend not implemented yet)
+  // if (result.error && result.error.status === 401) {
+  //   const refreshToken = state.auth?.refreshToken;
+  //
+  //   // Only try to refresh if we have a refresh token
+  //   if (refreshToken) {
+  //     try {
+  //       // Call Next.js API route to refresh token (HTTPOnly cookies)
+  //       const refreshResponse = await fetch('/api/auth/refresh', {
+  //         method: 'POST',
+  //         credentials: 'include',
+  //       });
+  //
+  //       if (refreshResponse.ok) {
+  //         const refreshData = await refreshResponse.json();
+  //
+  //         if (refreshData.success && refreshData.accessToken) {
+  //           // Store the new token in Redux
+  //           api.dispatch(setToken(refreshData.accessToken));
+  //
+  //           // Retry the original request with new token
+  //           (modifiedArgs.headers as Record<string, string>)['Authorization'] = `Bearer ${refreshData.accessToken}`;
+  //           result = await baseQuery(modifiedArgs, api, extraOptions);
+  //         } else {
+  //           // Refresh failed, clear credentials
+  //           api.dispatch(clearCredentials());
+  //         }
+  //       } else {
+  //         // Refresh failed, clear credentials
+  //         api.dispatch(clearCredentials());
+  //       }
+  //     } catch (error) {
+  //       console.error('Token refresh error:', error);
+  //       api.dispatch(clearCredentials());
+  //     }
+  //   } else {
+  //     // No refresh token, clear credentials
+  //     api.dispatch(clearCredentials());
+  //   }
+  // }
 
   return result;
 };

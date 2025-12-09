@@ -19,9 +19,9 @@ export default function CustomerDashboardLayout({ children }: { children: React.
   }, [auth.isInitialized, isAuthenticated, router]);
 
   // Show loading while initializing auth
-  if (!auth.isInitialized) {
-    return <AuthLoadingScreen />;
-  }
+  // if (!auth.isInitialized) {
+  //   return <AuthLoadingScreen />;
+  // }
 
   // If not authenticated, show nothing (will be redirected)
   if (!isAuthenticated) {

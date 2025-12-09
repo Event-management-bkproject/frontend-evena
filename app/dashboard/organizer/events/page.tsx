@@ -267,7 +267,7 @@ export default function EventsPage() {
   const isLoading = loadingOrganizers || loadingEvents || loadingCategories || loadingVenues;
 
   return (
-    <ProtectedContent fallback={<div className="p-6">Initializing authentication...</div>}>
+    <ProtectedContent>
       <LayoutWithSidebar currentPage="events">
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)' }}>
           {/* Header */}

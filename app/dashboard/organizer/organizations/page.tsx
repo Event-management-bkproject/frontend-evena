@@ -187,7 +187,7 @@ export default function OrganizationsPage() {
   const isLoading = loadingOrganizers;
 
   return (
-    <ProtectedContent fallback={<div className="p-6">Initializing authentication...</div>}>
+    <ProtectedContent>
       <LayoutWithSidebar currentPage="organizations">
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)' }}>
           {/* Header */}

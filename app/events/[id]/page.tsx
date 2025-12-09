@@ -46,9 +46,9 @@ export default function EventDetailPage() {
     router.push(`/events/${eventId}/tickets`);
   };
 
-  if (isLoading) {
-    return <AuthLoadingScreen />;
-  }
+  // if (isLoading) {
+  //   return <AuthLoadingScreen />;
+  // }
 
   if (error || !event) {
     return (

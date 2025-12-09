@@ -7,7 +7,7 @@ import {
   setCredentials,
   clearCredentials,
   setAuthFromInitialization,
-  setRefreshToken,
+  // setRefreshToken, // COMMENTED OUT: Backend refresh token not implemented yet
 } from '../stores/slices/authSlice';
 import { RootState } from '../stores/store';
 import { AuthAPI } from '../stores/services/AuthApi';
@@ -20,9 +20,9 @@ export const useAuth = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state: RootState) => state.auth);
 
-  // hook/useAuth.ts - Update login function
-  const login = (accessToken: string, refreshToken: string, user: any, isInitialized: boolean = true) => {
-    console.debug('Setting auth:', { accessToken, refreshToken, user });
+  // Updated: Only accessToken, no refreshToken (backend not implemented yet)
+  const login = (accessToken: string, user: any, isInitialized: boolean = true) => {
+    console.debug('Setting auth:', { accessToken, user });
 
     // Clear cache before new login
     dispatch(AuthAPI.util.resetApiState());
@@ -34,22 +34,21 @@ export const useAuth = () => {
     dispatch(
       setCredentials({
         accessToken,
-        refreshToken,
+        // refreshToken, // COMMENTED OUT: Backend refresh token not implemented yet
         user,
         isInitialized,
       }),
     );
 
-    // Tokens are stored in httpOnly cookies by server-side API routes
-    // No need to set cookies from client side
+    // AccessToken is now stored in Redux (persisted via redux-persist)
   };
 
+  // Updated: Only accessToken, no refreshToken
   const setAuthFromInit = (
     accessToken: string | null,
-    refreshToken: string | null,
     user: any | null,
   ) => {
-    dispatch(setAuthFromInitialization({ accessToken, refreshToken, user }));
+    dispatch(setAuthFromInitialization({ accessToken, user }));
   };
 
   const setAuthToken = (token: string) => {
@@ -57,26 +56,26 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    try {
-      // Call logout API to clear httpOnly cookie
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch (error) {
-      console.error('Logout API error:', error);
-    } finally {
-      // Clear all cache before logout
-      dispatch(AuthAPI.util.resetApiState());
-      dispatch(OrganizerAPI.util.resetApiState());
-      dispatch(EventAPI.util.resetApiState());
-      dispatch(CategoryAPI.util.resetApiState());
-      dispatch(VenueAPI.util.resetApiState());
+    // Clear all cache before logout
+    dispatch(AuthAPI.util.resetApiState());
+    dispatch(OrganizerAPI.util.resetApiState());
+    dispatch(EventAPI.util.resetApiState());
+    dispatch(CategoryAPI.util.resetApiState());
+    dispatch(VenueAPI.util.resetApiState());
 
-      dispatch(clearCredentials());
-      // Cookies are cleared by the server-side logout API
-      // No need to manually clear cookies from client side
-    }
+    // Clear credentials from Redux and localStorage
+    dispatch(clearCredentials());
+
+    // COMMENTED OUT: Logout API call (backend refresh token not implemented yet)
+    // try {
+    //   // Call logout API to clear httpOnly cookie
+    //   await fetch('/api/auth/logout', {
+    //     method: 'POST',
+    //     credentials: 'include',
+    //   });
+    // } catch (error) {
+    //   console.error('Logout API error:', error);
+    // }
   };
 
   const checkAuth = async () => {

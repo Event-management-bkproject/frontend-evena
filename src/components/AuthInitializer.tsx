@@ -9,23 +9,30 @@ import { EventAPI } from '@/src/stores/services/EventApi';
 import { CategoryAPI } from '@/src/stores/services/CategoryApi';
 import { VenueAPI } from '@/src/stores/services/VenueApi';
 import { useLazyGetMeQuery } from '@/src/stores/services/AuthApi';
+import { AuthLoadingPage } from './AuthLoadingPage';
 
 export default function AuthInitializer() {
   const { setAuthFromInit, auth } = useAuth();
   const dispatch = useDispatch();
-  const [getMe, { isLoading }] = useLazyGetMeQuery();
+  const [getMe] = useLazyGetMeQuery();
 
   useEffect(() => {
     const initializeAuth = async () => {
       // Nếu đã initialized thì không cần check lại
       if (auth.isInitialized) return;
 
+      // Check if we have token in localStorage (from redux-persist)
+      // If yes, skip loading screen - user is already logged in
+      const hasPersistedToken = typeof window !== 'undefined' &&
+        (auth.accessToken || localStorage.getItem('accessToken'));
+
       const startTime = Date.now();
-      const MIN_LOADING_TIME = 2500; // Hiển thị loading tối thiểu 2.5 giây
+      // Only show loading screen for minimum time if no persisted token (first time login)
+      const MIN_LOADING_TIME = hasPersistedToken ? 0 : 2500;
 
       try {
-        // Call /api/auth/me which will read tokens from HTTPOnly cookies
-        // This API returns both user data AND accessToken from the cookie
+        // Call /api/auth/me to verify authentication
+        // AccessToken is stored in Redux persist (localStorage)
         const response = await getMe().unwrap();
 
         // Calculate remaining time to meet minimum loading time (áp dụng cho tất cả trường hợp)
@@ -36,20 +43,20 @@ export default function AuthInitializer() {
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
         if (response.success && response.data) {
-          // Get tokens from API response (it reads from HTTPOnly cookies)
-          const accessToken = response.accessToken || null;
-          const refreshToken = response.refreshToken || null;
+          // Get accessToken from API response (or from Redux persist)
+          const accessToken = response.accessToken || auth.accessToken || null;
+          // const refreshToken = response.refreshToken || null; // COMMENTED OUT: Backend refresh token not implemented yet
 
-          if (accessToken && refreshToken) {
-            // Set auth with tokens from cookies
-            setAuthFromInit(accessToken, refreshToken, response.data);
+          if (accessToken) {
+            // Set auth with accessToken only
+            setAuthFromInit(accessToken, response.data);
           } else {
-            // No tokens found in cookies
-            setAuthFromInit(null, null, null);
+            // No token found
+            setAuthFromInit(null, null);
           }
         } else {
           // No valid session
-          setAuthFromInit(null, null, null);
+          setAuthFromInit(null, null);
 
           // Clear cache
           dispatch(OrganizerAPI.util.resetApiState());
@@ -66,7 +73,7 @@ export default function AuthInitializer() {
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
         // Clear auth state on error
-        setAuthFromInit(null, null, null);
+        setAuthFromInit(null, null);
 
         // Clear cache
         dispatch(OrganizerAPI.util.resetApiState());
@@ -77,7 +84,17 @@ export default function AuthInitializer() {
     };
 
     initializeAuth();
-  }, [setAuthFromInit, auth.isInitialized, dispatch, getMe]);
+  }, [setAuthFromInit, auth.isInitialized, auth.accessToken, dispatch, getMe]);
+
+  // Only show loading page if:
+  // 1. Not initialized yet AND
+  // 2. No persisted token (first time login scenario)
+  const hasPersistedToken = typeof window !== 'undefined' &&
+    (auth.accessToken || localStorage.getItem('accessToken'));
+
+  if (!auth.isInitialized && !hasPersistedToken) {
+    return <AuthLoadingPage message="Verifying authentication..." />;
+  }
 
   return null;
 }

@@ -25,10 +25,11 @@ export function useLogin() {
       const response = await loginMutation(credentials).unwrap();
 
       if (response.success && response.data) {
-        const { accessToken, refreshToken, user } = response.data;
+        const { accessToken, user } = response.data;
+        // const { refreshToken } = response.data; // COMMENTED OUT: Backend refresh token not implemented yet
 
-        // Set auth state in Redux with both tokens
-        setAuthState(accessToken, refreshToken, user, true);
+        // Set auth state in Redux with accessToken only
+        setAuthState(accessToken, user, true);
 
         logger.debug('Login successful for user:', user.email);
         showSnackbar('Login successful!', 'success');
