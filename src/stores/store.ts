@@ -4,11 +4,13 @@ import storage from './storage';
 import { AuthAPI } from './services/AuthApi';
 import { OrganizerAPI } from './services/OrganizerApi';
 import authReducer from './slices/authSlice';
+import uiReducer from './slices/uiSlice';
 import { CategoryAPI } from './services/CategoryApi';
 import { EventAPI } from './services/EventApi';
 import { VenueAPI } from './services/VenueApi';
 import { TicketTypeAPI } from './services/TicketTypeApi';
 import { OrganizationMemberAPI } from './services/OrganizationMemberApi';
+import { OrderAPI } from './services/OrderApi';
 
 // Redux Persist configuration for auth slice
 // Updated: Now persisting accessToken (backend refresh token not implemented yet)
@@ -22,9 +24,19 @@ const persistConfig = {
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 
+// UI state persist config - chỉ persist user preferences
+const uiPersistConfig = {
+  key: 'ui',
+  storage,
+  whitelist: ['sidebarOpen'], // Chỉ lưu sidebar preference
+};
+
+const persistedUiReducer = persistReducer(uiPersistConfig, uiReducer);
+
 export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
+    ui: persistedUiReducer, // UI state slice
     [AuthAPI.reducerPath]: AuthAPI.reducer,
     [OrganizerAPI.reducerPath]: OrganizerAPI.reducer,
     [CategoryAPI.reducerPath]: CategoryAPI.reducer,
@@ -32,6 +44,7 @@ export const store = configureStore({
     [VenueAPI.reducerPath]: VenueAPI.reducer,
     [TicketTypeAPI.reducerPath]: TicketTypeAPI.reducer,
     [OrganizationMemberAPI.reducerPath]: OrganizationMemberAPI.reducer,
+    [OrderAPI.reducerPath]: OrderAPI.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -45,7 +58,8 @@ export const store = configureStore({
       .concat(EventAPI.middleware)
       .concat(VenueAPI.middleware)
       .concat(TicketTypeAPI.middleware)
-      .concat(OrganizationMemberAPI.middleware),
+      .concat(OrganizationMemberAPI.middleware)
+      .concat(OrderAPI.middleware),
 });
 
 export const persistor = persistStore(store);

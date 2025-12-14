@@ -1,7 +1,7 @@
 // app/organizers-test/page.tsx
 'use client';
 
-import { useAuth } from '@/src/hook/useAuth';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useCreateOrganizationMutation, useGetMyOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
@@ -92,7 +92,7 @@ export default function OrganizersTestPage() {
     isLoading: loadingVenues,
     error: venuesError,
   } = useGetVenuesQuery(
-    { page: 0, size: 10 },
+    { page: 0, size: 100 }, // Increase size to fetch more venues
     {
       skip: !auth.accessToken,
     },
@@ -112,17 +112,17 @@ export default function OrganizersTestPage() {
 
   const handleCreateOrganization = async (formData: OrganizationFormData) => {
     try {
-      const response = await createOrganizer(formData).unwrap();
+      await createOrganizer(formData).unwrap();
+
+      // Refetch organizations sau khi tạo mới - await để đảm bảo data được cập nhật
+      await refetchOrganizers();
 
       setSnackbar({
         open: true,
-        message: 'Organization created successfully!',
+        message: 'Organization created successfully! You can now create events.',
         severity: 'success',
       });
       setOrganizationModalOpen(false);
-
-      // Refetch organizations sau khi tạo mới
-      refetchOrganizers();
     } catch (error: any) {
       console.error('Error creating organization:', error);
 
@@ -199,6 +199,10 @@ export default function OrganizersTestPage() {
 
   // Xử lý dữ liệu từ API response
   const organizers: OrganizationResponse[] = organizersResponse?.data || [];
+
+  // Debug: Log organizations count
+  console.log('[Organizer Dashboard] Organizations count:', organizers.length);
+  console.log('[Organizer Dashboard] Organizations:', organizers);
 
   // Lấy events từ PaginatedResponse
   const events: EventListResponse[] = eventsResponse?.data?.content || [];

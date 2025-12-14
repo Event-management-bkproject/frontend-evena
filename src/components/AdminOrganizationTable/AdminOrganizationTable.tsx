@@ -98,9 +98,6 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
                   </Typography>
                 )}
               </TableCell>
-              <TableCell>
-                <Typography variant="body2">{org.address || 'N/A'}</Typography>
-              </TableCell>
               <TableCell align="center">
                 <Chip
                   label={org.verified ? 'Verified' : 'Unverified'}

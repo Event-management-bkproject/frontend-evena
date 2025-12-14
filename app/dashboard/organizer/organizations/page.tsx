@@ -1,7 +1,7 @@
 // app/dashboard/organizer/organizations/page.tsx
 'use client';
 
-import { useAuth } from '@/src/hook/useAuth';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import {
   useCreateOrganizationMutation,
   useGetMyOrganizationsQuery,
@@ -141,6 +141,12 @@ export default function OrganizationsPage() {
     if (!selectedOrganization) {
       console.error('No organization selected');
       return;
+    }
+
+    // Client-side validation: prevent inviting yourself
+    if (auth?.user?.email && email.toLowerCase() === auth.user.email.toLowerCase()) {
+      showErrorMessage('You cannot invite yourself. Please enter a different organizer\'s email address.');
+      throw new Error('Cannot invite yourself');
     }
 
     console.log('Inviting member:', {

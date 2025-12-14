@@ -7,7 +7,7 @@ import FormTextField from '@components/FormTextField';
 import FormButton from '@components/FormButton';
 import { AuthLink } from '@components/common/AuthLink';
 import { registerValidationSchema } from '@utils/validationSchema/registerValidationSchema';
-import { useRegister } from '@hooks/useRegister';
+import { useRegister } from '@/src/hooks/auth/useRegister';
 import { RegisterFormProps } from './types';
 
 /**

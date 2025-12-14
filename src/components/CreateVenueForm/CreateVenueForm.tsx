@@ -12,8 +12,8 @@ const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValu
     name: '',
     address: '',
     city: '',
-    lat: undefined,
-    lng: undefined,
+    lat: 10.762622, // Default: Ho Chi Minh City
+    lng: 106.660172,
     capacity: 1,
     description: '',
     ...initialValues,

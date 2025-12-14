@@ -41,6 +41,7 @@ import {
   useGetTicketTypesQuery,
   useDeleteTicketTypeMutation,
   useDeactivateTicketTypeMutation,
+  useGetEventByIdQuery,
 } from '@/src/stores/services';
 import { EventResponse, TicketTypeResponse, TicketTypeStatus } from '@/src/stores/types';
 import TicketTypeFormModal from '../TicketTypeFormModal';
@@ -48,16 +49,19 @@ import TicketTypeFormModal from '../TicketTypeFormModal';
 interface TicketTypeManagementProps {
   eventId: string;
   event: EventResponse;
+  onEventUpdate?: () => void; // Optional callback when event data should be refreshed
 }
 
-const TicketTypeManagement = ({ eventId, event }: TicketTypeManagementProps) => {
+const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManagementProps) => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedTicketType, setSelectedTicketType] = useState<TicketTypeResponse | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ticketTypeToDelete, setTicketTypeToDelete] = useState<TicketTypeResponse | null>(null);
 
-  const { data: ticketTypesResponse, isLoading, error, refetch } = useGetTicketTypesQuery(eventId);
+  const { data: ticketTypesResponse, isLoading, error, refetch } = useGetTicketTypesQuery(eventId, {
+    refetchOnMountOrArgChange: 10, // Refetch if data is older than 10 seconds
+  });
 
   const [deleteTicketType, { isLoading: deleting }] = useDeleteTicketTypeMutation();
   const [deactivateTicketType, { isLoading: deactivating }] = useDeactivateTicketTypeMutation();
@@ -84,7 +88,14 @@ const TicketTypeManagement = ({ eventId, event }: TicketTypeManagementProps) => 
       }).unwrap();
       setDeleteDialogOpen(false);
       setTicketTypeToDelete(null);
-      refetch();
+
+      // Refetch ticket types
+      await refetch();
+
+      // Trigger parent Event refetch to update minPrice and availableTickets
+      if (onEventUpdate) {
+        onEventUpdate();
+      }
     } catch (error: any) {
       console.error('Error deleting ticket type:', error);
       alert(error?.data?.message || 'Failed to delete ticket type');
@@ -329,9 +340,12 @@ const TicketTypeManagement = ({ eventId, event }: TicketTypeManagementProps) => 
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         eventId={eventId}
-        onSuccess={() => {
+        onSuccess={async () => {
           setCreateModalOpen(false);
-          refetch();
+          await refetch();
+          if (onEventUpdate) {
+            onEventUpdate();
+          }
         }}
       />
 
@@ -345,10 +359,13 @@ const TicketTypeManagement = ({ eventId, event }: TicketTypeManagementProps) => 
           }}
           eventId={eventId}
           ticketType={selectedTicketType}
-          onSuccess={() => {
+          onSuccess={async () => {
             setEditModalOpen(false);
             setSelectedTicketType(null);
-            refetch();
+            await refetch();
+            if (onEventUpdate) {
+              onEventUpdate();
+            }
           }}
         />
       )}

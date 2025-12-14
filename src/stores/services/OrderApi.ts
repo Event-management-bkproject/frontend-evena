@@ -1,0 +1,120 @@
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReAuth } from './baseQuery';
+import {
+  CreateOrderRequest,
+  OrderResponse,
+  CheckoutRequest,
+  TicketResponse,
+  OrderListResponse,
+} from '../types/order';
+import { ApiResponse, PaginatedResponse } from '../types';
+
+export const OrderAPI = createApi({
+  reducerPath: 'OrderAPI',
+  baseQuery: baseQueryWithReAuth,
+  tagTypes: ['Order', 'Ticket', 'TicketType', 'Event'],
+  endpoints: (builder) => ({
+    // Create a new order
+    createOrder: builder.mutation<ApiResponse<OrderResponse>, CreateOrderRequest>({
+      query: (orderData) => ({
+        url: '/orders',
+        method: 'POST',
+        body: orderData,
+      }),
+      invalidatesTags: (result, error, { eventId }) => [
+        'Order',
+        // Invalidate TicketType to update sold/available counts
+        { type: 'TicketType', id: eventId },
+        'TicketType',
+        // Invalidate Event to update availableTickets
+        { type: 'Event', id: eventId },
+        'Event',
+      ],
+    }),
+
+    // Process payment for order (checkout)
+    checkoutOrder: builder.mutation<ApiResponse<OrderResponse>, CheckoutRequest>({
+      query: (checkoutData) => ({
+        url: '/orders/checkout',
+        method: 'POST',
+        body: checkoutData,
+      }),
+      invalidatesTags: (result, error, { orderId }) => [
+        { type: 'Order', id: orderId },
+        'Order',
+        'Ticket',
+        // Also invalidate TicketType and Event as ticket counts may change
+        'TicketType',
+        'Event',
+      ],
+    }),
+
+    // Get order by ID
+    getOrderById: builder.query<ApiResponse<OrderResponse>, number>({
+      query: (orderId) => ({
+        url: `/orders/${orderId}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, orderId) => [{ type: 'Order', id: orderId }],
+    }),
+
+    // Get current user's orders (paginated)
+    getMyOrders: builder.query<
+      ApiResponse<PaginatedResponse<OrderListResponse>>,
+      { page?: number; size?: number }
+    >({
+      query: (params = {}) => ({
+        url: '/orders/my-orders',
+        method: 'GET',
+        params: {
+          page: params.page || 0,
+          size: params.size || 10,
+        },
+      }),
+      providesTags: ['Order'],
+    }),
+
+    // Cancel a pending order
+    cancelOrder: builder.mutation<ApiResponse<OrderResponse>, number>({
+      query: (orderId) => ({
+        url: `/orders/${orderId}/cancel`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, orderId) => [
+        { type: 'Order', id: orderId },
+        'Order',
+        // Invalidate TicketType and Event to restore available tickets
+        'TicketType',
+        'Event',
+      ],
+    }),
+
+    // Get current user's tickets
+    getMyTickets: builder.query<ApiResponse<TicketResponse[]>, void>({
+      query: () => ({
+        url: '/orders/my-tickets',
+        method: 'GET',
+      }),
+      providesTags: ['Ticket'],
+    }),
+
+    // Get ticket details by ID (with QR code)
+    getTicketById: builder.query<ApiResponse<TicketResponse>, number>({
+      query: (ticketId) => ({
+        url: `/orders/tickets/${ticketId}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, ticketId) => [{ type: 'Ticket', id: ticketId }],
+    }),
+  }),
+});
+
+export const {
+  useCreateOrderMutation,
+  useCheckoutOrderMutation,
+  useGetOrderByIdQuery,
+  useGetMyOrdersQuery,
+  useCancelOrderMutation,
+  useGetMyTicketsQuery,
+  useGetTicketByIdQuery,
+} = OrderAPI;

@@ -2,6 +2,7 @@
 import { BaseQueryFn, FetchArgs, fetchBaseQuery, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { RootState } from '../store';
 import { setToken, clearCredentials } from '../slices/authSlice';
+import { apiLogger } from '@/src/utils/logger/flowLogger';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
@@ -34,8 +35,36 @@ export const baseQueryWithReAuth: BaseQueryFn<string | FetchArgs, unknown, Fetch
     (modifiedArgs.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
 
+  // Log API request
+  const url = typeof args === 'string' ? args : args.url;
+  const method = typeof args === 'string' ? 'GET' : (args.method || 'GET');
+  apiLogger.info(`API Request: ${method} ${url}`, {
+    method,
+    url,
+    hasAuth: !!token,
+  });
+
   // Make the initial request
+  const startTime = Date.now();
   let result = await baseQuery(modifiedArgs, api, extraOptions);
+  const duration = Date.now() - startTime;
+
+  // Log API response
+  if (result.error) {
+    apiLogger.error(`API Error: ${method} ${url}`, {
+      method,
+      url,
+      status: result.error.status,
+      error: result.error.data,
+      duration: `${duration}ms`,
+    });
+  } else {
+    apiLogger.info(`API Success: ${method} ${url}`, {
+      method,
+      url,
+      duration: `${duration}ms`,
+    });
+  }
 
   // TODO: Backend refresh token not implemented yet
   // If request failed with 401, clear credentials (no refresh logic)

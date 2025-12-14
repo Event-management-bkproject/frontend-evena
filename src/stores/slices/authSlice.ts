@@ -34,11 +34,7 @@ export const authSlice = createSlice({
       // state.refreshToken = action.payload.refreshToken; // COMMENTED OUT
       state.user = action.payload.user;
       state.isInitialized = action.payload.isInitialized ?? true;
-
-      // Persist accessToken to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', action.payload.accessToken);
-      }
+      // Note: Redux persist automatically saves to localStorage
     },
 
     clearCredentials: (state) => {
@@ -46,20 +42,12 @@ export const authSlice = createSlice({
       // state.refreshToken = null; // COMMENTED OUT
       state.user = null;
       state.isInitialized = true;
-
-      // Clear accessToken from localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-      }
+      // Note: Redux persist automatically clears from localStorage
     },
 
     setToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-
-      // Persist accessToken to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', action.payload);
-      }
+      // Note: Redux persist automatically saves to localStorage
     },
 
     // COMMENTED OUT: setRefreshToken (backend not implemented yet)
@@ -88,6 +76,7 @@ export const authSlice = createSlice({
       // state.refreshToken = action.payload.refreshToken; // COMMENTED OUT
       state.user = action.payload.user;
       state.isInitialized = true;
+      // Note: Redux persist automatically saves to localStorage
     },
   },
 });

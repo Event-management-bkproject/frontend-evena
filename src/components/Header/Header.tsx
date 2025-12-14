@@ -21,21 +21,33 @@ import {
   Avatar,
   Divider,
 } from '@mui/material';
-import { ShoppingCart, Menu as MenuIcon, Close, Logout, AccountCircle } from '@mui/icons-material';
+import { ShoppingCart, Menu as MenuIcon, Close, Logout, AccountCircle, ConfirmationNumber } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/src/hook/useAuth';
+import { useAuth } from '@/src/hooks/auth/useAuth';
+import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
+import { OrderStatus } from '@/src/stores/types/order';
 
 interface HeaderProps {
-  cartItemCount?: number;
+  cartItemCount?: number; // Deprecated: Now automatically fetched from pending orders
 }
 
-export default function Header({ cartItemCount = 0 }: HeaderProps) {
+export default function Header({ cartItemCount }: HeaderProps) {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<null | HTMLElement>(null);
   const { logout, auth } = useAuth();
+
+  // Fetch pending orders count for cart badge
+  const { data: ordersResponse } = useGetMyOrdersQuery(
+    { page: 0, size: 100 },
+    { skip: !auth?.accessToken }
+  );
+
+  // Count only PENDING orders for the badge
+  const pendingOrdersCount =
+    ordersResponse?.data?.content?.filter((order) => order.status === OrderStatus.PENDING).length || 0;
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -139,7 +151,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
           {/* Cart Icon - Only show if logged in */}
           {auth?.accessToken && (
             <IconButton
-              onClick={() => handleNavigate('/cart')}
+              onClick={() => handleNavigate('/dashboard/customer/cart')}
               sx={{
                 color: 'white',
                 '&:hover': {
@@ -148,7 +160,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
                 },
               }}
             >
-              <Badge badgeContent={cartItemCount} color="error">
+              <Badge badgeContent={pendingOrdersCount} color="error">
                 <ShoppingCart />
               </Badge>
             </IconButton>
@@ -365,6 +377,21 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
         >
           <AccountCircle sx={{ mr: 1.5, color: '#2A3363' }} />
           <Typography variant="body2">My Account</Typography>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleAccountMenuClose();
+            handleNavigate('/dashboard/customer/my-tickets');
+          }}
+          sx={{
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(243, 107, 249, 0.1)',
+            },
+          }}
+        >
+          <ConfirmationNumber sx={{ mr: 1.5, color: '#2A3363' }} />
+          <Typography variant="body2">My Tickets</Typography>
         </MenuItem>
         <Divider />
         <MenuItem

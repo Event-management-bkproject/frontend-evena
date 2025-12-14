@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth } from '@/src/hook/useAuth';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useDispatch } from 'react-redux';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
 import { EventAPI } from '@/src/stores/services/EventApi';
@@ -30,8 +30,18 @@ export default function AuthInitializer() {
       // Only show loading screen for minimum time if no persisted token (first time login)
       const MIN_LOADING_TIME = hasPersistedToken ? 0 : 2500;
 
+      // If no token exists, skip API call and mark as initialized
+      if (!hasPersistedToken) {
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+
+        setAuthFromInit(null, null);
+        return;
+      }
+
       try {
-        // Call /api/auth/me to verify authentication
+        // Only call /api/auth/me if we have a token to verify
         // AccessToken is stored in Redux persist (localStorage)
         const response = await getMe().unwrap();
 
@@ -65,7 +75,11 @@ export default function AuthInitializer() {
           dispatch(VenueAPI.util.resetApiState());
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        // Only log error if it's not a 401 (unauthorized is expected when token is invalid)
+        const is401 = error && typeof error === 'object' && 'status' in error && error.status === 401;
+        if (!is401) {
+          console.error('Auth initialization error:', error);
+        }
 
         // Calculate remaining time even for error case
         const elapsedTime = Date.now() - startTime;

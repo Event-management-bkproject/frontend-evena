@@ -185,7 +185,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({
               const isSelected = value === iconItem.name;
 
               return (
-                <Grid item xs={3} sm={2} key={iconItem.name}>
+                <Grid size={{ xs: 3, sm: 2 }} key={iconItem.name}>
                   <Box
                     onClick={() => handleIconSelect(iconItem.name)}
                     sx={{

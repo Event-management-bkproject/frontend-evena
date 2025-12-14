@@ -5,6 +5,7 @@ import { Card, CardMedia, Box, Typography, Chip } from '@mui/material';
 import { CalendarToday, Place } from '@mui/icons-material';
 import { EventListResponse } from '@/src/stores/types';
 import { useRouter } from 'next/navigation';
+import { formatDate as utilFormatDate, formatTime as utilFormatTime } from '@/src/utils/dateFormatters';
 
 interface CustomerEventCardProps {
   event: EventListResponse;
@@ -13,7 +14,7 @@ interface CustomerEventCardProps {
 export default function CustomerEventCard({ event }: CustomerEventCardProps) {
   const router = useRouter();
 
-  const formatDate = (dateString: string) => {
+  const getDateInfo = (dateString: string) => {
     const date = new Date(dateString);
     return {
       month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
@@ -21,22 +22,24 @@ export default function CustomerEventCard({ event }: CustomerEventCardProps) {
     };
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   const handleClick = () => {
-    router.push(`/events/${event.id}`);
+    router.push(`/dashboard/customer/events/${event.id}/tickets`);
   };
 
-  const dateInfo = formatDate(event.startAt);
+  const dateInfo = getDateInfo(event.startAt);
 
   return (
     <Card
       onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${event.title} event`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -50,13 +53,17 @@ export default function CustomerEventCard({ event }: CustomerEventCardProps) {
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
           transform: 'translateY(-4px)',
         },
+        '&:focus': {
+          outline: '2px solid #ED4690',
+          outlineOffset: '2px',
+        },
       }}
     >
       {/* Event Image */}
       <CardMedia
         component="img"
-        image={event.imageUrl || '/images/event-placeholder.jpg'}
-        alt={event.title}
+        image={event.coverUrl || '/images/event-placeholder.jpg'}
+        alt={`${event.title} event cover image`}
         sx={{
           height: 200,
           objectFit: 'cover',
@@ -107,7 +114,7 @@ export default function CustomerEventCard({ event }: CustomerEventCardProps) {
               mt: 0.5,
             }}
           >
-            {formatTime(event.startAt)}
+            {utilFormatTime(event.startAt)}
           </Typography>
         </Box>
 

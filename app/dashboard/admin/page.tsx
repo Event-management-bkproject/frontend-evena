@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { Box, Snackbar, Alert } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import RoleGuard from '@/src/components/RoleGuard';
 
 import { CreateCategoryRequest, CreateVenueRequest } from '@/src/stores/types';
 import {
@@ -21,8 +22,8 @@ import {
 } from '@/src/stores/services';
 
 import CreateCategoryForm from '@/src/components/CreateCategoryForm/CreateCategoryForm';
-import CreateVenueForm from '@/src/components/CreateVenueForm/CreateVenueForm';
-import { useAuth } from '@/src/hook/useAuth';
+import CreateVenueFormWithMap from '@/src/components/CreateVenueForm/CreateVenueFormWithMap';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import CategoryTable from '@/src/components/CategoryTable';
 import VenueTable from '@/src/components/VenueTable';
 import { AdminOrganizationTable } from '@/src/components/AdminOrganizationTable';
@@ -243,9 +244,10 @@ export default function AdminPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 3 }}>
-      {/* Header */}
-      <AdminHeader onLogout={handleLogout} />
+    <RoleGuard allowedRoles={['ADMIN']}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 3 }}>
+        {/* Header */}
+        <AdminHeader onLogout={handleLogout} />
 
       {/* Stats Cards */}
       <AdminStatsCards
@@ -358,35 +360,26 @@ export default function AdminPage() {
         </AdminFormDialog>
       )}
 
-      {/* Venue Modal */}
-      {venueModalOpen && (
-        <AdminFormDialog
-          open={venueModalOpen}
-          title={editingVenue ? 'Edit Venue' : 'Create New Venue'}
-          onClose={closeVenueModal}
-          maxWidth="md"
-        >
-          <CreateVenueForm
-            open={venueModalOpen}
-            onClose={closeVenueModal}
-            onSubmit={handleSubmitVenue}
-            loading={isCreatingVenue || isUpdatingVenue}
-            initialValues={
-              editingVenue
-                ? {
-                    name: editingVenue.name,
-                    address: editingVenue.address,
-                    city: editingVenue.city,
-                    capacity: editingVenue.capacity,
-                    description: editingVenue.description || '',
-                    lat: editingVenue.lat,
-                    lng: editingVenue.lng,
-                  }
-                : undefined
-            }
-          />
-        </AdminFormDialog>
-      )}
+      {/* Venue Modal with Map */}
+      <CreateVenueFormWithMap
+        open={venueModalOpen}
+        onClose={closeVenueModal}
+        onSubmit={handleSubmitVenue}
+        loading={isCreatingVenue || isUpdatingVenue}
+        initialValues={
+          editingVenue
+            ? {
+                name: editingVenue.name,
+                address: editingVenue.address,
+                city: editingVenue.city,
+                capacity: editingVenue.capacity,
+                description: editingVenue.description || '',
+                lat: editingVenue.lat,
+                lng: editingVenue.lng,
+              }
+            : undefined
+        }
+      />
 
       {/* Snackbar */}
       <Snackbar
@@ -405,5 +398,6 @@ export default function AdminPage() {
         </Alert>
       </Snackbar>
     </Box>
+    </RoleGuard>
   );
 }

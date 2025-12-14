@@ -14,9 +14,26 @@ export const EventAPI = createApi({
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Event'],
   endpoints: (builder) => ({
-    getEvents: builder.query<ApiResponse<PaginatedResponse<EventListResponse>>, EventSearchRequest>({
-      query: (params: EventSearchRequest) => ({
+    getEvents: builder.query<
+      ApiResponse<PaginatedResponse<EventListResponse>>,
+      {
+        page?: number;
+        size?: number;
+      }
+    >({
+      query: (params = {}) => ({
         url: '/events',
+        method: 'GET',
+        params: {
+          page: params.page || 0,
+          size: params.size || 10,
+        },
+      }),
+      providesTags: ['Event'],
+    }),
+    getEventsSearch: builder.query<ApiResponse<PaginatedResponse<EventListResponse>>, EventSearchRequest>({
+      query: (params: EventSearchRequest) => ({
+        url: '/events/search',
         method: 'GET',
         params: {
           page: params.page || 0,
@@ -88,20 +105,22 @@ export const EventAPI = createApi({
       }),
       providesTags: ['Event'],
     }),
-    getPublicEvents: builder.query<ApiResponse<PaginatedResponse<EventListResponse>>, { page?: number; size?: number }>({
-      query: (params = {}) => ({
-        url: '/events',
-        method: 'GET',
-        params: {
-          page: params.page || 0,
-          size: params.size || 1000, // Get all events for customer dashboard
-          status: 'PUBLISHED', // Only published events
-          sortBy: 'startAt',
-          sortDirection: 'ASC',
-        },
-      }),
-      providesTags: ['Event'],
-    }),
+    getPublicEvents: builder.query<ApiResponse<PaginatedResponse<EventListResponse>>, { page?: number; size?: number }>(
+      {
+        query: (params = {}) => ({
+          url: '/events',
+          method: 'GET',
+          params: {
+            page: params.page || 0,
+            size: params.size || 1000, // Get all events for customer dashboard
+            // No status filter - show all events to customers
+            sortBy: 'startAt',
+            sortDirection: 'ASC',
+          },
+        }),
+        providesTags: ['Event'],
+      },
+    ),
     getEventsByOrganizer: builder.query<
       ApiResponse<PaginatedResponse<EventListResponse>>,
       { organizerId: number; page?: number; size?: number }
@@ -120,6 +139,7 @@ export const EventAPI = createApi({
 });
 export const {
   useGetEventsQuery,
+  useGetEventsSearchQuery,
   useGetEventByIdQuery,
   useCreateEventMutation,
   useUpdateEventMutation,

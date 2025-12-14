@@ -6,6 +6,7 @@ import BaseModal from '../BaseModal';
 import FormTextField from '../FormTextField';
 import Forms from '../Forms';
 import { OrganizationRole } from '@/src/stores/types/enums';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import * as yup from 'yup';
 
 interface InviteMemberModalProps {
@@ -24,6 +25,7 @@ const inviteMemberSchema = yup.object({
 });
 
 export default function InviteMemberModal({ open, onClose, onSubmit, loading = false }: InviteMemberModalProps) {
+  const { auth } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +38,34 @@ export default function InviteMemberModal({ open, onClose, onSubmit, loading = f
       onClose();
     } catch (err: any) {
       console.error('Error inviting member:', err);
-      setError(err?.data?.message || err?.message || 'Failed to send invitation');
+
+      // Improve error message based on backend response
+      let errorMessage = 'Failed to send invitation';
+
+      if (err?.data?.message) {
+        const backendMessage = err.data.message;
+
+        // Handle specific error cases
+        if (backendMessage.toLowerCase().includes('not a organizer') ||
+            backendMessage.toLowerCase().includes('not an organizer')) {
+          errorMessage = `Cannot invite "${values.email}". This could be because:\n• The user is not registered as an Organizer\n• You cannot invite yourself\n• The email does not exist in the system\n\nPlease ensure the email belongs to a different Organizer account.`;
+        } else if (backendMessage.toLowerCase().includes('not found') ||
+                   backendMessage.toLowerCase().includes('does not exist')) {
+          errorMessage = `No account found for "${values.email}". Please ensure the email is registered in the system.`;
+        } else if (backendMessage.toLowerCase().includes('already') ||
+                   backendMessage.toLowerCase().includes('member')) {
+          errorMessage = `"${values.email}" is already a member of this organization.`;
+        } else if (backendMessage.toLowerCase().includes('yourself') ||
+                   backendMessage.toLowerCase().includes('own')) {
+          errorMessage = `You cannot invite yourself. Please enter a different organizer's email address.`;
+        } else {
+          errorMessage = backendMessage;
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
       actions.setSubmitting(false);
@@ -67,18 +96,48 @@ export default function InviteMemberModal({ open, onClose, onSubmit, loading = f
             </Alert>
           )}
 
+          {/* Your Email Info */}
+          {auth?.user?.email && (
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: '#FFF9E6',
+                borderRadius: '8px',
+                border: '1px solid #FFB74D',
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#F57C00', mb: 0.5 }}>
+                ⚠️ Important
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                You are currently logged in as <strong>{auth.user.email}</strong>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                You cannot invite yourself. Please enter a <strong>different organizer's email</strong>.
+              </Typography>
+            </Box>
+          )}
+
           {/* Info Box */}
           <Box
             sx={{
               p: 2,
-              backgroundColor: '#FFF4E6',
+              backgroundColor: '#E3F2FD',
               borderRadius: '8px',
-              border: '1px solid #FFB74D',
+              border: '1px solid #2196F3',
             }}
           >
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: '#1976D2' }}>
+              📋 Invitation Requirements
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              • The email must belong to an existing <strong>Organizer account</strong>
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              • The user must have registered with the "Organizer" role
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              ⚠️ <strong>Important:</strong> You can only invite users who have registered as <strong>Organizers</strong>.
-              The email must belong to an existing organizer account in the system.
+              • Customer accounts cannot be invited to organizations
             </Typography>
           </Box>
 

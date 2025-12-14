@@ -7,3 +7,4 @@ export * from './auth';
 export * from './event';
 export * from './entities';
 export * from './api';
+export * from './order';

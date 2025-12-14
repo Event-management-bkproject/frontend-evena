@@ -85,7 +85,39 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
     return '/placeholder-event.jpg'; // Fallback image
   };
 
+  // Helper function để lấy số lượng tickets available
+  const getAvailableTickets = () => {
+    // EventListResponse có availableTickets field
+    if ('availableTickets' in event) {
+      return (event as EventListResponse).availableTickets;
+    }
+    // EventResponse có ticketTypes array - tính tổng available
+    if ('ticketTypes' in event && event.ticketTypes) {
+      return (event as EventResponse).ticketTypes.reduce(
+        (total, ticketType) => total + ticketType.available,
+        0
+      );
+    }
+    return 0;
+  };
+
+  // Helper function để lấy giá thấp nhất
+  const getMinPrice = () => {
+    // EventListResponse có minPrice field
+    if ('minPrice' in event) {
+      return (event as EventListResponse).minPrice;
+    }
+    // EventResponse có ticketTypes array - tìm price nhỏ nhất
+    if ('ticketTypes' in event && event.ticketTypes && event.ticketTypes.length > 0) {
+      const prices = (event as EventResponse).ticketTypes.map((tt) => tt.price);
+      return Math.min(...prices);
+    }
+    return 0;
+  };
+
   const venue = getVenueInfo();
+  const availableTickets = getAvailableTickets();
+  const minPrice = getMinPrice();
 
   return (
     <Card
@@ -288,7 +320,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
                 </Box>
                 <Box display="flex" flexDirection="column">
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#2A3363', fontSize: '14px' }}>
-                    100
+                    {availableTickets > 0 ? availableTickets.toLocaleString() : 'N/A'}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#666', fontSize: '12px' }}>
                     Tickets
@@ -317,7 +349,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
                     fontSize: '24px',
                   }}
                 >
-                  $25
+                  {minPrice > 0 ? `$${minPrice.toFixed(2)}` : 'TBA'}
                 </Typography>
               </Box>
             </Box>

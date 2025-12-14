@@ -16,11 +16,17 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
+      "@/src/*": ["./src/*"],
       "@styles/*": ["./src/styles/*"],
       "@components/*": ["./src/components/*"],
       "@hooks/*": ["./src/hooks/*"],
+      "@queries/*": ["./src/hooks/queries/*"],
       "@utils/*": ["./src/utils/*"],
-      "@stores/*": ["./src/stores/*"]
+      "@stores/*": ["./src/stores/*"],
+      "@types/*": ["./src/stores/types/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@providers/*": ["./src/providers/*"]
     },
     "plugins": [
       {

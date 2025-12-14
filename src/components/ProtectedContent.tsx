@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth } from '@/src/hook/useAuth';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useDispatch } from 'react-redux';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
 

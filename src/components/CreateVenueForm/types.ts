@@ -4,8 +4,8 @@ export interface VenueFormData {
   name: string;
   address: string;
   city: string;
-  lat?: number;
-  lng?: number;
+  lat: number;
+  lng: number;
   capacity: number;
   description?: string;
 }

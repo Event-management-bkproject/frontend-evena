@@ -8,13 +8,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const isAuthenticated = !!token;
   const protectedRoutes = ['/dashboard/organizer', '/dashboard/customer', '/dashboard'];
-  const authRoutes = ['/login', '/register'];
 
   // Kiểm tra nếu đang truy cập protected route
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
-
-  // Kiểm tra nếu đang truy cập auth route (login/register)
-  const isAuthRoute = authRoutes.includes(pathname);
 
   // 🚫 Redirect nếu truy cập protected route mà chưa đăng nhập
   if (isProtectedRoute && !isAuthenticated) {
@@ -24,9 +20,11 @@ export function middleware(request: NextRequest) {
   }
 
   // 🔄 Redirect nếu đã đăng nhập mà truy cập login/register
-  if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  // REMOVED: This conflicts with useLogin's role-based redirect logic
+  // The login hook handles post-login redirects based on user role
+  // if (isAuthRoute && isAuthenticated) {
+  //   return NextResponse.redirect(new URL('/dashboard', request.url));
+  // }
 
   return NextResponse.next();
 }

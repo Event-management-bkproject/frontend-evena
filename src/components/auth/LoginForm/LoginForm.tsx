@@ -7,7 +7,7 @@ import FormTextField from '@components/FormTextField';
 import FormButton from '@components/FormButton';
 import { AuthLink } from '@components/common/AuthLink';
 import { loginValidationSchema } from '@utils/validationSchema/loginValidationSchema';
-import { useLogin } from '@hooks/useLogin';
+import { useLogin } from '@/src/hooks/auth/useLogin';
 import { LoginFormProps } from './types';
 
 interface LoginFormValues {

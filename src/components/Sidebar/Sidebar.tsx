@@ -23,7 +23,7 @@ import {
   Place as PlaceIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
-import { useAuth } from '@/src/hook/useAuth';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import Image from 'next/image';
 
 interface SidebarProps {

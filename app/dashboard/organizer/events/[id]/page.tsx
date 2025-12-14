@@ -37,6 +37,8 @@ export default function EventDetailsPage() {
     refetch,
   } = useGetEventByIdQuery(eventId, {
     skip: !eventId,
+    refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
+    refetchOnFocus: true, // Refetch when window regains focus
   });
 
   const { data: organizersResponse } = useGetMyOrganizationsQuery();
@@ -177,7 +179,7 @@ export default function EventDetailsPage() {
 
             {/* Right Side - Ticket Type Management (30%) */}
             <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 calc(30% - 12px)' } }}>
-              <TicketTypeManagement eventId={eventId} event={event} />
+              <TicketTypeManagement eventId={eventId} event={event} onEventUpdate={refetch} />
             </Box>
           </Box>
         </Box>

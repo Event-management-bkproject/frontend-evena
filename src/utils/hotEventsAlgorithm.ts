@@ -19,7 +19,7 @@ export function calculateHotEvents(events: EventListResponse[], limit: number = 
   const scoredEvents = events
     .filter((event) => {
       // Only include PUBLISHED events
-      if (event.status !== 'PUBLISHED') return false;
+      // if (event.status !== 'PUBLISHED') return false;
 
       // Only include future events
       const eventDate = new Date(event.startAt);
@@ -103,13 +103,13 @@ export function filterUpcomingEvents(
     searchKeyword?: string;
     searchPlace?: string;
     searchDate?: string;
-  }
+  },
 ): EventListResponse[] {
   const now = new Date();
 
   return events.filter((event) => {
     // Only PUBLISHED and future events
-    if (event.status !== 'PUBLISHED') return false;
+    // if (event.status !== 'PUBLISHED') return false;
 
     const eventDate = new Date(event.startAt);
     if (eventDate < now) return false;
