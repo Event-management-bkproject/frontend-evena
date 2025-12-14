@@ -40,10 +40,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
   const { logout, auth } = useAuth();
 
   // Fetch pending orders count for cart badge
-  const { data: ordersResponse } = useGetMyOrdersQuery(
-    { page: 0, size: 100 },
-    { skip: !auth?.accessToken }
-  );
+  const { data: ordersResponse } = useGetMyOrdersQuery({ page: 0, size: 100 }, { skip: !auth?.accessToken });
 
   // Count only PENDING orders for the badge
   const pendingOrdersCount =
@@ -80,7 +77,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
   };
 
   const menuItems = [
-    { label: 'Home', path: '/dashboard' },
+    { label: 'Home', path: '/dashboard/customer' },
     { label: 'About Us', path: '/about' },
     { label: 'Services', path: '/services' },
     { label: 'Contact', path: '/contact' },
@@ -98,7 +95,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
       <Toolbar sx={{ py: 1, px: { xs: 2, sm: 3, md: 4 } }}>
         {/* Logo */}
         <Box
-          onClick={() => handleNavigate('/')}
+          onClick={() => handleNavigate('/dashboard/customer')}
           sx={{
             display: 'flex',
             alignItems: 'center',
