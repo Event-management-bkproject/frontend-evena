@@ -14,7 +14,8 @@ import {
   CardActionArea,
   Avatar,
 } from '@mui/material';
-import { MoreVert, CalendarToday, Place, Category, Edit, Delete, Groups, Public, Drafts } from '@mui/icons-material';
+import { MoreVert, CalendarToday, Place, Category, Edit, Delete, Groups, Public, Drafts, Event as EventIcon } from '@mui/icons-material';
+import Image from 'next/image';
 import { EventListResponse, EventResponse, EventStatus } from '@/src/stores/types';
 
 interface EventCardProps {
@@ -23,7 +24,7 @@ interface EventCardProps {
   onDelete?: (event: EventListResponse | EventResponse) => void;
   onClick?: (event: EventListResponse | EventResponse) => void;
   showActions?: boolean;
-  variant?: 'default' | 'compact';
+  variant?: 'default' | 'compact' | 'dashboard';
 }
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -153,6 +154,121 @@ const EventCard: React.FC<EventCardProps> = ({
     }
     return null;
   };
+
+  // Dashboard variant - hiển thị như DashboardEventCard
+  if (variant === 'dashboard') {
+    const startDate = new Date(event.startAt);
+    const coverUrl = 'coverUrl' in event ? event.coverUrl : null;
+
+    return (
+      <Card
+        onClick={handleCardClick}
+        sx={{
+          minWidth: 320,
+          maxWidth: 320,
+          cursor: onClick ? 'pointer' : 'default',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': onClick
+            ? {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 24px rgba(243, 107, 249, 0.2)',
+              }
+            : {},
+        }}
+      >
+        {/* Event Cover Image */}
+        <Box sx={{ position: 'relative', width: '100%', height: 180, backgroundColor: '#E4E6F5' }}>
+          {coverUrl ? (
+            <Image src={coverUrl} alt={event.title} fill sizes="320px" style={{ objectFit: 'cover' }} />
+          ) : (
+            <Box
+              sx={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EventIcon sx={{ fontSize: 60, color: '#2A3363', opacity: 0.3 }} />
+            </Box>
+          )}
+
+          {/* Status Badge */}
+          <Chip
+            label={event.status}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              backgroundColor: event.status === EventStatus.PUBLISHED ? '#4CAF50' : '#FF9800',
+              color: 'white',
+              fontWeight: 600,
+            }}
+          />
+        </Box>
+
+        {/* Event Info */}
+        <Box sx={{ p: 2.5 }}>
+          {/* Event Name */}
+          <Typography
+            sx={{
+              color: '#000000',
+              fontWeight: 500,
+              fontSize: '14px',
+              mb: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              minHeight: 40,
+            }}
+          >
+            {event.title}
+          </Typography>
+
+          {/* Venue */}
+          {getVenueInfo() && (
+            <Typography
+              sx={{
+                color: '#ADACAE',
+                fontSize: '10px',
+                mb: 1.5,
+              }}
+            >
+              📍 {getVenueInfo()!.name}, {getVenueInfo()!.city}
+            </Typography>
+          )}
+
+          {/* Date and Price on same row */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Typography sx={{ fontSize: '10px', color: '#ADACAE' }}>
+              {startDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </Typography>
+            {'minPrice' in event && (
+              <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#F36BF9' }}>
+                From ${(event as EventListResponse).minPrice.toLocaleString()}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </Card>
+    );
+  }
 
   const cardContent = (
     <CardContent sx={{ p: variant === 'compact' ? 2 : 3, flex: 1 }}>

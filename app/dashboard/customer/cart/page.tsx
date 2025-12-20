@@ -19,8 +19,9 @@ import {
   Pagination,
   IconButton,
   Tooltip,
+  Collapse,
 } from '@mui/material';
-import { Visibility, Cancel } from '@mui/icons-material';
+import { Visibility, Cancel, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useGetMyOrdersQuery, useCancelOrderMutation } from '@/src/stores/services/OrderApi';
 import { OrderStatus } from '@/src/stores/types/order';
@@ -28,9 +29,144 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { orderLogger } from '@/src/utils/logger/flowLogger';
 
+interface OrderRowProps {
+  order: any;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onCancel: (orderId: number) => void;
+  isCancelling: boolean;
+  getStatusColor: (status: OrderStatus) => any;
+  router: any;
+}
+
+function OrderRow({
+  order,
+  isExpanded,
+  onToggleExpand,
+  onCancel,
+  isCancelling,
+  getStatusColor,
+  router,
+}: OrderRowProps) {
+  return (
+    <>
+      <TableRow hover>
+        <TableCell>
+          <IconButton size="small" onClick={onToggleExpand}>
+            {isExpanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          </IconButton>
+        </TableCell>
+        <TableCell>#{order.id}</TableCell>
+        <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+        <TableCell>{order.ticketCount} tickets</TableCell>
+        <TableCell sx={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString()}</TableCell>
+        <TableCell>
+          <Chip label={order.status} color={getStatusColor(order.status)} size="small" />
+        </TableCell>
+        <TableCell>
+          <Chip
+            label={order.status === OrderStatus.CONFIRMED ? 'PAID' : 'PENDING'}
+            color={order.status === OrderStatus.CONFIRMED ? 'success' : 'warning'}
+            size="small"
+          />
+        </TableCell>
+        <TableCell>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="View Details">
+              <IconButton
+                size="small"
+                onClick={() => router.push(`/dashboard/customer/cart/${order.id}`)}
+                sx={{ color: '#F36BF9' }}
+              >
+                <Visibility />
+              </IconButton>
+            </Tooltip>
+            {order.status === OrderStatus.PENDING && (
+              <Tooltip title="Cancel Order">
+                <IconButton
+                  size="small"
+                  onClick={() => onCancel(order.id)}
+                  disabled={isCancelling}
+                  sx={{ color: '#f44336' }}
+                >
+                  <Cancel />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={9}>
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <Box sx={{ margin: 2 }}>
+              {order.items && order.items.length > 0 ? (
+                <>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#2A3363' }}>
+                    Order Items
+                  </Typography>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#F9F9F9' }}>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            Event
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            Ticket Type
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            Price
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            Quantity
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>
+                            Subtotal
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {order.items.map((item: any) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.eventTitle}</TableCell>
+                          <TableCell>{item.ticketTypeName}</TableCell>
+                          <TableCell>${item.unitPrice.toLocaleString()}</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>
+                            <Typography fontWeight={600}>${item.subtotal.toLocaleString()}</Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No items found
+                </Typography>
+              )}
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
+    </>
+  );
+}
+
 export default function MyOrdersPage() {
   const router = useRouter();
   const [page, setPage] = useState(0);
+  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const { data, isLoading, error } = useGetMyOrdersQuery({ page, size: 10 });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
@@ -67,6 +203,10 @@ export default function MyOrdersPage() {
       orderLogger.error('Failed to cancel order', { orderId, error });
       alert(`Failed to cancel order: ${error?.data?.message || 'Please try again'}`);
     }
+  };
+
+  const handleToggleExpand = (orderId: number) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
 
   if (isLoading) {
@@ -110,9 +250,9 @@ export default function MyOrdersPage() {
               <Table>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
+                    <TableCell sx={{ fontWeight: 700, width: '50px' }} />
                     <TableCell sx={{ fontWeight: 700 }}>Order ID</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Event</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Items</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
@@ -122,56 +262,16 @@ export default function MyOrdersPage() {
                 </TableHead>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order.id} hover>
-                      <TableCell>#{order.id}</TableCell>
-                      <TableCell>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{order.eventTitle}</TableCell>
-                      <TableCell>{order.ticketCount} tickets</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        ${order.totalAmount.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={order.status}
-                          color={getStatusColor(order.status)}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={order.status === OrderStatus.CONFIRMED ? 'PAID' : 'PENDING'}
-                          color={order.status === OrderStatus.CONFIRMED ? 'success' : 'warning'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Tooltip title="View Details">
-                            <IconButton
-                              size="small"
-                              onClick={() => router.push(`/dashboard/customer/my-orders/${order.id}`)}
-                              sx={{ color: '#F36BF9' }}
-                            >
-                              <Visibility />
-                            </IconButton>
-                          </Tooltip>
-                          {order.status === OrderStatus.PENDING && (
-                            <Tooltip title="Cancel Order">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleCancelOrder(order.id)}
-                                disabled={isCancelling}
-                                sx={{ color: '#f44336' }}
-                              >
-                                <Cancel />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
+                    <OrderRow
+                      key={order.id}
+                      order={order}
+                      isExpanded={expandedOrderId === order.id}
+                      onToggleExpand={() => handleToggleExpand(order.id)}
+                      onCancel={handleCancelOrder}
+                      isCancelling={isCancelling}
+                      getStatusColor={getStatusColor}
+                      router={router}
+                    />
                   ))}
                 </TableBody>
               </Table>

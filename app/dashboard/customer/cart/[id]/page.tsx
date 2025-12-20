@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useMemo } from 'react';
 import {
   Box,
   Container,
@@ -21,8 +21,8 @@ import {
 } from '@mui/material';
 import { ArrowBack, CheckCircle } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useGetOrderByIdQuery } from '@/src/stores/services/OrderApi';
-import { OrderStatus, PaymentStatus } from '@/src/stores/types/order';
+import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
+import { OrderStatus } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 
@@ -33,8 +33,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const orderId = parseInt(resolvedParams.id);
   const isSuccess = searchParams.get('success') === 'true';
 
-  const { data, isLoading, error } = useGetOrderByIdQuery(orderId);
-  const order = data?.data;
+  // Fetch all orders and find the specific one
+  const { data, isLoading, error } = useGetMyOrdersQuery({ page: 0, size: 100 });
+
+  const order = useMemo(() => {
+    if (!data?.data?.content) return null;
+    return data.data.content.find((o: any) => o.id === orderId);
+  }, [data, orderId]);
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -79,7 +84,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => router.push('/dashboard/customer/my-orders')}
+          onClick={() => router.push('/dashboard/customer/cart')}
           sx={{ mb: 3, color: '#2A3363' }}
         >
           Back to Orders
@@ -105,54 +110,62 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Event
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {order.eventTitle}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Total Tickets
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {order.ticketCount} tickets
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
                   Order Date
                 </Typography>
                 <Typography variant="body1" fontWeight={600}>
                   {new Date(order.createdAt).toLocaleString()}
                 </Typography>
               </Box>
-
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Customer
-                </Typography>
-                <Typography variant="body1" fontWeight={600}>
-                  {order.user.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {order.user.email}
-                </Typography>
-              </Box>
             </Card>
 
-            <Card sx={{ p: 3, borderRadius: '16px' }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
-                Order Items
-              </Typography>
+            {order.items && order.items.length > 0 && (
+              <Card sx={{ p: 3, borderRadius: '16px' }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
+                  Order Items
+                </Typography>
 
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
-                      <TableCell><Typography fontWeight={700}>Ticket Type</Typography></TableCell>
-                      <TableCell><Typography fontWeight={700}>Price</Typography></TableCell>
-                      <TableCell><Typography fontWeight={700}>Quantity</Typography></TableCell>
-                      <TableCell><Typography fontWeight={700}>Subtotal</Typography></TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {order.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.ticketType.name}</TableCell>
-                        <TableCell>${item.unitPrice.toLocaleString()}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell><Typography fontWeight={600}>${item.totalPrice.toLocaleString()}</Typography></TableCell>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
+                        <TableCell><Typography fontWeight={700}>Ticket Type</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>Price</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>Quantity</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>Subtotal</Typography></TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Card>
+                    </TableHead>
+                    <TableBody>
+                      {order.items.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.ticketTypeName}</TableCell>
+                          <TableCell>${item.unitPrice.toLocaleString()}</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell><Typography fontWeight={600}>${item.subtotal.toLocaleString()}</Typography></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Card>
+            )}
           </Grid>
 
           <Grid size={{ xs: 12, md: 4 }}>
@@ -161,18 +174,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 Payment Summary
               </Typography>
 
-              <Box sx={{ mb: 2 }}>
-                {order.items.map((item) => (
-                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="body2">
-                      {item.ticketType.name} x {item.quantity}
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      ${item.totalPrice.toLocaleString()}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
+              {order.items && order.items.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  {order.items.map((item) => (
+                    <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2">
+                        {item.ticketTypeName} x {item.quantity}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        ${item.subtotal.toLocaleString()}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <Divider sx={{ my: 2 }} />
 
@@ -185,28 +200,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </Typography>
               </Box>
 
-              {order.payments.length > 0 && (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Payment Method
-                  </Typography>
-                  <Typography variant="body1" fontWeight={600} gutterBottom>
-                    {order.payments[0].provider}
-                  </Typography>
-                  <Chip
-                    label={order.payments[0].status}
-                    color={
-                      order.payments[0].status === PaymentStatus.SUCCESS
-                        ? 'success'
-                        : order.payments[0].status === PaymentStatus.PENDING
-                        ? 'warning'
-                        : 'error'
-                    }
-                    size="small"
-                  />
-                </>
-              )}
+              <Divider sx={{ my: 2 }} />
+
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Payment Status
+                </Typography>
+                <Chip
+                  label={order.status === OrderStatus.CONFIRMED ? 'PAID' : 'PENDING'}
+                  color={order.status === OrderStatus.CONFIRMED ? 'success' : 'warning'}
+                  size="small"
+                />
+              </Box>
             </Card>
 
             {order.status === OrderStatus.CONFIRMED && (

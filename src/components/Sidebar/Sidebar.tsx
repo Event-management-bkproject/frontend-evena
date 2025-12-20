@@ -40,11 +40,18 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
   const { logout, auth } = useAuth();
 
   const menuItems = [
-    { text: 'Dashboard', path: '/dashboard/organizer', icon: <DashboardIcon /> },
-    { text: 'Organizations', path: '/dashboard/organizer/organizations', icon: <BusinessIcon /> },
-    { text: 'Events', path: '/dashboard/organizer/events', icon: <EventIcon /> },
+    { text: 'Dashboard', path: '/dashboard/organizer', icon: <DashboardIcon />, exact: true },
+    { text: 'Organizations', path: '/dashboard/organizer/organizations', icon: <BusinessIcon />, exact: false },
+    { text: 'Events', path: '/dashboard/organizer/events', icon: <EventIcon />, exact: false },
     // { text: 'Venues', path: '/venues', icon: <PlaceIcon /> },
   ];
+
+  const isActiveRoute = (itemPath: string, exact: boolean = false) => {
+    if (exact) {
+      return pathname === itemPath;
+    }
+    return pathname.startsWith(itemPath);
+  };
 
   const handleMenuItemClick = (path: string) => {
     router.push(path);
@@ -90,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
               <Image
                 src="/logoOrg.svg"
-                alt="Logo"
+                alt="F-Anizer Logo"
                 width={40}
                 height={40}
                 priority
@@ -114,60 +121,63 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
               </Typography>
             </Box>
             <List>
-              {menuItems.map((item) => (
-                <Box
-                  key={item.text}
-                  sx={{
-                    position: 'relative',
-                    mb: 0.5,
-                  }}
-                >
-                  {/* Small rectangle for selected item */}
-                  {pathname === item.path && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        left: 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        width: 4,
-                        height: 30,
-                        backgroundColor: '#F36BF9',
-                        borderRadius: '20px',
-                        zIndex: 1,
-                      }}
-                    />
-                  )}
-                  <ListItemButton
-                    selected={pathname === item.path}
-                    onClick={() => handleMenuItemClick(item.path)}
+              {menuItems.map((item) => {
+                const isActive = isActiveRoute(item.path, item.exact);
+                return (
+                  <Box
+                    key={item.text}
                     sx={{
-                      borderRadius: 1,
-                      color: pathname === item.path ? '#F36BF9' : '#2A3363', // Text colors
-                      '&:hover': {
-                        backgroundColor: 'rgba(243, 107, 249, 0.1)',
-                      },
-                      '&.Mui-selected': {
-                        color: '#F36BF9',
-                        backgroundColor: 'transparent',
+                      position: 'relative',
+                      mb: 0.5,
+                    }}
+                  >
+                    {/* Small rectangle for selected item */}
+                    {isActive && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          left: 0,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 4,
+                          height: 30,
+                          backgroundColor: '#F36BF9',
+                          borderRadius: '20px',
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
+                    <ListItemButton
+                      selected={isActive}
+                      onClick={() => handleMenuItemClick(item.path)}
+                      sx={{
+                        borderRadius: 1,
+                        color: isActive ? '#F36BF9' : '#2A3363', // Text colors
                         '&:hover': {
                           backgroundColor: 'rgba(243, 107, 249, 0.1)',
                         },
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 40,
-                        color: pathname === item.path ? '#F36BF9' : '#2A3363',
+                        '&.Mui-selected': {
+                          color: '#F36BF9',
+                          backgroundColor: 'transparent',
+                          '&:hover': {
+                            backgroundColor: 'rgba(243, 107, 249, 0.1)',
+                          },
+                        },
                       }}
                     >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.text} />
-                  </ListItemButton>
-                </Box>
-              ))}
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 40,
+                          color: isActive ? '#F36BF9' : '#2A3363',
+                        }}
+                      >
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} />
+                    </ListItemButton>
+                  </Box>
+                );
+              })}
             </List>
           </Box>
         </Box>
@@ -230,61 +240,64 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
               />
             </Box>
             <List>
-              {menuItems.map((item) => (
-                <Box
-                  key={item.text}
-                  sx={{
-                    position: 'relative',
-                    mb: 0.5,
-                  }}
-                >
-                  {/* Small rectangle for selected item */}
-                  {pathname === item.path && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        left: 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        width: 4,
-                        height: 30,
-                        backgroundColor: '#F36BF9',
-                        borderTopRightRadius: 10,
-                        borderBottomRightRadius: 10,
-                        zIndex: 1,
-                      }}
-                    />
-                  )}
-                  <ListItemButton
-                    selected={pathname === item.path}
-                    onClick={() => handleMenuItemClick(item.path)}
+              {menuItems.map((item) => {
+                const isActive = isActiveRoute(item.path, item.exact);
+                return (
+                  <Box
+                    key={item.text}
                     sx={{
-                      borderRadius: 1,
-                      color: pathname === item.path ? '#F36BF9' : '#2A3363', // Text colors
-                      '&:hover': {
-                        backgroundColor: 'rgba(243, 107, 249, 0.1)',
-                      },
-                      '&.Mui-selected': {
-                        color: '#F36BF9',
-                        backgroundColor: 'transparent',
+                      position: 'relative',
+                      mb: 0.5,
+                    }}
+                  >
+                    {/* Small rectangle for selected item */}
+                    {isActive && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          left: 0,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 4,
+                          height: 30,
+                          backgroundColor: '#F36BF9',
+                          borderTopRightRadius: 10,
+                          borderBottomRightRadius: 10,
+                          zIndex: 1,
+                        }}
+                      />
+                    )}
+                    <ListItemButton
+                      selected={isActive}
+                      onClick={() => handleMenuItemClick(item.path)}
+                      sx={{
+                        borderRadius: 1,
+                        color: isActive ? '#F36BF9' : '#2A3363', // Text colors
                         '&:hover': {
                           backgroundColor: 'rgba(243, 107, 249, 0.1)',
                         },
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 40,
-                        color: pathname === item.path ? '#F36BF9' : '#2A3363',
+                        '&.Mui-selected': {
+                          color: '#F36BF9',
+                          backgroundColor: 'transparent',
+                          '&:hover': {
+                            backgroundColor: 'rgba(243, 107, 249, 0.1)',
+                          },
+                        },
                       }}
                     >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText primary={item.text} />
-                  </ListItemButton>
-                </Box>
-              ))}
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 40,
+                          color: isActive ? '#F36BF9' : '#2A3363',
+                        }}
+                      >
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText primary={item.text} />
+                    </ListItemButton>
+                  </Box>
+                );
+              })}
             </List>
           </Box>
         </Box>

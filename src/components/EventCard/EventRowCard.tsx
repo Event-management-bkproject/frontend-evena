@@ -93,10 +93,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
     }
     // EventResponse có ticketTypes array - tính tổng available
     if ('ticketTypes' in event && event.ticketTypes) {
-      return (event as EventResponse).ticketTypes.reduce(
-        (total, ticketType) => total + ticketType.available,
-        0
-      );
+      return (event as EventResponse).ticketTypes.reduce((total, ticketType) => total + ticketType.available, 0);
     }
     return 0;
   };
@@ -349,7 +346,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
                     fontSize: '24px',
                   }}
                 >
-                  {minPrice > 0 ? `$${minPrice.toFixed(2)}` : 'TBA'}
+                  {minPrice > 0 ? `$${minPrice.toFixed(2)}` : 'N/A'}
                 </Typography>
               </Box>
             </Box>

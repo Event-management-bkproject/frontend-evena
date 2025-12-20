@@ -139,6 +139,17 @@ export interface OrderListResponse {
   ticketCount: number;
   createdAt: string;
   updatedAt: string;
+  items?: Array<{
+    id: number;
+    ticketTypeId: number;
+    ticketTypeName: string;
+    eventTitle: string;
+    unitPrice: number;
+    quantity: number;
+    subtotal: number;
+  }>;
+  userEmail?: string;
+  userName?: string;
 }
 
 // ============= UI STATE =============
