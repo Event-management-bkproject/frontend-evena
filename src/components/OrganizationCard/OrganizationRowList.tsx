@@ -10,6 +10,7 @@ interface OrganizationRowListProps {
   onEdit: (organization: OrganizationResponse) => void;
   onDelete: (organization: OrganizationResponse) => void;
   onManageMembers: (organization: OrganizationResponse) => void;
+  onClick?: (organization: OrganizationResponse) => void;
   loading?: boolean;
 }
 
@@ -18,6 +19,7 @@ export function OrganizationRowList({
   onEdit,
   onDelete,
   onManageMembers,
+  onClick,
   loading = false,
 }: OrganizationRowListProps) {
   if (loading) {
@@ -69,6 +71,7 @@ export function OrganizationRowList({
           onEdit={onEdit}
           onDelete={onDelete}
           onManageMembers={onManageMembers}
+          onClick={onClick}
         />
       ))}
     </Box>

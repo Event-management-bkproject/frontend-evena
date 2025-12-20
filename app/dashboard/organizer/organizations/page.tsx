@@ -9,6 +9,7 @@ import {
   useDeleteOrganizationMutation,
 } from '@/src/stores/services/OrganizerApi';
 import { useInviteMemberMutation } from '@/src/stores/services';
+import { useRouter } from 'next/navigation';
 import React, { useState, useMemo } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import { Box } from '@mui/material';
@@ -30,6 +31,7 @@ import { OrganizationRole } from '@/src/stores/types/enums';
 
 export default function OrganizationsPage() {
   const { auth } = useAuth();
+  const router = useRouter();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -118,7 +120,14 @@ export default function OrganizationsPage() {
       setSelectedOrganization(null);
       refetchOrganizers();
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || 'Failed to delete organization');
+      // console.error('Delete organization error:', error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.data?.error ||
+        error?.message ||
+        'Failed to delete organization. It may have active events or members.';
+      showErrorMessage(errorMessage);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -137,6 +146,10 @@ export default function OrganizationsPage() {
     setMemberModalOpen(true);
   };
 
+  const handleOrganizationClick = (organization: OrganizationResponse) => {
+    router.push(`/dashboard/organizer/organizations/${organization.id}`);
+  };
+
   const handleInviteMember = async (email: string, role: OrganizationRole) => {
     if (!selectedOrganization) {
       console.error('No organization selected');
@@ -145,7 +158,7 @@ export default function OrganizationsPage() {
 
     // Client-side validation: prevent inviting yourself
     if (auth?.user?.email && email.toLowerCase() === auth.user.email.toLowerCase()) {
-      showErrorMessage('You cannot invite yourself. Please enter a different organizer\'s email address.');
+      showErrorMessage("You cannot invite yourself. Please enter a different organizer's email address.");
       throw new Error('Cannot invite yourself');
     }
 
@@ -228,6 +241,7 @@ export default function OrganizationsPage() {
               onEdit={handleOrganizationEdit}
               onDelete={handleOrganizationDelete}
               onManageMembers={handleManageMembers}
+              onClick={handleOrganizationClick}
               loading={isLoading}
             />
           </Box>

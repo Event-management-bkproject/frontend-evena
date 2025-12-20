@@ -10,16 +10,19 @@ interface OrganizationRowCardProps {
   onEdit: (organization: OrganizationResponse) => void;
   onDelete: (organization: OrganizationResponse) => void;
   onManageMembers: (organization: OrganizationResponse) => void;
+  onClick?: (organization: OrganizationResponse) => void;
 }
 
-export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMembers }: OrganizationRowCardProps) {
+export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMembers, onClick }: OrganizationRowCardProps) {
   return (
     <Card
+      onClick={() => onClick?.(organization)}
       sx={{
         mb: 2,
         borderRadius: '16px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
         transition: 'all 0.3s ease',
+        cursor: onClick ? 'pointer' : 'default',
         '&:hover': {
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
           transform: 'translateY(-2px)',
@@ -185,7 +188,10 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
           {/* Actions */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <IconButton
-              onClick={() => onManageMembers(organization)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onManageMembers(organization);
+              }}
               sx={{
                 color: '#f36bf9',
                 backgroundColor: '#FFF4FF',
@@ -198,7 +204,10 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
               <People />
             </IconButton>
             <IconButton
-              onClick={() => onEdit(organization)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(organization);
+              }}
               sx={{
                 color: '#F36BF9',
                 padding: '8px',
@@ -211,7 +220,10 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
               <Box component="i" className="fa-regular fa-pen-to-square" sx={{ fontSize: '20px' }} />
             </IconButton>
             <IconButton
-              onClick={() => onDelete(organization)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(organization);
+              }}
               sx={{
                 color: '#36437C',
                 padding: '8px',

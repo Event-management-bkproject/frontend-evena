@@ -34,7 +34,7 @@ class FileLogger {
         // Create object stores for different flows
         const flows = ['auth', 'event', 'order', 'payment', 'api', 'general'];
 
-        flows.forEach(flow => {
+        flows.forEach((flow) => {
           if (!db.objectStoreNames.contains(flow)) {
             const store = db.createObjectStore(flow, { keyPath: 'id', autoIncrement: true });
             store.createIndex('timestamp', 'timestamp', { unique: false });
@@ -68,11 +68,15 @@ class FileLogger {
 
       // Also log to console in development
       if (process.env.NODE_ENV === 'development') {
-        const consoleMethod = level === 'error' ? console.error :
-                            level === 'warn' ? console.warn :
-                            level === 'debug' ? console.debug :
-                            console.log;
-        consoleMethod(`[${flow.toUpperCase()}]`, message, data || '');
+        const consoleMethod =
+          level === 'error'
+            ? console.error
+            : level === 'warn'
+            ? console.warn
+            : level === 'debug'
+            ? console.debug
+            : console.log;
+        // consoleMethod(`[${flow.toUpperCase()}]`, message, data || '');
       }
 
       const transaction = this.db.transaction([flow], 'readwrite');
@@ -148,9 +152,14 @@ class FileLogger {
 
   async downloadLogs(flow: string) {
     const logs = await this.getLogs(flow, 1000);
-    const logText = logs.map(log =>
-      `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message}${log.data ? '\n' + JSON.stringify(log.data, null, 2) : ''}`
-    ).join('\n\n');
+    const logText = logs
+      .map(
+        (log) =>
+          `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message}${
+            log.data ? '\n' + JSON.stringify(log.data, null, 2) : ''
+          }`,
+      )
+      .join('\n\n');
 
     const blob = new Blob([logText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
