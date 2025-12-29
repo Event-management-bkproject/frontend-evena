@@ -5,6 +5,8 @@ import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import dynamic from 'next/dynamic';
 import type { Map as LeafletMap } from 'leaflet';
+import SnackbarNotification from '../SnackbarNotification';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 // Import MapContainer wrapper để tránh SSR issues
 const MapContainerWrapper = dynamic(() => import('@/src/components/LeafletMapPicker/MapContainerWrapper'), {
@@ -25,6 +27,7 @@ export default function LeafletMapPicker({ lat, lng, onLocationSelect, height = 
     lat && lng ? [lat, lng] : [10.762622, 106.660172] // Default: Ho Chi Minh City
   );
   const mapRef = useRef<LeafletMap | null>(null);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const handleLocationSelect = (lat: number, lng: number, address?: string) => {
     setPosition([lat, lng]);
@@ -56,11 +59,11 @@ export default function LeafletMapPicker({ lat, lng, onLocationSelect, height = 
         },
         (error) => {
           console.error('Error getting location:', error);
-          alert('Could not get your location. Please allow location access.');
+          showSnackbar('Could not get your location. Please allow location access.', 'error');
         }
       );
     } else {
-      alert('Geolocation is not supported by your browser.');
+      showSnackbar('Geolocation is not supported by your browser.', 'error');
     }
   };
 
@@ -129,6 +132,14 @@ export default function LeafletMapPicker({ lat, lng, onLocationSelect, height = 
           </Typography>
         </Box>
       )}
+
+      {/* Snackbar for notifications */}
+      <SnackbarNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnackbar}
+      />
     </Box>
   );
 }

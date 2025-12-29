@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Typography } from '@mui/material';
-import { Search, Add } from '@mui/icons-material';
+import { Box, Button, TextField, InputAdornment, Typography, IconButton, Badge } from '@mui/material';
+import { Search, Add, Notifications } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
+import { useGetPendingInvitationsQuery } from '@/src/stores/services/OrganizationMemberApi';
+import InvitationNotificationModal from '../InvitationNotificationModal';
 
 interface OrganizationFiltersProps {
   onSearch: (keyword: string) => void;
@@ -19,6 +21,11 @@ export default function OrganizationFilters({
   loading = false,
 }: OrganizationFiltersProps) {
   const [searchValue, setSearchValue] = useState('');
+  const [invitationModalOpen, setInvitationModalOpen] = useState(false);
+
+  // Fetch pending invitations count
+  const { data: invitationsData } = useGetPendingInvitationsQuery();
+  const pendingCount = invitationsData?.data?.length || 0;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -65,6 +72,24 @@ export default function OrganizationFilters({
           }}
         />
 
+        {/* Invitation Notification Button */}
+        <IconButton
+          onClick={() => setInvitationModalOpen(true)}
+          sx={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E0E0E0',
+            borderRadius: '12px',
+            padding: '12px',
+            '&:hover': {
+              backgroundColor: '#F5F5F5',
+            },
+          }}
+        >
+          <Badge badgeContent={pendingCount} color="error">
+            <Notifications sx={{ color: '#888' }} />
+          </Badge>
+        </IconButton>
+
         {/* Create Organization Button */}
         <Button
           variant="contained"
@@ -90,6 +115,9 @@ export default function OrganizationFilters({
           Create Organization
         </Button>
       </Box>
+
+      {/* Invitation Modal */}
+      <InvitationNotificationModal open={invitationModalOpen} onClose={() => setInvitationModalOpen(false)} />
 
       {/* Stats Row */}
       <Box

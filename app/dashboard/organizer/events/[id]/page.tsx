@@ -172,13 +172,13 @@ export default function EventDetailsPage() {
               flexDirection: { xs: 'column', lg: 'row' },
             }}
           >
-            {/* Left Side - Event Content (70%) */}
-            <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 calc(70% - 12px)' } }}>
+            {/* Left Side - Event Content */}
+            <Box sx={{ flex: { xs: '1 1 100%', lg: 1 } }}>
               <EventContent event={event} onRefresh={refetch} onEdit={handleEdit} onDelete={handleDelete} />
             </Box>
 
-            {/* Right Side - Ticket Type Management (30%) */}
-            <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 calc(30% - 12px)' } }}>
+            {/* Right Side - Ticket Type Management - Fixed Width */}
+            <Box sx={{ width: { xs: '100%', lg: '550px' }, flexShrink: 0 }}>
               <TicketTypeManagement eventId={eventId} event={event} onEventUpdate={refetch} />
             </Box>
           </Box>

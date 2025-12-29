@@ -74,109 +74,114 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <Box
-      sx={{
-        backgroundColor: '#FAFAFA',
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* Header */}
-      <Header cartItemCount={0} />
+    <>
+      {/* <SSESync /> */}
+      <Box
+        sx={{
+          backgroundColor: '#FAFAFA',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Header */}
+        <Header cartItemCount={0} />
 
-      {/* Main Content - flex: 1 pushes footer to bottom */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          {/* Page Title */}
-          <Box sx={{ mb: 4 }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                color: '#2A3363',
-                mb: 1,
-              }}
-            >
-              Discover Events
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#666' }}>
-              Find and book tickets for the best events happening around you
-            </Typography>
-          </Box>
-
-          {/* Search Bar */}
-          <Box sx={{ mb: 4 }}>
-            <EventSearchBar onSearch={handleSearch} />
-          </Box>
-
-          {/* Recommended/Hot Events Section */}
-          <Box sx={{ mb: 6 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <LocalFireDepartment sx={{ color: '#F36BF9', fontSize: 32 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363' }}>
-                Hot Events
-              </Typography>
-            </Box>
-
-            {hotEvents.length === 0 ? (
-              <Alert severity="info">No hot events available at the moment. Check back later!</Alert>
-            ) : (
-              <Grid container spacing={3}>
-                {hotEvents.map((event) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
-                    <CustomerEventCard event={event} />
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-
-          {/* Filters for Upcoming Events */}
-          <Box sx={{ mb: 3 }}>
-            <EventCategoryFilter
-              categories={categories}
-              onCategoryChange={handleCategoryChange}
-              onTimePeriodChange={handleTimePeriodChange}
-            />
-          </Box>
-
-          {/* Upcoming Events Section */}
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <Event sx={{ color: '#36437C', fontSize: 32 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363' }}>
-                Upcoming Events
-              </Typography>
+        {/* Main Content - flex: 1 pushes footer to bottom */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Container maxWidth="xl" sx={{ py: 4 }}>
+            {/* Page Title */}
+            <Box sx={{ mb: 4 }}>
               <Typography
-                variant="body2"
+                variant="h3"
                 sx={{
-                  color: '#999',
-                  ml: 1,
-                  mt: 0.5,
+                  fontWeight: 700,
+                  color: '#2A3363',
+                  mb: 1,
                 }}
               >
-                ({upcomingEvents.length} events)
+                Discover Events
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#666' }}>
+                Find and book tickets for the best events happening around you
               </Typography>
             </Box>
 
-            {upcomingEvents.length === 0 ? (
-              <Alert severity="info">No events found matching your filters. Try adjusting your search criteria.</Alert>
-            ) : (
-              <Grid container spacing={3}>
-                {upcomingEvents.map((event) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
-                    <CustomerEventCard event={event} />
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        </Container>
-      </Box>
+            {/* Search Bar */}
+            <Box sx={{ mb: 4 }}>
+              <EventSearchBar onSearch={handleSearch} />
+            </Box>
 
-      {/* Footer - Sticky at bottom */}
-      <Footer />
-    </Box>
+            {/* Recommended/Hot Events Section */}
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <LocalFireDepartment sx={{ color: '#F36BF9', fontSize: 32 }} />
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363' }}>
+                  Hot Events
+                </Typography>
+              </Box>
+
+              {hotEvents.length === 0 ? (
+                <Alert severity="info">No hot events available at the moment. Check back later!</Alert>
+              ) : (
+                <Grid container spacing={3}>
+                  {hotEvents.map((event) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
+                      <CustomerEventCard event={event} />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+
+            {/* Filters for Upcoming Events */}
+            <Box sx={{ mb: 3 }}>
+              <EventCategoryFilter
+                categories={categories}
+                onCategoryChange={handleCategoryChange}
+                onTimePeriodChange={handleTimePeriodChange}
+              />
+            </Box>
+
+            {/* Upcoming Events Section */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <Event sx={{ color: '#36437C', fontSize: 32 }} />
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363' }}>
+                  Upcoming Events
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#999',
+                    ml: 1,
+                    mt: 0.5,
+                  }}
+                >
+                  ({upcomingEvents.length} events)
+                </Typography>
+              </Box>
+
+              {upcomingEvents.length === 0 ? (
+                <Alert severity="info">
+                  No events found matching your filters. Try adjusting your search criteria.
+                </Alert>
+              ) : (
+                <Grid container spacing={3}>
+                  {upcomingEvents.map((event) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
+                      <CustomerEventCard event={event} />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
+          </Container>
+        </Box>
+
+        {/* Footer - Sticky at bottom */}
+        <Footer />
+      </Box>
+    </>
   );
 }

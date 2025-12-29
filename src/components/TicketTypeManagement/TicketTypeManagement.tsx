@@ -45,6 +45,8 @@ import {
 } from '@/src/stores/services';
 import { EventResponse, TicketTypeResponse, TicketTypeStatus } from '@/src/stores/types';
 import TicketTypeFormModal from '../TicketTypeFormModal';
+import SnackbarNotification from '../SnackbarNotification';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 interface TicketTypeManagementProps {
   eventId: string;
@@ -58,6 +60,7 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
   const [selectedTicketType, setSelectedTicketType] = useState<TicketTypeResponse | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ticketTypeToDelete, setTicketTypeToDelete] = useState<TicketTypeResponse | null>(null);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const { data: ticketTypesResponse, isLoading, error, refetch } = useGetTicketTypesQuery(eventId, {
     refetchOnMountOrArgChange: 10, // Refetch if data is older than 10 seconds
@@ -98,7 +101,7 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
       }
     } catch (error: any) {
       console.error('Error deleting ticket type:', error);
-      alert(error?.data?.message || 'Failed to delete ticket type');
+      showSnackbar(error?.data?.message || 'Failed to delete ticket type', 'error');
     }
   };
 
@@ -215,18 +218,16 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                 borderRadius: '12px',
                 boxShadow: 'none',
                 border: '1px solid #E0E0E0',
-                maxHeight: 600,
-                overflow: 'auto',
               }}
             >
-              <Table stickyHeader>
+              <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }}>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-                    <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Price</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Tickets</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    <TableCell sx={{ fontWeight: 600, width: '25%' }}>Name</TableCell>
+                    <TableCell sx={{ fontWeight: 600, width: '20%' }}>Price</TableCell>
+                    <TableCell sx={{ fontWeight: 600, width: '25%' }}>Tickets</TableCell>
+                    <TableCell sx={{ fontWeight: 600, width: '15%' }}>Status</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 600, width: '15%' }}>
                       Actions
                     </TableCell>
                   </TableRow>
@@ -237,19 +238,27 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
 
                     return (
                       <TableRow key={ticketType.id} hover>
-                        <TableCell>
+                        <TableCell sx={{ overflow: 'hidden' }}>
                           <Box>
-                            <Typography variant="body2" fontWeight={500}>
+                            <Typography
+                              variant="body2"
+                              fontWeight={500}
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
                               {ticketType.name}
                             </Typography>
                             {ticketType.earlyBird && (
                               <Chip
-                                label={`-${ticketType.earlyBirdDiscount}% Early Bird`}
+                                label={`-${ticketType.earlyBirdDiscount}%`}
                                 size="small"
                                 sx={{
                                   mt: 0.5,
                                   height: 20,
-                                  fontSize: '0.7rem',
+                                  fontSize: '0.65rem',
                                   backgroundColor: '#FFE0B2',
                                   color: '#E65100',
                                 }}
@@ -257,21 +266,30 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                             )}
                             {!ticketType.visible && (
                               <Chip
-                                icon={<VisibilityOff fontSize="small" />}
+                                icon={<VisibilityOff sx={{ fontSize: '0.75rem' }} />}
                                 label="Hidden"
                                 size="small"
                                 sx={{
                                   mt: 0.5,
                                   ml: 0.5,
                                   height: 20,
-                                  fontSize: '0.7rem',
+                                  fontSize: '0.65rem',
                                 }}
                               />
                             )}
                           </Box>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={600} color="#f36bf9">
+                        <TableCell sx={{ overflow: 'hidden' }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            color="#f36bf9"
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
                             {formatPrice(ticketType.price)}
                           </Typography>
                         </TableCell>
@@ -405,6 +423,14 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <SnackbarNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnackbar}
+      />
     </>
   );
 };

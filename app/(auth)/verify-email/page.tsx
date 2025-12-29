@@ -1,7 +1,7 @@
 // app/verify-email/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Box, Typography, Paper, Button, CircularProgress, Alert } from '@mui/material';
 import Image from 'next/image';
@@ -13,8 +13,14 @@ export default function VerifyEmailPage() {
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const hasVerified = useRef(false);
 
   useEffect(() => {
+    // Prevent double verification (React StrictMode calls useEffect twice)
+    if (hasVerified.current) {
+      return;
+    }
+
     const verifyEmail = async () => {
       if (!token) {
         setStatus('error');
@@ -22,20 +28,22 @@ export default function VerifyEmailPage() {
         return;
       }
 
+      hasVerified.current = true;
+
       try {
-        const res = await fetch(`/api/auth/verify-email`, {
+        const res = await fetch(`http://localhost:8080/api/auth/verify-email?token=${token}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
 
         const data = await res.json();
 
-        if (res.ok) {
+        if (res.ok && data.success) {
           setStatus('success');
           setMessage(data.message || 'Xác thực email thành công!');
         } else {
           setStatus('error');
-          setMessage(data.error || 'Xác thực email thất bại');
+          setMessage(data.message || 'Xác thực email thất bại');
         }
       } catch (error) {
         setStatus('error');

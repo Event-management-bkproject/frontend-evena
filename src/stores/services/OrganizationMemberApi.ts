@@ -11,8 +11,17 @@ import {
 export const OrganizationMemberAPI = createApi({
   reducerPath: 'OrganizationMemberAPI',
   baseQuery: baseQueryWithReAuth,
-  tagTypes: ['OrganizationMember'],
+  tagTypes: ['OrganizationMember', 'Invitation', 'Organizer'],
   endpoints: (builder) => ({
+    // Get pending invitations for current user
+    getPendingInvitations: builder.query<ApiResponse<OrganizationMemberResponse[]>, void>({
+      query: () => ({
+        url: '/invitations/pending',
+        method: 'GET',
+      }),
+      providesTags: ['Invitation'],
+    }),
+
     // Invite member to organization
     inviteMember: builder.mutation<
       ApiResponse<OrganizationMemberResponse>,
@@ -29,31 +38,22 @@ export const OrganizationMemberAPI = createApi({
       ],
     }),
 
-    // Accept invitation
-    acceptInvitation: builder.mutation<
-      ApiResponse<OrganizationMemberResponse>,
-      { organizationId: number; memberId: number }
-    >({
-      query: ({ organizationId, memberId }) => ({
-        url: `/organizations/${organizationId}/members/${memberId}/accept`,
+    // Accept invitation (new simplified endpoint)
+    acceptInvitation: builder.mutation<ApiResponse<OrganizationMemberResponse>, number>({
+      query: (invitationId) => ({
+        url: `/invitations/${invitationId}/accept`,
         method: 'POST',
       }),
-      invalidatesTags: (result, error, { organizationId }) => [
-        { type: 'OrganizationMember', id: organizationId },
-        'OrganizationMember',
-      ],
+      invalidatesTags: ['Invitation', 'OrganizationMember', 'Organizer'],
     }),
 
-    // Reject invitation
-    rejectInvitation: builder.mutation<ApiResponse<string>, { organizationId: number; memberId: number }>({
-      query: ({ organizationId, memberId }) => ({
-        url: `/organizations/${organizationId}/members/${memberId}/reject`,
+    // Reject invitation (new simplified endpoint)
+    rejectInvitation: builder.mutation<ApiResponse<string>, number>({
+      query: (invitationId) => ({
+        url: `/invitations/${invitationId}/reject`,
         method: 'POST',
       }),
-      invalidatesTags: (result, error, { organizationId }) => [
-        { type: 'OrganizationMember', id: organizationId },
-        'OrganizationMember',
-      ],
+      invalidatesTags: ['Invitation', 'OrganizationMember'],
     }),
 
     // Update member role
@@ -109,6 +109,7 @@ export const OrganizationMemberAPI = createApi({
 });
 
 export const {
+  useGetPendingInvitationsQuery,
   useInviteMemberMutation,
   useAcceptInvitationMutation,
   useRejectInvitationMutation,

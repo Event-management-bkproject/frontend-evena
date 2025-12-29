@@ -56,6 +56,8 @@ export default function OrganizationsPage() {
     refetch: refetchOrganizers,
   } = useGetMyOrganizationsQuery(undefined, {
     skip: !auth.accessToken,
+    // refetchOnMountOrArgChange: true, // Auto-refetch when cache invalidated
+    // refetchOnFocus: true, // Auto-refetch when window regains focus
   });
 
   // Mutations
@@ -207,6 +209,7 @@ export default function OrganizationsPage() {
 
   return (
     <ProtectedContent>
+      {/* <SSESync /> */}
       <LayoutWithSidebar currentPage="organizations">
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)' }}>
           {/* Header */}

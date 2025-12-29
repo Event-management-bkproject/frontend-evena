@@ -23,8 +23,8 @@ export default function AuthInitializer() {
 
       // Check if we have token in localStorage (from redux-persist)
       // If yes, skip loading screen - user is already logged in
-      const hasPersistedToken = typeof window !== 'undefined' &&
-        (auth.accessToken || localStorage.getItem('accessToken'));
+      const hasPersistedToken =
+        typeof window !== 'undefined' && (auth.accessToken || localStorage.getItem('accessToken'));
 
       const startTime = Date.now();
       // Only show loading screen for minimum time if no persisted token (first time login)
@@ -103,8 +103,7 @@ export default function AuthInitializer() {
   // Only show loading page if:
   // 1. Not initialized yet AND
   // 2. No persisted token (first time login scenario)
-  const hasPersistedToken = typeof window !== 'undefined' &&
-    (auth.accessToken || localStorage.getItem('accessToken'));
+  const hasPersistedToken = typeof window !== 'undefined' && (auth.accessToken || localStorage.getItem('accessToken'));
 
   if (!auth.isInitialized && !hasPersistedToken) {
     return <AuthLoadingPage message="Verifying authentication..." />;

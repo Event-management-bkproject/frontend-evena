@@ -52,6 +52,7 @@ function EventsPage() {
 
   return (
     <ProtectedContent>
+      {/* <SSESync /> */}
       <LayoutWithSidebar currentPage="events">
         <EventsManagement
           initialCategories={categoriesData}

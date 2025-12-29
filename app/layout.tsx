@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import AuthInitializer from '@/src/components/AuthInitializer';
 import { Providers } from './providers';
 import { QueryProvider } from '@/src/providers/QueryProvider';
+import { SSEProvider } from '@/src/providers/SSEProvider';
 
 export const metadata: Metadata = {
   title: {
@@ -57,7 +58,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <head>
         {/* Font Awesome CSS */}
         <link
@@ -68,11 +69,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           referrerPolicy="no-referrer"
         />
       </head>
-      <body style={{ margin: 0, padding: 0 }}>
+      <body style={{ margin: 0, padding: 0 }} suppressHydrationWarning>
         <QueryProvider>
           <Providers>
+            {/* <SSEProvider> */}
             <AuthInitializer />
             {children}
+            {/* </SSEProvider> */}
           </Providers>
         </QueryProvider>
       </body>

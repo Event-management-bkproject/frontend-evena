@@ -21,12 +21,17 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
+  Alert,
 } from '@mui/material';
-import { Delete, PersonAdd, CheckCircle, Cancel } from '@mui/icons-material';
+import { Delete, PersonAdd, CheckCircle, Cancel, Warning } from '@mui/icons-material';
 import BaseModal from '../BaseModal';
 import { useGetOrganizationMembersQuery, useRemoveMemberMutation, useUpdateMemberRoleMutation } from '@/src/stores/services';
 import { OrganizationResponse } from '@/src/stores/types';
 import { OrganizationRole } from '@/src/stores/types/enums';
+import { useAppSelector } from '@/src/stores/hooks';
+import SnackbarNotification from '../SnackbarNotification';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 interface MemberManagementModalProps {
   open: boolean;
@@ -45,6 +50,10 @@ export default function MemberManagementModal({
 }: MemberManagementModalProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
+  // Get current user from Redux store
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   // Fetch members
   const {
@@ -60,6 +69,9 @@ export default function MemberManagementModal({
 
   const members = membersResponse?.data || [];
 
+  // Check if current user is the owner of the organization
+  const isOwnerOfOrganization = currentUser?.id === organization.owner.id;
+
   const handleRoleChange = async (memberId: number, newRole: OrganizationRole) => {
     try {
       await updateMemberRole({
@@ -71,7 +83,7 @@ export default function MemberManagementModal({
       onSuccess?.();
     } catch (error: any) {
       console.error('Error updating member role:', error);
-      alert(error?.data?.message || 'Failed to update member role');
+      showSnackbar(error?.data?.message || 'Failed to update member role', 'error');
     }
   };
 
@@ -89,13 +101,21 @@ export default function MemberManagementModal({
       onSuccess?.();
     } catch (error: any) {
       console.error('Error removing member:', error);
-      alert(error?.data?.message || 'Failed to remove member');
+      showSnackbar(error?.data?.message || 'Failed to remove member', 'error');
     }
   };
 
   const openDeleteDialog = (memberId: number) => {
     setSelectedMemberId(memberId);
     setDeleteDialogOpen(true);
+  };
+
+  const handleInviteMemberClick = () => {
+    if (!organization.verified) {
+      showSnackbar('Organization must be verified by admin before inviting members. Please wait for admin verification.', 'warning');
+      return;
+    }
+    onInviteMember();
   };
 
   const getRoleColor = (role: OrganizationRole) => {
@@ -119,28 +139,42 @@ export default function MemberManagementModal({
     <>
       <BaseModal open={open} onClose={onClose} title={`Team Members - ${organization.name}`} maxWidth="lg">
         <Box>
+          {/* Verification Warning */}
+          {!organization.verified && (
+            <Alert severity="warning" icon={<Warning />} sx={{ mb: 3 }}>
+              This organization is pending admin verification. You cannot invite members until it is verified.
+            </Alert>
+          )}
+
           {/* Header with Invite Button */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="body1" color="text.secondary">
-              Manage your team members and their roles
+              {isOwnerOfOrganization ? 'Manage your team members and their roles' : 'View team members'}
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<PersonAdd />}
-              onClick={onInviteMember}
-              sx={{
-                backgroundColor: '#f36bf9',
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 600,
-                '&:hover': {
-                  backgroundColor: '#e55ae0',
-                },
-              }}
-            >
-              Invite Member
-            </Button>
+            {isOwnerOfOrganization && (
+              <Button
+                variant="contained"
+                startIcon={<PersonAdd />}
+                onClick={handleInviteMemberClick}
+                disabled={!organization.verified}
+                sx={{
+                  backgroundColor: '#f36bf9',
+                  borderRadius: '10px',
+                  textTransform: 'none',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: '#e55ae0',
+                  },
+                  '&:disabled': {
+                    backgroundColor: '#cccccc',
+                    color: '#888888',
+                  },
+                }}
+              >
+                Invite Member
+              </Button>
+            )}
           </Box>
 
           {/* Members Table */}
@@ -175,15 +209,18 @@ export default function MemberManagementModal({
                     <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600 }}>
-                      Actions
-                    </TableCell>
+                    {isOwnerOfOrganization && (
+                      <TableCell align="center" sx={{ fontWeight: 600 }}>
+                        Actions
+                      </TableCell>
+                    )}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {members.map((member) => {
                     const roleColors = getRoleColor(member.role);
                     const isOwner = member.role === OrganizationRole.OWNER;
+                    const isCurrentUser = currentUser?.id === member.userId;
 
                     return (
                       <TableRow key={member.id} hover>
@@ -199,16 +236,18 @@ export default function MemberManagementModal({
                           <Typography variant="body2">{member.email}</Typography>
                         </TableCell>
                         <TableCell>
-                          {isOwner ? (
-                            <Chip
-                              label={member.role}
-                              size="small"
-                              sx={{
-                                backgroundColor: roleColors.bg,
-                                color: roleColors.color,
-                                fontWeight: 600,
-                              }}
-                            />
+                          {isOwner || isCurrentUser || !isOwnerOfOrganization ? (
+                            <Tooltip title={isCurrentUser ? "You cannot change your own role" : !isOwnerOfOrganization ? "Only owner can change roles" : ""} arrow>
+                              <Chip
+                                label={member.role}
+                                size="small"
+                                sx={{
+                                  backgroundColor: roleColors.bg,
+                                  color: roleColors.color,
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </Tooltip>
                           ) : (
                             <Select
                               value={member.role}
@@ -258,23 +297,25 @@ export default function MemberManagementModal({
                             />
                           )}
                         </TableCell>
-                        <TableCell align="center">
-                          {!isOwner && (
-                            <IconButton
-                              onClick={() => openDeleteDialog(member.id)}
-                              size="small"
-                              disabled={removing}
-                              sx={{
-                                color: '#F44336',
-                                '&:hover': {
-                                  backgroundColor: '#FFEBEE',
-                                },
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          )}
-                        </TableCell>
+                        {isOwnerOfOrganization && (
+                          <TableCell align="center">
+                            {!isOwner && (
+                              <IconButton
+                                onClick={() => openDeleteDialog(member.id)}
+                                size="small"
+                                disabled={removing}
+                                sx={{
+                                  color: '#F44336',
+                                  '&:hover': {
+                                    backgroundColor: '#FFEBEE',
+                                  },
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            )}
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
@@ -300,6 +341,14 @@ export default function MemberManagementModal({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <SnackbarNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnackbar}
+      />
     </>
   );
 }

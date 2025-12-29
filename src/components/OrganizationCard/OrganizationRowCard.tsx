@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { Box, Card, CardContent, Typography, IconButton, Chip, Avatar, AvatarGroup, Tooltip } from '@mui/material';
-import { People, Verified, Event, Group } from '@mui/icons-material';
+import { People, Verified, Event, Group, Edit, Delete } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
+import { useAppSelector } from '@/src/stores/hooks';
 
 interface OrganizationRowCardProps {
   organization: OrganizationResponse;
@@ -14,6 +15,11 @@ interface OrganizationRowCardProps {
 }
 
 export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMembers, onClick }: OrganizationRowCardProps) {
+  // Get current user from Redux store
+  const currentUser = useAppSelector((state) => state.auth.user);
+
+  // Check if current user is the organization owner
+  const isOwner = currentUser?.id === organization.owner.id;
   return (
     <Card
       onClick={() => onClick?.(organization)}
@@ -65,6 +71,27 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
                     '& .MuiChip-icon': {
                       color: '#2E7D32',
                     },
+                  }}
+                />
+              )}
+              {isOwner ? (
+                <Chip
+                  label="Owner"
+                  size="small"
+                  sx={{
+                    backgroundColor: '#FFF4E6',
+                    color: '#E65100',
+                    fontWeight: 600,
+                  }}
+                />
+              ) : (
+                <Chip
+                  label="Member"
+                  size="small"
+                  sx={{
+                    backgroundColor: '#E3F2FD',
+                    color: '#1565C0',
+                    fontWeight: 600,
                   }}
                 />
               )}
@@ -203,38 +230,75 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
             >
               <People />
             </IconButton>
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(organization);
-              }}
-              sx={{
-                color: '#F36BF9',
-                padding: '8px',
-                '&:hover': {
-                  backgroundColor: 'rgba(243, 107, 249, 0.1)',
-                },
-              }}
-              title="Edit"
-            >
-              <Box component="i" className="fa-regular fa-pen-to-square" sx={{ fontSize: '20px' }} />
-            </IconButton>
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(organization);
-              }}
-              sx={{
-                color: '#36437C',
-                padding: '8px',
-                '&:hover': {
-                  backgroundColor: 'rgba(54, 67, 124, 0.1)',
-                },
-              }}
-              title="Delete"
-            >
-              <Box component="i" className="fa-solid fa-trash" sx={{ fontSize: '20px' }} />
-            </IconButton>
+            {/* Edit - Only for Owner */}
+            {isOwner ? (
+              <Tooltip title="Edit Organization" arrow>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(organization);
+                  }}
+                  sx={{
+                    color: '#F36BF9',
+                    padding: '8px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(243, 107, 249, 0.1)',
+                    },
+                  }}
+                >
+                  <Edit sx={{ fontSize: '20px' }} />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Only owner can edit this organization" arrow>
+                <span>
+                  <IconButton
+                    disabled
+                    sx={{
+                      color: '#cccccc',
+                      padding: '8px',
+                    }}
+                  >
+                    <Edit sx={{ fontSize: '20px' }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )}
+
+            {/* Delete - Only for Owner */}
+            {isOwner ? (
+              <Tooltip title="Delete Organization" arrow>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(organization);
+                  }}
+                  sx={{
+                    color: '#36437C',
+                    padding: '8px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(54, 67, 124, 0.1)',
+                    },
+                  }}
+                >
+                  <Delete sx={{ fontSize: '20px' }} />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Only owner can delete this organization" arrow>
+                <span>
+                  <IconButton
+                    disabled
+                    sx={{
+                      color: '#cccccc',
+                      padding: '8px',
+                    }}
+                  >
+                    <Delete sx={{ fontSize: '20px' }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )}
           </Box>
         </Box>
       </CardContent>

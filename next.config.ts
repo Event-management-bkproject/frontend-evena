@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   // Enable gzip compression
   compress: true,
 
+  // Turbopack config (silences warning in Next.js 16+)
+  turbopack: {},
+
   // Image optimization configuration
   images: {
     formats: ['image/avif', 'image/webp'],

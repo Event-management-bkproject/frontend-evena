@@ -282,13 +282,24 @@ export default function OrganizationDetailPage() {
                   ) : (
                     <Box
                       sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                          xs: '1fr',
-                          sm: 'repeat(2, 1fr)',
-                          md: 'repeat(3, 1fr)',
+                        display: 'flex',
+                        gap: 3,
+                        overflowX: 'auto',
+                        pb: 2,
+                        '&::-webkit-scrollbar': {
+                          height: 8,
                         },
-                        gap: 2,
+                        '&::-webkit-scrollbar-track': {
+                          backgroundColor: '#F0F0F0',
+                          borderRadius: 4,
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                          backgroundColor: '#F36BF9',
+                          borderRadius: 4,
+                          '&:hover': {
+                            backgroundColor: '#e55ae0',
+                          },
+                        },
                       }}
                     >
                       {organizationEvents.map((event) => (
@@ -296,7 +307,7 @@ export default function OrganizationDetailPage() {
                           key={event.id}
                           event={event}
                           onClick={() => handleEventClick(event.id)}
-                          variant="compact"
+                          variant="dashboard"
                           showActions={false}
                         />
                       ))}

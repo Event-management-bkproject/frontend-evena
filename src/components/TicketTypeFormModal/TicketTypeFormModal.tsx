@@ -90,224 +90,169 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: '16px',
-          maxHeight: '90vh',
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: '16px',
+            maxHeight: '90vh',
+          },
         },
       }}
     >
-      <DialogTitle>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6" fontWeight="bold">
-            {isEditMode ? 'Edit Ticket Type' : 'Create New Ticket Type'}
-          </Typography>
-          <IconButton onClick={onClose} size="small">
-            <Close />
-          </IconButton>
-        </Box>
-      </DialogTitle>
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6" fontWeight="bold">
+              {isEditMode ? 'Edit Ticket Type' : 'Create New Ticket Type'}
+            </Typography>
+            <IconButton onClick={onClose} disabled={loading}>
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
 
-      <Formik
-        initialValues={initialValues}
-        validationSchema={ticketTypeSchema}
-        onSubmit={handleSubmit}
-        enableReinitialize
-      >
-        {({ values, setFieldValue, errors, touched }) => (
-          <Form>
-            <DialogContent sx={{ pt: 2 }}>
-              <Grid container spacing={2}>
-                {/* Name */}
-                <Grid size={{ xs: 12 }}>
-                  <FormTextField
-                    id="name"
-                    name="name"
-                    label="Ticket Type Name"
-                    placeholder="e.g. VIP, General Admission, Early Bird"
-                    required
-                    fullWidth
-                  />
-                </Grid>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={ticketTypeSchema}
+          onSubmit={handleSubmit}
+          enableReinitialize
+        >
+          {({ values, setFieldValue }) => (
+            <Form>
+              <DialogContent dividers sx={{ py: 3 }}>
+                <Grid container spacing={3}>
+                  {/* Basic Information */}
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+                      Basic Information
+                    </Typography>
+                  </Grid>
 
-                {/* Description */}
-                <Grid size={{ xs: 12 }}>
-                  <FormTextField
-                    id="description"
-                    name="description"
-                    label="Description"
-                    placeholder="Brief description of this ticket type"
-                    multiline
-                    rows={3}
-                    fullWidth
-                  />
-                </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <FormTextField id="name" name="name" label="Ticket Name" placeholder="e.g., VIP, Regular, Student" required />
+                  </Grid>
 
-                {/* Price & Currency */}
-                <Grid size={{ xs: 8 }}>
-                  <FormTextField
-                    id="price"
-                    name="price"
-                    label="Price"
-                    type="number"
-                    required
-                    fullWidth
-                    inputProps={{ min: 0, step: 1000 }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 4 }}>
-                  <FormTextField id="currency" name="currency" label="Currency" placeholder="VND" fullWidth disabled />
-                </Grid>
-
-                {/* Total & Per User Limit */}
-                <Grid size={{ xs: 6 }}>
-                  <FormTextField
-                    id="total"
-                    name="total"
-                    label="Total Tickets"
-                    type="number"
-                    required
-                    fullWidth
-                    inputProps={{ min: 1 }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 6 }}>
-                  <FormTextField
-                    id="perUserLimit"
-                    name="perUserLimit"
-                    label="Per User Limit"
-                    type="number"
-                    fullWidth
-                    inputProps={{ min: 1 }}
-                    helperText="Max tickets per customer (optional)"
-                  />
-                </Grid>
-
-                {/* Sales Period */}
-                <Grid size={{ xs: 6 }}>
-                  <FormTextField
-                    id="salesStart"
-                    name="salesStart"
-                    label="Sales Start"
-                    type="datetime-local"
-                    required
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 6 }}>
-                  <FormTextField
-                    id="salesEnd"
-                    name="salesEnd"
-                    label="Sales End"
-                    type="datetime-local"
-                    required
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-
-                {/* Early Bird Toggle */}
-                <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={values.earlyBird}
-                        onChange={(e) => setFieldValue('earlyBird', e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#f36bf9',
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#f36bf9',
-                          },
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography variant="body2" fontWeight={500}>
-                        Early Bird Discount
-                      </Typography>
-                    }
-                  />
-                </Grid>
-
-                {/* Early Bird Discount */}
-                {values.earlyBird && (
                   <Grid size={{ xs: 12 }}>
                     <FormTextField
-                      id="earlyBirdDiscount"
-                      name="earlyBirdDiscount"
-                      label="Discount Percentage (%)"
-                      type="number"
-                      required={values.earlyBird}
-                      fullWidth
-                      inputProps={{ min: 0, max: 100 }}
-                      helperText="Discount applied for early bird tickets (0-100%)"
+                      id="description"
+                      name="description"
+                      label="Description"
+                      placeholder="Describe what's included with this ticket"
+                      multiline
+                      rows={3}
                     />
                   </Grid>
-                )}
 
-                {/* Visibility Toggle */}
-                <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={values.visible}
-                        onChange={(e) => setFieldValue('visible', e.target.checked)}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': {
-                            color: '#f36bf9',
-                          },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#f36bf9',
-                          },
-                        }}
+                  {/* Pricing */}
+                  <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+                      Pricing
+                    </Typography>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormTextField id="price" name="price" label="Price" type="number" required />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormTextField id="currency" name="currency" label="Currency" disabled value="VND" />
+                  </Grid>
+
+                  {/* Early Bird Discount */}
+                  <Grid size={{ xs: 12 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={values.earlyBird}
+                          onChange={(e) => setFieldValue('earlyBird', e.target.checked)}
+                        />
+                      }
+                      label="Enable Early Bird Discount"
+                    />
+                  </Grid>
+
+                  {values.earlyBird && (
+                    <Grid size={{ xs: 12 }}>
+                      <FormTextField
+                        id="earlyBirdDiscount"
+                        name="earlyBirdDiscount"
+                        label="Early Bird Discount (%)"
+                        type="number"
+                        placeholder="e.g., 20"
                       />
-                    }
-                    label={
-                      <Box>
-                        <Typography variant="body2" fontWeight={500}>
-                          Visible to Public
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Hidden tickets can only be accessed via direct link
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </Grid>
-              </Grid>
-            </DialogContent>
+                    </Grid>
+                  )}
 
-            <DialogActions sx={{ px: 3, pb: 3 }}>
-              <Button onClick={onClose} disabled={loading}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={loading}
-                sx={{
-                  backgroundColor: '#f36bf9',
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  '&:hover': {
-                    backgroundColor: '#e55ae0',
-                  },
-                }}
-              >
-                {loading ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
-              </Button>
-            </DialogActions>
-          </Form>
-        )}
-      </Formik>
-    </Dialog>
+                  {/* Quantity */}
+                  <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+                      Quantity & Limits
+                    </Typography>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormTextField id="total" name="total" label="Total Tickets" type="number" required />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormTextField
+                      id="perUserLimit"
+                      name="perUserLimit"
+                      label="Per User Limit"
+                      type="number"
+                      placeholder="Max tickets per user"
+                      required
+                    />
+                  </Grid>
+
+                  {/* Sales Period */}
+                  <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+                      Sales Period
+                    </Typography>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormTextField id="salesStart" name="salesStart" label="Sales Start" type="datetime-local" required />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormTextField id="salesEnd" name="salesEnd" label="Sales End" type="datetime-local" required />
+                  </Grid>
+
+                  {/* Visibility */}
+                  <Grid size={{ xs: 12 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch checked={values.visible} onChange={(e) => setFieldValue('visible', e.target.checked)} />
+                      }
+                      label="Visible to customers"
+                    />
+                  </Grid>
+                </Grid>
+              </DialogContent>
+
+              <DialogActions sx={{ px: 3, py: 2 }}>
+                <Button onClick={onClose} disabled={loading}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={loading}
+                  sx={{
+                    backgroundColor: '#f36bf9',
+                    '&:hover': {
+                      backgroundColor: '#e55ae0',
+                    },
+                  }}
+                >
+                  {loading ? (isEditMode ? 'Updating...' : 'Creating...') : isEditMode ? 'Update' : 'Create'}
+                </Button>
+              </DialogActions>
+            </Form>
+          )}
+        </Formik>
+      </Dialog>
   );
 };
 

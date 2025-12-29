@@ -37,10 +37,11 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
   onVerifyOrganization,
 }) => {
   // Filter organizations based on search term
-  const filteredOrganizations = organizations.filter((org) =>
-    org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    org.phone?.includes(searchTerm)
+  const filteredOrganizations = organizations.filter(
+    (org) =>
+      org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      org.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      org.phone?.includes(searchTerm),
   );
 
   if (isLoading) {
@@ -68,9 +69,12 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
           <TableRow sx={{ bgcolor: '#f5f5f5' }}>
             <TableCell sx={{ fontWeight: 'bold' }}>Organization Name</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }}>Contact</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Address</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }} align="center">Status</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }} align="center">Actions</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }} align="center">
+              Status
+            </TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }} align="center">
+              Actions
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

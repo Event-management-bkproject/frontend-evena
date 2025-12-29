@@ -106,6 +106,8 @@ export interface OrganizationMemberResponse {
   userName: string;
   email: string;
   phone?: string;
+  organizationId?: number;
+  organizationName?: string;
   role: OrganizationRole;
   invitationAccepted: boolean;
   joinedAt?: string;

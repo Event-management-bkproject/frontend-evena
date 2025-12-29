@@ -28,6 +28,8 @@ import { OrderStatus } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { orderLogger } from '@/src/utils/logger/flowLogger';
+import SnackbarNotification from '@/src/components/SnackbarNotification';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 interface OrderRowProps {
   order: any;
@@ -56,7 +58,7 @@ function OrderRow({
             {isExpanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
           </IconButton>
         </TableCell>
-        <TableCell>#{order.id}</TableCell>
+        {/* <TableCell>#{order.id}</TableCell> */}
         <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
         <TableCell>{order.ticketCount} tickets</TableCell>
         <TableCell sx={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString()}</TableCell>
@@ -167,6 +169,7 @@ export default function MyOrdersPage() {
   const router = useRouter();
   const [page, setPage] = useState(0);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const { data, isLoading, error } = useGetMyOrdersQuery({ page, size: 10 });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
@@ -198,10 +201,10 @@ export default function MyOrdersPage() {
       orderLogger.info('Cancelling order', { orderId });
       await cancelOrder(orderId).unwrap();
       orderLogger.info('Order cancelled successfully', { orderId });
-      alert('Order cancelled successfully');
+      showSnackbar('Order cancelled successfully', 'success');
     } catch (error: any) {
       orderLogger.error('Failed to cancel order', { orderId, error });
-      alert(`Failed to cancel order: ${error?.data?.message || 'Please try again'}`);
+      showSnackbar(`Failed to cancel order: ${error?.data?.message || 'Please try again'}`, 'error');
     }
   };
 
@@ -251,7 +254,7 @@ export default function MyOrdersPage() {
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
                     <TableCell sx={{ fontWeight: 700, width: '50px' }} />
-                    <TableCell sx={{ fontWeight: 700 }}>Order ID</TableCell>
+                    {/* <TableCell sx={{ fontWeight: 700 }}>Order ID</TableCell> */}
                     <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Items</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
@@ -298,6 +301,14 @@ export default function MyOrdersPage() {
       </Container>
 
       <Footer />
+
+      {/* Snackbar for notifications */}
+      <SnackbarNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnackbar}
+      />
     </Box>
   );
 }

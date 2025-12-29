@@ -245,159 +245,160 @@ export default function AdminPage() {
 
   return (
     <RoleGuard allowedRoles={['ADMIN']}>
+      {/* <SSESync /> */}
       <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 3 }}>
         {/* Header */}
         <AdminHeader onLogout={handleLogout} />
 
-      {/* Stats Cards */}
-      <AdminStatsCards
-        categoriesCount={categoriesData?.data?.length || 0}
-        venuesCount={venuesData?.data?.totalElements || 0}
-        organizationsCount={organizationsData?.data?.totalElements || 0}
-      />
-
-      {/* Tabs and Search Bar */}
-      <AdminTabBar
-        activeTab={activeTab}
-        searchTerm={searchTerm}
-        onTabChange={handleTabChange}
-        onSearchChange={setSearchTerm}
-        onAddClick={handleAddClick}
-        showAddButton={activeTab !== 2}
-      />
-
-      {/* Category Tab Panel */}
-      {activeTab === 0 && (
-        <CategoryTable
-          categories={categoriesData?.data || []}
-          isLoading={isLoadingCategories}
-          searchTerm={searchTerm}
-          isDeletingCategory={isDeletingCategory}
-          onEditCategory={openEditCategory}
-          onDeleteCategory={handleDeleteCategoryClick}
+        {/* Stats Cards */}
+        <AdminStatsCards
+          categoriesCount={categoriesData?.data?.length || 0}
+          venuesCount={venuesData?.data?.totalElements || 0}
+          organizationsCount={organizationsData?.data?.totalElements || 0}
         />
-      )}
 
-      {/* Venue Tab Panel */}
-      {activeTab === 1 && (
-        <VenueTable
-          venues={venuesData?.data?.content || []}
-          isLoading={isLoadingVenues}
+        {/* Tabs and Search Bar */}
+        <AdminTabBar
+          activeTab={activeTab}
           searchTerm={searchTerm}
-          isDeletingVenue={isDeletingVenue}
-          onEditVenue={openEditVenue}
-          onDeleteVenue={handleDeleteVenueClick}
+          onTabChange={handleTabChange}
+          onSearchChange={setSearchTerm}
+          onAddClick={handleAddClick}
+          showAddButton={activeTab !== 2}
         />
-      )}
 
-      {/* Organization Tab Panel */}
-      {activeTab === 2 && (
-        <AdminOrganizationTable
-          organizations={organizationsData?.data?.content || []}
-          isLoading={isLoadingOrganizations}
-          searchTerm={searchTerm}
-          isVerifying={isVerifying}
-          onEditOrganization={(org) => {
-            // TODO: Implement edit organization if needed
-            showSnackbar('Edit organization feature coming soon', 'error');
-          }}
-          onDeleteOrganization={handleDeleteOrganizationClick}
-          onVerifyOrganization={handleVerifyOrganization}
-        />
-      )}
-
-      {/* Delete Confirmation Dialogs */}
-      <AdminDeleteDialog
-        open={deleteCategoryDialogOpen}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this category? This action cannot be undone."
-        isDeleting={isDeletingCategory}
-        onClose={() => setDeleteCategoryDialogOpen(false)}
-        onConfirm={handleDeleteCategoryConfirm}
-      />
-
-      <AdminDeleteDialog
-        open={deleteVenueDialogOpen}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this venue? This action cannot be undone."
-        isDeleting={isDeletingVenue}
-        onClose={() => setDeleteVenueDialogOpen(false)}
-        onConfirm={handleDeleteVenueConfirm}
-      />
-
-      <AdminDeleteDialog
-        open={deleteOrganizationDialogOpen}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this organization? This action cannot be undone and will affect all associated events."
-        isDeleting={isDeletingOrganization}
-        onClose={() => setDeleteOrganizationDialogOpen(false)}
-        onConfirm={handleDeleteOrganizationConfirm}
-      />
-
-      {/* Category Modal */}
-      {categoryModalOpen && (
-        <AdminFormDialog
-          open={categoryModalOpen}
-          title={editingCategory ? 'Edit Category' : 'Create New Category'}
-          onClose={closeCategoryModal}
-          maxWidth="sm"
-        >
-          <CreateCategoryForm
-            open={categoryModalOpen}
-            onClose={closeCategoryModal}
-            onSubmit={handleSubmitCategory}
-            loading={isCreatingCategory || isUpdatingCategory}
-            initialValues={
-              editingCategory
-                ? {
-                    name: editingCategory.name,
-                    description: editingCategory.description || '',
-                    iconUrl: editingCategory.iconUrl || '',
-                  }
-                : undefined
-            }
+        {/* Category Tab Panel */}
+        {activeTab === 0 && (
+          <CategoryTable
+            categories={categoriesData?.data || []}
+            isLoading={isLoadingCategories}
+            searchTerm={searchTerm}
+            isDeletingCategory={isDeletingCategory}
+            onEditCategory={openEditCategory}
+            onDeleteCategory={handleDeleteCategoryClick}
           />
-        </AdminFormDialog>
-      )}
+        )}
 
-      {/* Venue Modal with Map */}
-      <CreateVenueFormWithMap
-        open={venueModalOpen}
-        onClose={closeVenueModal}
-        onSubmit={handleSubmitVenue}
-        loading={isCreatingVenue || isUpdatingVenue}
-        initialValues={
-          editingVenue
-            ? {
-                name: editingVenue.name,
-                address: editingVenue.address,
-                city: editingVenue.city,
-                capacity: editingVenue.capacity,
-                description: editingVenue.description || '',
-                lat: editingVenue.lat,
-                lng: editingVenue.lng,
+        {/* Venue Tab Panel */}
+        {activeTab === 1 && (
+          <VenueTable
+            venues={venuesData?.data?.content || []}
+            isLoading={isLoadingVenues}
+            searchTerm={searchTerm}
+            isDeletingVenue={isDeletingVenue}
+            onEditVenue={openEditVenue}
+            onDeleteVenue={handleDeleteVenueClick}
+          />
+        )}
+
+        {/* Organization Tab Panel */}
+        {activeTab === 2 && (
+          <AdminOrganizationTable
+            organizations={organizationsData?.data?.content || []}
+            isLoading={isLoadingOrganizations}
+            searchTerm={searchTerm}
+            isVerifying={isVerifying}
+            onEditOrganization={(org) => {
+              // TODO: Implement edit organization if needed
+              showSnackbar('Edit organization feature coming soon', 'error');
+            }}
+            onDeleteOrganization={handleDeleteOrganizationClick}
+            onVerifyOrganization={handleVerifyOrganization}
+          />
+        )}
+
+        {/* Delete Confirmation Dialogs */}
+        <AdminDeleteDialog
+          open={deleteCategoryDialogOpen}
+          title="Confirm Delete"
+          message="Are you sure you want to delete this category? This action cannot be undone."
+          isDeleting={isDeletingCategory}
+          onClose={() => setDeleteCategoryDialogOpen(false)}
+          onConfirm={handleDeleteCategoryConfirm}
+        />
+
+        <AdminDeleteDialog
+          open={deleteVenueDialogOpen}
+          title="Confirm Delete"
+          message="Are you sure you want to delete this venue? This action cannot be undone."
+          isDeleting={isDeletingVenue}
+          onClose={() => setDeleteVenueDialogOpen(false)}
+          onConfirm={handleDeleteVenueConfirm}
+        />
+
+        <AdminDeleteDialog
+          open={deleteOrganizationDialogOpen}
+          title="Confirm Delete"
+          message="Are you sure you want to delete this organization? This action cannot be undone and will affect all associated events."
+          isDeleting={isDeletingOrganization}
+          onClose={() => setDeleteOrganizationDialogOpen(false)}
+          onConfirm={handleDeleteOrganizationConfirm}
+        />
+
+        {/* Category Modal */}
+        {categoryModalOpen && (
+          <AdminFormDialog
+            open={categoryModalOpen}
+            title={editingCategory ? 'Edit Category' : 'Create New Category'}
+            onClose={closeCategoryModal}
+            maxWidth="sm"
+          >
+            <CreateCategoryForm
+              open={categoryModalOpen}
+              onClose={closeCategoryModal}
+              onSubmit={handleSubmitCategory}
+              loading={isCreatingCategory || isUpdatingCategory}
+              initialValues={
+                editingCategory
+                  ? {
+                      name: editingCategory.name,
+                      description: editingCategory.description || '',
+                      iconUrl: editingCategory.iconUrl || '',
+                    }
+                  : undefined
               }
-            : undefined
-        }
-      />
+            />
+          </AdminFormDialog>
+        )}
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
+        {/* Venue Modal with Map */}
+        <CreateVenueFormWithMap
+          open={venueModalOpen}
+          onClose={closeVenueModal}
+          onSubmit={handleSubmitVenue}
+          loading={isCreatingVenue || isUpdatingVenue}
+          initialValues={
+            editingVenue
+              ? {
+                  name: editingVenue.name,
+                  address: editingVenue.address,
+                  city: editingVenue.city,
+                  capacity: editingVenue.capacity,
+                  description: editingVenue.description || '',
+                  lat: editingVenue.lat,
+                  lng: editingVenue.lng,
+                }
+              : undefined
+          }
+        />
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
     </RoleGuard>
   );
 }

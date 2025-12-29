@@ -12,6 +12,8 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { orderLogger } from '@/src/utils/logger/flowLogger';
 import { PaymentProvider } from '@/src/stores/types/order';
+import SnackbarNotification from '@/src/components/SnackbarNotification';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 export default function EventTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   const [selectedTickets, setSelectedTickets] = useState<Record<number, number>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentProvider>(PaymentProvider.CASH);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const { data: eventResponse, isLoading: eventLoading } = useGetEventByIdQuery(eventId);
   const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetTicketTypesQuery(eventId);
@@ -45,14 +48,14 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
 
       // Check perUserLimit if set
       if (ticket.perUserLimit && newQuantity > ticket.perUserLimit) {
-        alert(`Maximum ${ticket.perUserLimit} tickets per user for ${ticket.name}`);
+        showSnackbar(`Maximum ${ticket.perUserLimit} tickets per user for ${ticket.name}`, 'warning');
         return prev;
       }
 
       // Check available stock
       const available = ticket.total - ticket.sold;
       if (newQuantity > available) {
-        alert(`Only ${available} tickets available for ${ticket.name}`);
+        showSnackbar(`Only ${available} tickets available for ${ticket.name}`, 'warning');
         return prev;
       }
 
@@ -74,7 +77,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   const handleCheckout = async () => {
     // No auth check needed - already in protected route
     if (getTotalQuantity() === 0) {
-      alert('Please select at least one ticket');
+      showSnackbar('Please select at least one ticket', 'warning');
       return;
     }
 
@@ -134,7 +137,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
 
       // Display detailed error
       const errorMsg = error?.data?.message || error?.message || 'Checkout failed';
-      alert(`Error: ${errorMsg}`);
+      showSnackbar(`Error: ${errorMsg}`, 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -167,7 +170,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
       <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
         {/* Back Button */}
         <Button startIcon={<ArrowBack />} onClick={() => router.back()} sx={{ mb: 3, color: '#2A3363' }}>
-          Back to Event
+          Back to Events
         </Button>
 
         {/* Event Info */}
@@ -215,11 +218,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                           <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                             {ticket.earlyBird && <Chip label="Early Bird" size="small" color="secondary" />}
                             {ticket.perUserLimit && (
-                              <Chip
-                                label={`Max ${ticket.perUserLimit} per user`}
-                                size="small"
-                                color="info"
-                              />
+                              <Chip label={`Max ${ticket.perUserLimit} per user`} size="small" color="info" />
                             )}
                             <Chip
                               label={isAvailable ? `${available} available` : 'Sold Out'}
@@ -262,7 +261,9 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                                 onClick={() => handleQuantityChange(ticket.id, 1)}
                                 disabled={
                                   (selectedTickets[ticket.id] || 0) >= available ||
-                                  Boolean(ticket.perUserLimit && (selectedTickets[ticket.id] || 0) >= ticket.perUserLimit)
+                                  Boolean(
+                                    ticket.perUserLimit && (selectedTickets[ticket.id] || 0) >= ticket.perUserLimit,
+                                  )
                                 }
                                 sx={{
                                   minWidth: '40px',
@@ -378,13 +379,20 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
               >
                 {isProcessing ? 'Processing...' : 'Checkout'}
               </Button>
-
             </Card>
           </Grid>
         </Grid>
       </Container>
 
       <Footer />
+
+      {/* Snackbar for notifications */}
+      <SnackbarNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnackbar}
+      />
     </Box>
   );
 }

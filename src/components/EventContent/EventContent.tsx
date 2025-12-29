@@ -28,10 +28,16 @@ import {
   Pending,
   CheckCircle,
   Cancel,
+  Check,
+  Close,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { EventResponse, EventStatus } from '@/src/stores/types';
 import VenueMap from '../VenueMap';
+import CancelEventDialog from '../CancelEventDialog';
+import SnackbarNotification from '../SnackbarNotification';
+import { usePublishEventMutation, useCancelEventMutation } from '@/src/stores/services';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 interface EventContentProps {
   event: EventResponse;
@@ -42,6 +48,10 @@ interface EventContentProps {
 
 const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps) => {
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+  const [publishEvent, { isLoading: publishing }] = usePublishEventMutation();
+  const [cancelEvent, { isLoading: cancelling }] = useCancelEventMutation();
 
   const getStatusColor = (status: EventStatus) => {
     switch (status) {
@@ -74,6 +84,33 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
       style: 'currency',
       currency: 'VND',
     }).format(price);
+  };
+
+  const handlePublish = async () => {
+    try {
+      await publishEvent(event.id).unwrap();
+      showSnackbar('Event published successfully!', 'success');
+      onRefresh?.();
+    } catch (error: any) {
+      console.error('Error publishing event:', error);
+      showSnackbar(error?.data?.message || 'Failed to publish event', 'error');
+    }
+  };
+
+  const handleCancelClick = () => {
+    setCancelDialogOpen(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    try {
+      await cancelEvent(event.id).unwrap();
+      setCancelDialogOpen(false);
+      showSnackbar('Event cancelled successfully!', 'success');
+      onRefresh?.();
+    } catch (error: any) {
+      console.error('Error cancelling event:', error);
+      showSnackbar(error?.data?.message || 'Failed to cancel event', 'error');
+    }
   };
 
   const minPrice =
@@ -144,8 +181,41 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
             <Typography variant="h4" fontWeight="bold" sx={{ color: '#36437C' }}>
               {event.title}
             </Typography>
-            {(onEdit || onDelete) && (
-              <Box display="flex" gap={0.5}>
+            {(onEdit || onDelete || event.status === EventStatus.DRAFT || event.status === EventStatus.PUBLISHED) && (
+              <Box display="flex" gap={1}>
+                {/* Publish/Cancel Buttons */}
+                {event.status === EventStatus.DRAFT && (
+                  <IconButton
+                    onClick={handlePublish}
+                    disabled={publishing}
+                    sx={{
+                      color: '#F36BF9',
+                      padding: '8px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(243, 107, 249, 0.1)',
+                      },
+                    }}
+                  >
+                    <Box component="i" className="fa-regular fa-circle-check" sx={{ fontSize: '20px' }} />
+                  </IconButton>
+                )}
+                {event.status === EventStatus.PUBLISHED && (
+                  <IconButton
+                    onClick={handleCancelClick}
+                    disabled={cancelling}
+                    sx={{
+                      color: '#FF5B5E',
+                      padding: '8px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 91, 94, 0.1)',
+                      },
+                    }}
+                  >
+                    <Box component="i" className="fa-regular fa-circle-xmark" sx={{ fontSize: 20 }} />
+                  </IconButton>
+                )}
+
+                {/* Edit/Delete Buttons */}
                 {onEdit && (
                   <IconButton
                     onClick={onEdit}
@@ -381,6 +451,23 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
           <Button onClick={() => setMapDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Cancel Event Dialog */}
+      <CancelEventDialog
+        open={cancelDialogOpen}
+        onClose={() => setCancelDialogOpen(false)}
+        onConfirm={handleCancelConfirm}
+        eventTitle={event.title}
+        loading={cancelling}
+      />
+
+      {/* Snackbar for notifications */}
+      <SnackbarNotification
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnackbar}
+      />
     </>
   );
 };
