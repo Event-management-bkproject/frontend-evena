@@ -23,7 +23,7 @@ export default function CustomerEventCard({ event }: CustomerEventCardProps) {
   };
 
   const handleClick = () => {
-    router.push(`/dashboard/customer/events/${event.id}/tickets`);
+    router.push(`/dashboard/customer/events/${event.id}`);
   };
 
   const dateInfo = getDateInfo(event.startAt);
