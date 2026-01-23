@@ -1,7 +1,7 @@
 // app/dashboard/admin/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Snackbar, Alert } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import RoleGuard from '@/src/components/RoleGuard';
@@ -24,6 +24,7 @@ import {
 import CreateCategoryForm from '@/src/components/CreateCategoryForm/CreateCategoryForm';
 import CreateVenueFormWithMap from '@/src/components/CreateVenueForm/CreateVenueFormWithMap';
 import { useAuth } from '@/src/hooks/auth/useAuth';
+import { useSSE } from '@/src/providers/SSEProvider';
 import CategoryTable from '@/src/components/CategoryTable';
 import VenueTable from '@/src/components/VenueTable';
 import { AdminOrganizationTable } from '@/src/components/AdminOrganizationTable';
@@ -38,6 +39,7 @@ import {
 export default function AdminPage() {
   const router = useRouter();
   const { logout } = useAuth();
+  const { lastEvent } = useSSE();
 
   // State
   const [activeTab, setActiveTab] = useState(0);
@@ -88,6 +90,7 @@ export default function AdminPage() {
   const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
     setSnackbar({ open: true, message, severity });
   };
+
 
   const handleLogout = async () => {
     await logout();
@@ -242,6 +245,27 @@ export default function AdminPage() {
     }
     // No add action for organizations (tab 2)
   };
+
+
+// Listen to SSE events from SSEProvider
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [Admin] Received SSE event:', lastEvent.type);
+
+    // Handle organization events
+    switch (lastEvent.type) {
+      case 'ORGANIZATION_CREATED':
+      case 'ORGANIZATION_UPDATED':
+      case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_DELETED':
+        console.log('🔄 [Admin] Refetching organizations...');
+        refetchOrganizations();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchOrganizations]);
 
   return (
     <RoleGuard allowedRoles={['ADMIN']}>

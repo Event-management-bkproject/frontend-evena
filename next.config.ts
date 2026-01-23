@@ -3,6 +3,9 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Enable standalone output for Docker
+  output: 'standalone',
+
   // Enable SWC minification for faster builds
 
   // Enable gzip compression

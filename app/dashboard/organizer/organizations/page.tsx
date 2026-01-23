@@ -2,6 +2,7 @@
 'use client';
 
 import { useAuth } from '@/src/hooks/auth/useAuth';
+import { useSSE } from '@/src/providers/SSEProvider';
 import {
   useCreateOrganizationMutation,
   useGetMyOrganizationsQuery,
@@ -10,7 +11,7 @@ import {
 } from '@/src/stores/services/OrganizerApi';
 import { useInviteMemberMutation } from '@/src/stores/services';
 import { useRouter } from 'next/navigation';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import { Box } from '@mui/material';
 import BaseModal from '@/src/components/BaseModal';
@@ -32,6 +33,7 @@ import { OrganizationRole } from '@/src/stores/types/enums';
 export default function OrganizationsPage() {
   const { auth } = useAuth();
   const router = useRouter();
+  const { lastEvent } = useSSE();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -65,6 +67,26 @@ export default function OrganizationsPage() {
   const [updateOrganization, { isLoading: updatingOrganization }] = useUpdateOrganizationMutation();
   const [deleteOrganization, { isLoading: deletingOrganization }] = useDeleteOrganizationMutation();
   const [inviteMember, { isLoading: invitingMember }] = useInviteMemberMutation();
+
+  // Listen to SSE events from SSEProvider
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [Organizer] Received SSE event:', lastEvent.type);
+
+    // Handle organization events
+    switch (lastEvent.type) {
+      case 'ORGANIZATION_CREATED':
+      case 'ORGANIZATION_UPDATED':
+      case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_DELETED':
+        console.log('🔄 [Organizer] Refetching organizations...');
+        refetchOrganizers();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchOrganizers]);
 
   // Data processing
   const organizations: OrganizationResponse[] = organizersResponse?.data || [];

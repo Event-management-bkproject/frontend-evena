@@ -72,10 +72,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ margin: 0, padding: 0 }} suppressHydrationWarning>
         <QueryProvider>
           <Providers>
-            {/* <SSEProvider> */}
-            <AuthInitializer />
-            {children}
-            {/* </SSEProvider> */}
+            <SSEProvider>
+              <AuthInitializer />
+              {children}
+            </SSEProvider>
           </Providers>
         </QueryProvider>
       </body>
