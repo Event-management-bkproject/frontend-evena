@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -32,6 +32,7 @@ import { OrganizationRole } from '@/src/stores/types/enums';
 import { useAppSelector } from '@/src/stores/hooks';
 import SnackbarNotification from '../SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 interface MemberManagementModalProps {
   open: boolean;
@@ -66,6 +67,25 @@ export default function MemberManagementModal({
 
   const [removeMember, { isLoading: removing }] = useRemoveMemberMutation();
   const [updateMemberRole, { isLoading: updatingRole }] = useUpdateMemberRoleMutation();
+
+  // Listen to SSE events for real-time member updates
+  const { lastEvent } = useSSE();
+
+  useEffect(() => {
+    if (!lastEvent || !open) return;
+
+    console.log('📨 [MemberManagementModal] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
+        console.log('🔄 [MemberManagementModal] Refetching members...');
+        refetch();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetch, open]);
 
   const members = membersResponse?.data || [];
 

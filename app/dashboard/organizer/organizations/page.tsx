@@ -80,6 +80,8 @@ export default function OrganizationsPage() {
       case 'ORGANIZATION_UPDATED':
       case 'ORGANIZATION_VERIFIED':
       case 'ORGANIZATION_DELETED':
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
         console.log('🔄 [Organizer] Refetching organizations...');
         refetchOrganizers();
         break;

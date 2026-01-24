@@ -115,6 +115,11 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       eventSource.addEventListener('organization:delete', handleEvent('🏢 Organization deleted', 'ORGANIZATION_DELETED'));
       eventSource.addEventListener('organization:verify', handleEvent('🏢 Organization verified', 'ORGANIZATION_VERIFIED'));
 
+      // Invitation events
+      eventSource.addEventListener('invitation:create', handleEvent('✉️ Invitation sent', 'INVITATION_CREATED'));
+      eventSource.addEventListener('invitation:accept', handleEvent('✅ Invitation accepted', 'INVITATION_ACCEPTED'));
+      eventSource.addEventListener('invitation:reject', handleEvent('❌ Invitation rejected', 'INVITATION_REJECTED'));
+
       // Event events
       eventSource.addEventListener('event:create', handleEvent('🎉 Event created', 'EVENT_CREATED'));
       eventSource.addEventListener('event:update', handleEvent('🎉 Event updated', 'EVENT_UPDATED'));

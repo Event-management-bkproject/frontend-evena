@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, InputAdornment, Typography, IconButton, Badge } from '@mui/material';
 import { Search, Add, Notifications } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
 import { useGetPendingInvitationsQuery } from '@/src/stores/services/OrganizationMemberApi';
 import InvitationNotificationModal from '../InvitationNotificationModal';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 interface OrganizationFiltersProps {
   onSearch: (keyword: string) => void;
@@ -24,8 +25,26 @@ export default function OrganizationFilters({
   const [invitationModalOpen, setInvitationModalOpen] = useState(false);
 
   // Fetch pending invitations count
-  const { data: invitationsData } = useGetPendingInvitationsQuery();
+  const { data: invitationsData, refetch: refetchInvitations } = useGetPendingInvitationsQuery();
   const pendingCount = invitationsData?.data?.length || 0;
+
+  // Listen to SSE events for invitations
+  const { lastEvent } = useSSE();
+
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [OrganizationFilters] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'INVITATION_CREATED':
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
+        console.log('🔄 [OrganizationFilters] Refetching pending invitations...');
+        refetchInvitations();
+        break;
+    }
+  }, [lastEvent, refetchInvitations]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
