@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAppSelector } from '../stores/hooks';
-import { useGetMyOrganizationsQuery } from '../stores/services/OrganizerApi';
 
 interface SSEContextType {
   isConnected: boolean;
@@ -38,11 +37,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const token = useAppSelector((state) => state.auth.accessToken);
   const userId = user?.id;
   const isAdmin = user?.roles?.includes('ADMIN') || false;
-
-  // Get user's organizations
-  const { data: organizationsData } = useGetMyOrganizationsQuery(undefined, {
-    skip: !token, // Skip query if not authenticated
-  });
+  const isOrganizer = user?.roles?.includes('ORGANIZER') || false;
 
   const [isConnected, setIsConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
@@ -62,8 +57,8 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     // Determine which channels to subscribe to
     const channels: string[] = ['public']; // All users subscribe to public
 
-    // Add organizer channel if user has any organizations
-    if (organizationsData?.data && organizationsData.data.length > 0) {
+    // Add organizer channel if user has ORGANIZER role
+    if (isOrganizer) {
       channels.push('organizer');
     }
 
@@ -172,7 +167,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       }
       setIsConnected(false);
     };
-  }, [userId, organizationsData, isAdmin]); // Reconnect when user, organizations, or admin status changes
+  }, [userId, isOrganizer, isAdmin]); // Reconnect when user, role, or admin status changes
 
   return <SSEContext.Provider value={{ isConnected, lastEvent }}>{children}</SSEContext.Provider>;
 };
