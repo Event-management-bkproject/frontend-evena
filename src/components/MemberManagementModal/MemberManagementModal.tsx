@@ -77,6 +77,7 @@ export default function MemberManagementModal({
     console.log('📨 [MemberManagementModal] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
+      case 'INVITATION_CREATED':
       case 'INVITATION_ACCEPTED':
       case 'INVITATION_REJECTED':
         console.log('🔄 [MemberManagementModal] Refetching members...');

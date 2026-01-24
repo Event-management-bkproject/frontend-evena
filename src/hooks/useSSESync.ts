@@ -7,6 +7,7 @@ import { EventAPI } from '@/src/stores/services/EventApi';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
 import { CategoryAPI } from '@/src/stores/services/CategoryApi';
 import { VenueAPI } from '@/src/stores/services/VenueApi';
+import { OrganizationMemberAPI } from '@/src/stores/services/OrganizationMemberApi';
 
 /**
  * Hook to sync SSE events with RTK Query cache
@@ -65,8 +66,20 @@ export const useSSESync = () => {
         dispatch(VenueAPI.util.invalidateTags(['Venue']));
         break;
 
+      // Invitation events
+      case 'INVITATION_CREATED':
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
+        console.log('[SSESync] ✉️ Invalidating invitation/member cache');
+        // Invalidate invitation and member queries
+        dispatch(OrganizationMemberAPI.util.invalidateTags(['Invitation', 'OrganizationMember']));
+        // Also invalidate organizer cache since accepted invitation adds user to organization
+        dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
+        break;
+
       default:
-        console.warn('[SSESync] ⚠️ Unknown event type:', type);
+        // Don't warn for unknown events - they may be handled elsewhere
+        break;
     }
   }, [lastEvent, dispatch]);
 

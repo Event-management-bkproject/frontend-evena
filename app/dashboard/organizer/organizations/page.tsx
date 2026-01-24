@@ -84,7 +84,9 @@ export default function OrganizationsPage() {
       case 'INVITATION_ACCEPTED':
       case 'INVITATION_REJECTED':
         console.log('🔄 [Organizer] Refetching organizations...');
-        refetchOrganizers();
+        refetchOrganizers().then((result) => {
+          console.log('✅ [Organizer] Refetch completed:', result);
+        });
         break;
       default:
         break;

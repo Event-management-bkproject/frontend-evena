@@ -30,6 +30,7 @@ import {
   UpdateEventRequest,
 } from '@/src/stores/types';
 import { EventFormData } from '../CreateEventForm/types';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 interface EventsManagementProps {
   initialCategories: CategoryResponse[];
@@ -70,7 +71,7 @@ export default function EventsManagement({
   const {
     data: eventsResponse,
     isLoading: loadingEvents,
-    error: eventsError,
+    refetch: refetchEvents,
   } = useGetMyEventsQuery(
     {
       page: 0,
@@ -81,6 +82,27 @@ export default function EventsManagement({
       refetchOnFocus: true, // Refetch when window regains focus
     }
   );
+
+  // Listen to SSE events for real-time updates
+  const { lastEvent } = useSSE();
+
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [EventsManagement] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'EVENT_CREATED':
+      case 'EVENT_UPDATED':
+      case 'EVENT_DELETED':
+      case 'EVENT_PUBLISHED':
+        console.log('🔄 [EventsManagement] Refetching events...');
+        refetchEvents();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchEvents]);
 
   // Fetch full event details khi editing
   const { data: fullEventResponse } = useGetEventByIdQuery(selectedItemId as string, {

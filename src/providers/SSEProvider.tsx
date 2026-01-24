@@ -1,7 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { useAppSelector } from '../stores/hooks';
+import { useAppSelector, useAppDispatch } from '../stores/hooks';
+import { EventAPI } from '../stores/services/EventApi';
+import { OrganizerAPI } from '../stores/services/OrganizerApi';
+import { CategoryAPI } from '../stores/services/CategoryApi';
+import { VenueAPI } from '../stores/services/VenueApi';
+import { OrganizationMemberAPI } from '../stores/services/OrganizationMemberApi';
 
 interface SSEContextType {
   isConnected: boolean;
@@ -174,6 +179,65 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       setIsConnected(false);
     };
   }, [userId, isOrganizer, isAdmin]); // Reconnect when user, role, or admin status changes
+
+  // Global SSE cache invalidation - handles all RTK Query cache updates
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const { type } = lastEvent;
+    console.log('[SSE] 🔄 Cache invalidation for event:', type);
+
+    switch (type) {
+      // Organization events
+      case 'ORGANIZATION_CREATED':
+      case 'ORGANIZATION_UPDATED':
+      case 'ORGANIZATION_DELETED':
+      case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_UNVERIFIED':
+        console.log('[SSE] 🏢 Invalidating organization cache');
+        dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
+        break;
+
+      // Event events
+      case 'EVENT_CREATED':
+      case 'EVENT_UPDATED':
+      case 'EVENT_DELETED':
+      case 'EVENT_PUBLISHED':
+        console.log('[SSE] 🎉 Invalidating event cache');
+        dispatch(EventAPI.util.invalidateTags(['Event']));
+        break;
+
+      // Category events
+      case 'CATEGORY_CREATED':
+      case 'CATEGORY_UPDATED':
+      case 'CATEGORY_DELETED':
+        console.log('[SSE] 📁 Invalidating category cache');
+        dispatch(CategoryAPI.util.invalidateTags(['Category']));
+        break;
+
+      // Venue events
+      case 'VENUE_CREATED':
+      case 'VENUE_UPDATED':
+      case 'VENUE_DELETED':
+        console.log('[SSE] 📍 Invalidating venue cache');
+        dispatch(VenueAPI.util.invalidateTags(['Venue']));
+        break;
+
+      // Invitation events
+      case 'INVITATION_CREATED':
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
+        console.log('[SSE] ✉️ Invalidating invitation/member cache');
+        dispatch(OrganizationMemberAPI.util.invalidateTags(['Invitation', 'OrganizationMember']));
+        dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
+        break;
+
+      default:
+        break;
+    }
+  }, [lastEvent, dispatch]);
 
   return <SSEContext.Provider value={{ isConnected, lastEvent }}>{children}</SSEContext.Provider>;
 };

@@ -261,7 +261,9 @@ export default function AdminPage() {
       case 'ORGANIZATION_UNVERIFIED':
       case 'ORGANIZATION_DELETED':
         console.log('🔄 [Admin] Refetching organizations...');
-        refetchOrganizations();
+        refetchOrganizations().then((result) => {
+          console.log('✅ [Admin] Refetch completed:', result);
+        });
         break;
       default:
         break;
