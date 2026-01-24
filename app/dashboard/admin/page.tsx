@@ -258,6 +258,7 @@ export default function AdminPage() {
       case 'ORGANIZATION_CREATED':
       case 'ORGANIZATION_UPDATED':
       case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_UNVERIFIED':
       case 'ORGANIZATION_DELETED':
         console.log('🔄 [Admin] Refetching organizations...');
         refetchOrganizations();

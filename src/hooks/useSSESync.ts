@@ -29,6 +29,7 @@ export const useSSESync = () => {
       case 'ORGANIZATION_UPDATED':
       case 'ORGANIZATION_DELETED':
       case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_UNVERIFIED':
         console.log('[SSESync] 🏢 Invalidating organization cache');
         // Invalidate all organization-related queries
         const orgResult = dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));

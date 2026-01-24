@@ -79,6 +79,7 @@ export default function OrganizationsPage() {
       case 'ORGANIZATION_CREATED':
       case 'ORGANIZATION_UPDATED':
       case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_UNVERIFIED':
       case 'ORGANIZATION_DELETED':
       case 'INVITATION_ACCEPTED':
       case 'INVITATION_REJECTED':
