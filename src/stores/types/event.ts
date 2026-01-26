@@ -98,6 +98,17 @@ export interface OrganizationResponse {
   totalEvents: number;
   totalMembers?: number;
   members?: OrganizationMemberResponse[];
+  version: number; // For optimistic locking
+}
+
+export interface UpdateOrganizationRequest {
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  version: number; // Required for optimistic locking
 }
 
 export interface OrganizationMemberResponse {

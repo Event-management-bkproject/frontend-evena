@@ -3,6 +3,7 @@ import { baseQueryWithReAuth } from './baseQuery';
 import {
   ApiResponse,
   CreateOrganizationRequest,
+  UpdateOrganizationRequest,
   OrganizationDetailResponse,
   OrganizationResponse,
   PaginatedResponse,
@@ -74,14 +75,14 @@ export const OrganizerAPI = createApi({
 
     updateOrganization: builder.mutation<
       ApiResponse<OrganizationResponse>,
-      { id: number; data: CreateOrganizationRequest }
+      { id: number; data: UpdateOrganizationRequest }
     >({
       query: ({ id, data }) => ({
         url: `/organizations/${id}`,
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Organizer', id }, 'Organizer'],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Organizer', id }, 'Organizer'],
     }),
 
     verifyOrganization: builder.mutation<ApiResponse<OrganizationResponse>, number>({

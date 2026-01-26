@@ -18,6 +18,7 @@ import BaseModal from '@/src/components/BaseModal';
 import CreateOrganizationForm, {
   OrganizationFormData,
 } from '@/src/components/CreateOrganisationForm/CreateOrganisationForm';
+import { UpdateOrganizationRequest } from '@/src/stores/types';
 import UpdateOrganizationForm from '@/src/components/UpdateOrganizationForm';
 import DeleteConfirmDialog from '@/src/components/DeleteConfirmDialog';
 import DashboardHeader from '@/src/components/DashboardHeader';
@@ -125,7 +126,7 @@ export default function OrganizationsPage() {
     }
   };
 
-  const handleUpdateOrganization = async (formData: OrganizationFormData) => {
+  const handleUpdateOrganization = async (formData: UpdateOrganizationRequest) => {
     if (!selectedOrganization) return;
 
     try {
@@ -135,7 +136,17 @@ export default function OrganizationsPage() {
       setSelectedOrganization(null);
       refetchOrganizers();
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || 'Failed to update organization');
+      const errorMessage = error?.data?.message || 'Failed to update organization';
+
+      // Check for version conflict error (optimistic locking)
+      if (errorMessage.includes('has been modified by another user')) {
+        showErrorMessage('This organization was modified by someone else. Please close the form and try again with fresh data.');
+        setUpdateModalOpen(false);
+        setSelectedOrganization(null);
+        refetchOrganizers();
+      } else {
+        showErrorMessage(errorMessage);
+      }
     }
   };
 
@@ -163,6 +174,12 @@ export default function OrganizationsPage() {
   const handleOrganizationEdit = (organization: OrganizationResponse) => {
     setSelectedOrganization(organization);
     setUpdateModalOpen(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setUpdateModalOpen(false);
+    setSelectedOrganization(null);
+    refetchOrganizers(); // Refetch to get latest data when modal closes
   };
 
   const handleOrganizationDelete = (organization: OrganizationResponse) => {
@@ -295,14 +312,14 @@ export default function OrganizationsPage() {
         {selectedOrganization && (
           <BaseModal
             open={updateModalOpen}
-            onClose={() => setUpdateModalOpen(false)}
+            onClose={handleCloseUpdateModal}
             title="Edit Organization"
             maxWidth="md"
           >
             <UpdateOrganizationForm
               organization={selectedOrganization}
               onSubmit={handleUpdateOrganization}
-              onCancel={() => setUpdateModalOpen(false)}
+              onCancel={handleCloseUpdateModal}
               loading={updatingOrganization}
             />
           </BaseModal>
