@@ -1,16 +1,6 @@
 // CreateEventForm component types
-
-export interface EventFormData {
-  title: string;
-  description: string;
-  startAt: string;
-  endAt: string;
-  organizerId: number;
-  categoryId: number;
-  venueId: number;
-  coverUrl?: string;
-  imageUrls?: string[];
-}
+// Re-export from central types
+export type { EventFormData } from '@/src/stores/types';
 
 export interface CreateEventFormProps {
   open: boolean;

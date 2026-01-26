@@ -5,7 +5,7 @@ import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useSnackbar } from '@/src/hooks/ui/useSnackbar';
 import { logger } from '@utils/logger';
 import { useLoginMutation } from '@/src/stores/services/AuthApi';
-import { LoginRequest } from '@/src/stores/types';
+import { LoginRequest, parseApiError } from '@/src/stores/types';
 
 /**
  * Custom hook for handling login logic using RTK Query
@@ -63,10 +63,10 @@ export function useLogin() {
 
       showSnackbar(response.message || 'Login failed', 'error');
       return false;
-    } catch (err: any) {
-      const errorMessage = err?.data?.message || 'Invalid email or password';
-      showSnackbar(errorMessage, 'error');
-      logger.error('Login error:', err);
+    } catch (err: unknown) {
+      const apiError = parseApiError(err);
+      showSnackbar(apiError.message, 'error');
+      logger.error('Login error:', apiError);
       return false;
     }
   };

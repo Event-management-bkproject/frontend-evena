@@ -40,6 +40,9 @@ export interface CreateEventRequest {
   imageUrls?: string[];
 }
 
+// Alias for form usage - same as CreateEventRequest
+export type EventFormData = CreateEventRequest;
+
 export interface UpdateEventRequest {
   title?: string;
   description?: string;

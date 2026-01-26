@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useSnackbar } from '@/src/hooks/ui/useSnackbar';
 import { logger } from '@utils/logger';
 import { useRegisterMutation, useRegisterOrganizerMutation } from '@/src/stores/services/AuthApi';
-import { RegisterRequest, RegisterType } from '@/src/stores/types';
+import { RegisterRequest, RegisterType, parseApiError } from '@/src/stores/types';
 
 /**
  * Custom hook for handling registration logic using RTK Query
@@ -39,10 +39,10 @@ export function useRegister({ type }: RegisterType) {
 
       showSnackbar(response.message || 'Registration failed', 'error');
       return false;
-    } catch (err: any) {
-      const errorMessage = err?.data?.message || 'An error occurred during registration. Please try again.';
-      showSnackbar(errorMessage, 'error');
-      logger.error('Registration error:', err);
+    } catch (err: unknown) {
+      const apiError = parseApiError(err);
+      showSnackbar(apiError.message, 'error');
+      logger.error('Registration error:', apiError);
       return false;
     }
   };

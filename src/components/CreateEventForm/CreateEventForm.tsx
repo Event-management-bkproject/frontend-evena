@@ -3,24 +3,12 @@
 
 import { useState } from 'react';
 import { Box, Button, MenuItem, Chip, Typography } from '@mui/material';
+import { FormikHelpers } from 'formik';
 import FormTextField from '../FormTextField';
 import { eventSchema } from '@/src/utils/validationSchema/eventValidationSchema';
 import Forms from '../Forms';
-import DateRangePickerField from '../DateRangePickerField';
 import FormTextareaField from '../FormTextAreaField';
-
-// Define types - SỬA LẠI ĐỂ KHỚP VỚI API
-export interface EventFormData {
-  title: string;
-  description: string;
-  startAt: string; // Thay vì dateRange object
-  endAt: string; // Thay vì dateRange object
-  organizerId: number;
-  categoryId: number;
-  venueId: number;
-  coverUrl: string;
-  imageUrls: string[];
-}
+import { EventFormData } from '@/src/stores/types';
 
 interface CreateEventFormProps {
   onSubmit: (data: EventFormData) => void;
@@ -60,7 +48,7 @@ const CreateEventForm = ({
     ...initialValues,
   };
 
-  const handleSubmit = (values: EventFormData, actions: any) => {
+  const handleSubmit = (values: EventFormData, actions: FormikHelpers<EventFormData>) => {
     const submitData: EventFormData = {
       ...values,
       imageUrls: imageUrls,
