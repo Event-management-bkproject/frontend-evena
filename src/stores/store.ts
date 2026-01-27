@@ -13,13 +13,13 @@ import { OrganizationMemberAPI } from './services/OrganizationMemberApi';
 import { OrderAPI } from './services/OrderApi';
 
 // Redux Persist configuration for auth slice
-// Updated: Now persisting accessToken (backend refresh token not implemented yet)
-// Note: When backend implements refresh token, move back to HTTPOnly cookies
+// Security: Only persist user info, NOT accessToken (stored in memory only)
+// Refresh token is stored in httpOnly cookie by backend
 const persistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['user', 'accessToken'], // Persist user data AND accessToken
-  // blacklist: ['refreshToken'], // COMMENTED OUT: Backend refresh token not implemented yet
+  whitelist: ['user'], // Only persist user data, accessToken lives in memory
+  // accessToken will be refreshed from httpOnly cookie on app init
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);

@@ -1,7 +1,7 @@
 // components/AuthInitializer.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useDispatch } from 'react-redux';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
@@ -15,57 +15,70 @@ export default function AuthInitializer() {
   const { setAuthFromInit, auth } = useAuth();
   const dispatch = useDispatch();
   const [getMe] = useLazyGetMeQuery();
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    // Track component mounted state
+    isMountedRef.current = true;
+
     const initializeAuth = async () => {
       // Nếu đã initialized thì không cần check lại
       if (auth.isInitialized) return;
 
-      // Check if we have token in localStorage (from redux-persist)
-      // If yes, skip loading screen - user is already logged in
-      const hasPersistedToken =
-        typeof window !== 'undefined' && (auth.accessToken || localStorage.getItem('accessToken'));
+      // Check if we have user in memory (from redux-persist)
+      // If user exists, try to get fresh access token from refresh token (httpOnly cookie)
+      const hasPersistedUser = auth.user !== null;
 
       const startTime = Date.now();
-      // Only show loading screen for minimum time if no persisted token (first time login)
-      const MIN_LOADING_TIME = hasPersistedToken ? 0 : 2500;
+      // Show loading screen for first-time visitors
+      const MIN_LOADING_TIME = hasPersistedUser ? 0 : 2500;
 
-      // If no token exists, skip API call and mark as initialized
-      if (!hasPersistedToken) {
+      // If no user exists, skip API call and mark as initialized
+      if (!hasPersistedUser) {
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
-        setAuthFromInit(null, null);
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setAuthFromInit(null, null);
+        }
         return;
       }
 
       try {
-        // Only call /api/auth/me if we have a token to verify
-        // AccessToken is stored in Redux persist (localStorage)
-        const response = await getMe().unwrap();
+        // Call /api/auth/refresh to get fresh access token
+        // Refresh token is automatically sent via httpOnly cookie
+        const refreshResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include', // Send httpOnly cookie
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-        // Calculate remaining time to meet minimum loading time (áp dụng cho tất cả trường hợp)
+        // Calculate remaining time to meet minimum loading time
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
 
         // Wait for remaining time before setting auth
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
-        if (response.success && response.data) {
-          // Get accessToken from API response (or from Redux persist)
-          const accessToken = response.accessToken || auth.accessToken || null;
-          // const refreshToken = response.refreshToken || null; // COMMENTED OUT: Backend refresh token not implemented yet
+        // Only update state if component is still mounted
+        if (!isMountedRef.current) return;
 
-          if (accessToken) {
-            // Set auth with accessToken only
-            setAuthFromInit(accessToken, response.data);
+        if (refreshResponse.ok) {
+          const data = await refreshResponse.json();
+
+          if (data.success && data.data) {
+            // Set new access token (from refresh) and user data
+            setAuthFromInit(data.data.accessToken, data.data.user);
           } else {
-            // No token found
+            // Refresh failed
             setAuthFromInit(null, null);
           }
         } else {
-          // No valid session
+          // Refresh token expired or invalid - logout
           setAuthFromInit(null, null);
 
           // Clear cache
@@ -86,6 +99,9 @@ export default function AuthInitializer() {
         const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
+        // Only update state if component is still mounted
+        if (!isMountedRef.current) return;
+
         // Clear auth state on error
         setAuthFromInit(null, null);
 
@@ -98,14 +114,19 @@ export default function AuthInitializer() {
     };
 
     initializeAuth();
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [setAuthFromInit, auth.isInitialized, auth.accessToken, dispatch, getMe]);
 
   // Only show loading page if:
   // 1. Not initialized yet AND
-  // 2. No persisted token (first time login scenario)
-  const hasPersistedToken = typeof window !== 'undefined' && (auth.accessToken || localStorage.getItem('accessToken'));
+  // 2. No persisted user (first time visitor scenario)
+  const hasPersistedUser = auth.user !== null;
 
-  if (!auth.isInitialized && !hasPersistedToken) {
+  if (!auth.isInitialized && !hasPersistedUser) {
     return <AuthLoadingPage message="Verifying authentication..." />;
   }
 

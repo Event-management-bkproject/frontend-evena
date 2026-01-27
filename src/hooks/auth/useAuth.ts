@@ -7,7 +7,6 @@ import {
   setCredentials,
   clearCredentials,
   setAuthFromInitialization,
-  // setRefreshToken, // COMMENTED OUT: Backend refresh token not implemented yet
 } from '@/src/stores/slices/authSlice';
 import { RootState } from '@/src/stores/store';
 import { AuthAPI } from '@/src/stores/services/AuthApi';
@@ -20,7 +19,8 @@ export const useAuth = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state: RootState) => state.auth);
 
-  // Updated: Only accessToken, no refreshToken (backend not implemented yet)
+  // Security: accessToken stored in memory only (not persisted)
+  // Refresh token stored in httpOnly cookie by backend
   const login = (accessToken: string, user: any, isInitialized: boolean = true) => {
     console.debug('Setting auth:', { accessToken, user });
 
@@ -34,16 +34,13 @@ export const useAuth = () => {
     dispatch(
       setCredentials({
         accessToken,
-        // refreshToken, // COMMENTED OUT: Backend refresh token not implemented yet
         user,
         isInitialized,
       }),
     );
-
-    // AccessToken is now stored in Redux (persisted via redux-persist)
   };
 
-  // Updated: Only accessToken, no refreshToken
+  // Initialize auth from refresh token (httpOnly cookie)
   const setAuthFromInit = (
     accessToken: string | null,
     user: any | null,
@@ -56,26 +53,25 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    // Clear all cache before logout
+    try {
+      // Call logout API to clear httpOnly cookie
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include', // Send httpOnly cookie to be cleared
+      });
+    } catch (error) {
+      console.error('Logout API error:', error);
+    }
+
+    // Clear all cache after logout
     dispatch(AuthAPI.util.resetApiState());
     dispatch(OrganizerAPI.util.resetApiState());
     dispatch(EventAPI.util.resetApiState());
     dispatch(CategoryAPI.util.resetApiState());
     dispatch(VenueAPI.util.resetApiState());
 
-    // Clear credentials from Redux and localStorage
+    // Clear credentials from Redux and persisted storage
     dispatch(clearCredentials());
-
-    // COMMENTED OUT: Logout API call (backend refresh token not implemented yet)
-    // try {
-    //   // Call logout API to clear httpOnly cookie
-    //   await fetch('/api/auth/logout', {
-    //     method: 'POST',
-    //     credentials: 'include',
-    //   });
-    // } catch (error) {
-    //   console.error('Logout API error:', error);
-    // }
   };
 
   const checkAuth = async () => {

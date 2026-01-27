@@ -1,12 +1,16 @@
 // baseQuery.ts
 import { BaseQueryFn, FetchArgs, fetchBaseQuery, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { RootState } from '../store';
-import { setToken, clearCredentials } from '../slices/authSlice';
+import { clearCredentials, setCredentials } from '../slices/authSlice';
 import { apiLogger } from '@/src/utils/logger/flowLogger';
+import { Mutex } from 'async-mutex';
+
+// Create a mutex to prevent multiple refresh requests
+const mutex = new Mutex();
 
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
-  credentials: 'include',
+  credentials: 'include', // Send httpOnly cookies
   prepareHeaders: (headers) => {
     headers.set('Content-Type', 'application/json');
     return headers;
@@ -66,53 +70,71 @@ export const baseQueryWithReAuth: BaseQueryFn<string | FetchArgs, unknown, Fetch
     });
   }
 
-  // TODO: Backend refresh token not implemented yet
-  // If request failed with 401, clear credentials (no refresh logic)
+  // Handle 401 errors with refresh token
   if (result.error && result.error.status === 401) {
-    // Clear credentials on 401 (user needs to login again)
-    api.dispatch(clearCredentials());
-  }
+    // Wait until mutex is available (prevent multiple refresh requests)
+    if (!mutex.isLocked()) {
+      const release = await mutex.acquire();
 
-  // COMMENTED OUT: Refresh token logic (backend not implemented yet)
-  // if (result.error && result.error.status === 401) {
-  //   const refreshToken = state.auth?.refreshToken;
-  //
-  //   // Only try to refresh if we have a refresh token
-  //   if (refreshToken) {
-  //     try {
-  //       // Call Next.js API route to refresh token (HTTPOnly cookies)
-  //       const refreshResponse = await fetch('/api/auth/refresh', {
-  //         method: 'POST',
-  //         credentials: 'include',
-  //       });
-  //
-  //       if (refreshResponse.ok) {
-  //         const refreshData = await refreshResponse.json();
-  //
-  //         if (refreshData.success && refreshData.accessToken) {
-  //           // Store the new token in Redux
-  //           api.dispatch(setToken(refreshData.accessToken));
-  //
-  //           // Retry the original request with new token
-  //           (modifiedArgs.headers as Record<string, string>)['Authorization'] = `Bearer ${refreshData.accessToken}`;
-  //           result = await baseQuery(modifiedArgs, api, extraOptions);
-  //         } else {
-  //           // Refresh failed, clear credentials
-  //           api.dispatch(clearCredentials());
-  //         }
-  //       } else {
-  //         // Refresh failed, clear credentials
-  //         api.dispatch(clearCredentials());
-  //       }
-  //     } catch (error) {
-  //       console.error('Token refresh error:', error);
-  //       api.dispatch(clearCredentials());
-  //     }
-  //   } else {
-  //     // No refresh token, clear credentials
-  //     api.dispatch(clearCredentials());
-  //   }
-  // }
+      try {
+        apiLogger.info('Attempting to refresh access token...');
+
+        // Try to refresh token
+        const refreshResult = await baseQuery(
+          {
+            url: '/auth/refresh',
+            method: 'POST',
+            credentials: 'include',
+          },
+          api,
+          extraOptions
+        );
+
+        if (refreshResult.data) {
+          const refreshData = refreshResult.data as any;
+
+          if (refreshData.success && refreshData.data) {
+            // Store new access token and user data
+            api.dispatch(setCredentials({
+              accessToken: refreshData.data.accessToken,
+              user: refreshData.data.user,
+            }));
+
+            apiLogger.info('Access token refreshed successfully');
+
+            // Retry original request with new token
+            (modifiedArgs.headers as Record<string, string>)['Authorization'] = `Bearer ${refreshData.data.accessToken}`;
+            result = await baseQuery(modifiedArgs, api, extraOptions);
+          } else {
+            // Refresh failed - logout user
+            apiLogger.warn('Refresh token invalid - logging out');
+            api.dispatch(clearCredentials());
+          }
+        } else {
+          // Refresh failed - logout user
+          apiLogger.warn('Refresh token expired - logging out');
+          api.dispatch(clearCredentials());
+        }
+      } catch (error) {
+        apiLogger.error('Token refresh error', { error });
+        api.dispatch(clearCredentials());
+      } finally {
+        release();
+      }
+    } else {
+      // Wait for refresh to complete, then retry
+      await mutex.waitForUnlock();
+
+      // Get fresh token after refresh completes
+      const freshState = api.getState() as RootState;
+      const freshToken = freshState.auth?.accessToken;
+
+      if (freshToken) {
+        (modifiedArgs.headers as Record<string, string>)['Authorization'] = `Bearer ${freshToken}`;
+        result = await baseQuery(modifiedArgs, api, extraOptions);
+      }
+    }
+  }
 
   return result;
 };
