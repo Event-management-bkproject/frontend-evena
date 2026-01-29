@@ -14,9 +14,11 @@ import { orderLogger } from '@/src/utils/logger/flowLogger';
 import { PaymentProvider } from '@/src/stores/types/order';
 import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
+import { useTranslation } from 'react-i18next';
 
 export default function EventTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const resolvedParams = use(params);
   const eventId = resolvedParams.id;
   const { isAuthenticated } = useAuth();
@@ -48,14 +50,14 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
 
       // Check perUserLimit if set
       if (ticket.perUserLimit && newQuantity > ticket.perUserLimit) {
-        showSnackbar(`Maximum ${ticket.perUserLimit} tickets per user for ${ticket.name}`, 'warning');
+        showSnackbar(t('customer.maxTicketsPerUser', { count: ticket.perUserLimit, name: ticket.name }), 'warning');
         return prev;
       }
 
       // Check available stock
       const available = ticket.total - ticket.sold;
       if (newQuantity > available) {
-        showSnackbar(`Only ${available} tickets available for ${ticket.name}`, 'warning');
+        showSnackbar(t('customer.onlyTicketsAvailable', { count: available, name: ticket.name }), 'warning');
         return prev;
       }
 
@@ -77,7 +79,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   const handleCheckout = async () => {
     // No auth check needed - already in protected route
     if (getTotalQuantity() === 0) {
-      showSnackbar('Please select at least one ticket', 'warning');
+      showSnackbar(t('customer.selectAtLeastOneTicket'), 'warning');
       return;
     }
 
@@ -156,7 +158,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
       <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
         <Header cartItemCount={0} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Alert severity="error">Event not found</Alert>
+          <Alert severity="error">{t('messages.error.notFound', { item: t('common.entities.event') })}</Alert>
         </Container>
         <Footer />
       </Box>
@@ -170,7 +172,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
       <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
         {/* Back Button */}
         <Button startIcon={<ArrowBack />} onClick={() => router.back()} sx={{ mb: 3, color: '#2A3363' }}>
-          Back to Events
+          {t('customer.backToEvents')}
         </Button>
 
         {/* Event Info */}
@@ -194,11 +196,11 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
           {/* Ticket Selection */}
           <Grid size={{ xs: 12, md: 8 }}>
             <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363', mb: 3 }}>
-              Select Tickets
+              {t('customer.selectTickets')}
             </Typography>
 
             {ticketTypes.length === 0 ? (
-              <Alert severity="info">No tickets available for this event</Alert>
+              <Alert severity="info">{t('customer.noTicketsAvailable')}</Alert>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {ticketTypes.map((ticket) => {
@@ -216,12 +218,12 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                             {ticket.description}
                           </Typography>
                           <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {ticket.earlyBird && <Chip label="Early Bird" size="small" color="secondary" />}
+                            {ticket.earlyBird && <Chip label={t('customer.earlyBird')} size="small" color="secondary" />}
                             {ticket.perUserLimit && (
-                              <Chip label={`Max ${ticket.perUserLimit} per user`} size="small" color="info" />
+                              <Chip label={t('customer.maxPerUser', { count: ticket.perUserLimit })} size="small" color="info" />
                             )}
                             <Chip
-                              label={isAvailable ? `${available} available` : 'Sold Out'}
+                              label={isAvailable ? t('customer.available', { count: available }) : t('customer.soldOut')}
                               size="small"
                               color={isAvailable ? 'success' : 'error'}
                             />
@@ -277,7 +279,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                             </Box>
                           ) : (
                             <Typography variant="body2" color="error">
-                              Sold Out
+                              {t('customer.soldOut')}
                             </Typography>
                           )}
                         </Grid>
@@ -300,7 +302,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
               }}
             >
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
-                Order Summary
+                {t('customer.orderSummary')}
               </Typography>
 
               <Box sx={{ mb: 2 }}>
@@ -332,7 +334,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h6" fontWeight={700}>
-                  Total
+                  {t('common.labels.total')}
                 </Typography>
                 <Typography variant="h6" fontWeight={700} color="#F36BF9">
                   ${calculateTotal().toLocaleString()}
@@ -341,7 +343,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
 
               {/* Payment Method Selection */}
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
-                Payment Method:
+                {t('customer.paymentMethod')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
                 {Object.values(PaymentProvider).map((provider) => (
@@ -377,7 +379,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                   '&:hover': { backgroundColor: '#e55ae0' },
                 }}
               >
-                {isProcessing ? 'Processing...' : 'Checkout'}
+                {isProcessing ? t('customer.processing') : t('common.buttons.checkout')}
               </Button>
             </Card>
           </Grid>

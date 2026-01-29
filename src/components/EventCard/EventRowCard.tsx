@@ -357,4 +357,5 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
   );
 };
 
-export default EventRowCard;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(EventRowCard);

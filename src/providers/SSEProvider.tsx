@@ -148,15 +148,24 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       });
 
       eventSource.onerror = (error) => {
-        console.error(`[SSE][${channel}] ❌ Error:`, error);
+        if (error){
+          console.error(`[SSE][${channel}] ❌ Error:`, error);
+        }
         eventSourcesRef.current.delete(channel);
 
         // Reconnect after 3 seconds
         if (eventSourcesRef.current.size === 0) {
           setIsConnected(false);
+
+          // Clear any existing reconnect timeout to prevent memory leak
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+          }
+
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log(`[SSE] 🔄 Reconnecting to ${channel}...`);
             setupEventSource(channel);
+            reconnectTimeoutRef.current = null;
           }, 3000);
         }
       };

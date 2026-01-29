@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/src/stores/hooks';
 import { openModal, closeModal, setEventFilter } from '@/src/stores/slices/uiSlice';
 import {
@@ -43,6 +44,7 @@ export default function EventsManagement({
   initialVenues,
   userName,
 }: EventsManagementProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -83,8 +85,24 @@ export default function EventsManagement({
     }
   );
 
-  // Listen to SSE events for real-time updates
+  // Listen to SSE events for real-time updates with debouncing
   const { lastEvent } = useSSE();
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced refetch to prevent API spam from rapid SSE events
+  const debouncedRefetch = useCallback(() => {
+    // Clear any pending refetch
+    if (refetchTimeoutRef.current) {
+      clearTimeout(refetchTimeoutRef.current);
+    }
+
+    // Schedule new refetch after 500ms
+    refetchTimeoutRef.current = setTimeout(() => {
+      console.log('🔄 [EventsManagement] Refetching events (debounced)...');
+      refetchEvents();
+      refetchTimeoutRef.current = null;
+    }, 500);
+  }, [refetchEvents]);
 
   useEffect(() => {
     if (!lastEvent) return;
@@ -96,13 +114,21 @@ export default function EventsManagement({
       case 'EVENT_UPDATED':
       case 'EVENT_DELETED':
       case 'EVENT_PUBLISHED':
-        console.log('🔄 [EventsManagement] Refetching events...');
-        refetchEvents();
+        debouncedRefetch();
         break;
       default:
         break;
     }
-  }, [lastEvent, refetchEvents]);
+  }, [lastEvent, debouncedRefetch]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Fetch full event details khi editing
   const { data: fullEventResponse } = useGetEventByIdQuery(selectedItemId as string, {
@@ -192,10 +218,10 @@ export default function EventsManagement({
   const handleCreateEvent = async (formData: EventFormData) => {
     try {
       await createEvent(formData).unwrap();
-      showSuccessMessage('Event created successfully!');
+      showSuccessMessage(t('messages.success.eventCreated'));
       dispatch(closeModal('createEvent'));
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || error?.message || 'Failed to create event');
+      showErrorMessage(error?.data?.message || error?.message || t('messages.error.eventCreateFailed'));
     }
   };
 
@@ -215,10 +241,10 @@ export default function EventsManagement({
       };
 
       await updateEvent({ id: selectedItemId as string, data: updateData }).unwrap();
-      showSuccessMessage('Event updated successfully!');
+      showSuccessMessage(t('messages.success.eventUpdated'));
       dispatch(closeModal('updateEvent'));
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || error?.message || 'Failed to update event');
+      showErrorMessage(error?.data?.message || error?.message || t('messages.error.eventUpdateFailed'));
     }
   };
 
@@ -227,10 +253,10 @@ export default function EventsManagement({
 
     try {
       await deleteEvent(selectedItemId as string).unwrap();
-      showSuccessMessage('Event deleted successfully!');
+      showSuccessMessage(t('messages.success.eventDeleted'));
       dispatch(closeModal('deleteConfirm'));
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || error?.message || 'Failed to delete event');
+      showErrorMessage(error?.data?.message || error?.message || t('messages.error.eventDeleteFailed'));
     }
   };
 
@@ -267,8 +293,8 @@ export default function EventsManagement({
       {/* Header */}
       <Box sx={{ mb: '10px' }}>
         <DashboardHeader
-          title="Events"
-          breadcrumbs={[{ label: 'Dashboard', href: '/dashboard/organizer' }, { label: 'Events' }]}
+          title={t('common.navigation.events')}
+          breadcrumbs={[{ label: t('common.navigation.dashboard'), href: '/dashboard/organizer' }, { label: t('common.navigation.events') }]}
           userName={userName}
         />
       </Box>
@@ -291,7 +317,7 @@ export default function EventsManagement({
         {/* Warning if no organization */}
         {!canCreateEvent && (
           <Box sx={{ mb: 2, p: 2, bgcolor: '#FABABB', borderRadius: 1, color: '#FF5B5E' }}>
-            You need to create an organization first.
+            {t('event.needOrganization')}
           </Box>
         )}
 
@@ -309,7 +335,7 @@ export default function EventsManagement({
       <BaseModal
         open={modals.createEvent}
         onClose={() => dispatch(closeModal('createEvent'))}
-        title="Create New Event"
+        title={t('event.createNew')}
         maxWidth="lg"
       >
         <CreateEventForm
@@ -327,7 +353,7 @@ export default function EventsManagement({
         <BaseModal
           open={modals.updateEvent}
           onClose={() => dispatch(closeModal('updateEvent'))}
-          title="Edit Event"
+          title={t('event.edit')}
           maxWidth="lg"
         >
           <UpdateEventForm
@@ -347,8 +373,8 @@ export default function EventsManagement({
         open={modals.deleteConfirm}
         onClose={() => dispatch(closeModal('deleteConfirm'))}
         onConfirm={handleDeleteEvent}
-        title="Delete Event"
-        message={`Are you sure you want to delete "${selectedEvent?.title}"? This action cannot be undone.`}
+        title={t('event.delete')}
+        message={t('dialog.delete.message', { name: selectedEvent?.title || '' })}
         loading={deletingEvent}
       />
 

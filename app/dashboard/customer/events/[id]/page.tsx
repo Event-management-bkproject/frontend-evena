@@ -9,9 +9,11 @@ import { useGetAvailableTicketTypesQuery } from '@/src/stores/services/TicketTyp
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import Image from 'next/image';
+import { useTranslation } from 'react-i18next';
 
 export default function CustomerEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const resolvedParams = use(params);
   const eventId = resolvedParams.id;
 
@@ -80,7 +82,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
       <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
         <Header />
         <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Alert severity="error">Failed to load event details. Please try again later.</Alert>
+          <Alert severity="error">{t('messages.error.loadFailed', { item: t('common.entities.event') })}</Alert>
         </Container>
         <Footer />
       </Box>
@@ -159,7 +161,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                     mb: 3,
                   }}
                 >
-                  THE EVENTS
+                  {t('customer.theEvents')}
                 </Typography>
 
                 {/* Large Title - Multi-line */}
@@ -214,7 +216,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  Book Now!
+                  {t('customer.bookNow')}
                 </Button>
               </Box>
 
@@ -238,7 +240,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                         variant="caption"
                         sx={{ color: '#36437C', display: 'block', fontSize: '11px', mb: 0.5 }}
                       >
-                        SALE FROM
+                        {t('customer.saleFrom')}
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#ADACAE' }}>
                         {getSalesDateRange()}
@@ -254,7 +256,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                         variant="caption"
                         sx={{ color: '#36437C', display: 'block', fontSize: '11px', mb: 0.5 }}
                       >
-                        DATE & TIME
+                        {t('customer.dateAndTime')}
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#ADACAE' }}>
                         {formatDate(event.startAt)} • {formatTime(event.startAt)}
@@ -270,7 +272,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                         variant="caption"
                         sx={{ color: '#36437C', display: 'block', fontSize: '11px', mb: 0.5 }}
                       >
-                        LOCATION
+                        {t('customer.location')}
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#ADACAE' }}>
                         {event.venue?.name}, {event.venue?.city}
@@ -297,7 +299,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                       variant="caption"
                       sx={{ color: '#36437C', display: 'block', fontSize: '11px', mb: 0.5 }}
                     >
-                      STARTING FROM
+                      {t('customer.startingFrom')}
                     </Typography>
                     <Typography
                       variant="h4"
@@ -382,7 +384,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                   fontSize: '2.5rem',
                 }}
               >
-                Packages
+                {t('customer.packages')}
               </Typography>
 
               {/* Ticket Cards */}
@@ -398,7 +400,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                     }}
                   >
                     <Typography variant="body1" color="text.secondary">
-                      No tickets available
+                      {t('customer.noTicketsAvailable')}
                     </Typography>
                   </Card>
                 ) : (
@@ -434,7 +436,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                             </Typography>
                             {ticket.earlyBird && (
                               <Chip
-                                label="EARLY BIRD"
+                                label={t('customer.earlyBird')}
                                 size="small"
                                 sx={{
                                   backgroundColor: '#FFD54F',
@@ -458,13 +460,13 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                               fontSize: '0.95rem',
                             }}
                           >
-                            {ticket.description || 'Standard admission ticket'}
+                            {ticket.description || t('customer.standardAdmission')}
                           </Typography>
 
                           {/* Badges */}
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             <Chip
-                              label={`${ticket.total - ticket.sold} available`}
+                              label={t('customer.available', { count: ticket.total - ticket.sold })}
                               size="small"
                               sx={{
                                 backgroundColor: '#E8F5E9',
@@ -476,7 +478,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                             />
                             {ticket.perUserLimit && (
                               <Chip
-                                label={`Max ${ticket.perUserLimit}/user`}
+                                label={t('customer.maxPerUser', { count: ticket.perUserLimit })}
                                 size="small"
                                 sx={{
                                   backgroundColor: '#E3F2FD',
@@ -514,7 +516,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                                 fontSize: '0.9rem',
                               }}
                             >
-                              {ticket.earlyBirdDiscount}% OFF
+                              {t('customer.percentOff', { percent: ticket.earlyBirdDiscount })}
                             </Typography>
                           )}
                         </Box>
@@ -548,7 +550,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    Select Tickets →
+                    {t('customer.selectTickets')} →
                   </Button>
                 )}
               </Box>
@@ -565,7 +567,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                   fontSize: '2.5rem',
                 }}
               >
-                About Event
+                {t('customer.aboutEvent')}
               </Typography>
 
               <Card
@@ -611,7 +613,7 @@ Don't miss your chance to be part of this extraordinary occasion. Get your ticke
                     fontSize: '1.35rem',
                   }}
                 >
-                  Event Details
+                  {t('customer.eventDetails')}
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -622,7 +624,7 @@ Don't miss your chance to be part of this extraordinary occasion. Get your ticke
                         variant="body2"
                         sx={{ color: '#999', minWidth: '120px', fontWeight: 600, fontSize: '0.95rem' }}
                       >
-                        Category
+                        {t('common.labels.category')}
                       </Typography>
                       <Chip
                         label={event.category.name}
@@ -644,10 +646,10 @@ Don't miss your chance to be part of this extraordinary occasion. Get your ticke
                       variant="body2"
                       sx={{ color: '#999', minWidth: '120px', fontWeight: 600, fontSize: '0.95rem' }}
                     >
-                      Organized by
+                      {t('customer.organizedBy')}
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 700, color: '#2A3363', fontSize: '1rem' }}>
-                      {event.organizer?.name || 'Event Organizer'}
+                      {event.organizer?.name || t('customer.eventOrganizer')}
                     </Typography>
                   </Box>
 
@@ -657,7 +659,7 @@ Don't miss your chance to be part of this extraordinary occasion. Get your ticke
                       variant="body2"
                       sx={{ color: '#999', minWidth: '120px', fontWeight: 600, fontSize: '0.95rem' }}
                     >
-                      Status
+                      {t('common.labels.status')}
                     </Typography>
                     <Chip
                       label={event.status}

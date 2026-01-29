@@ -30,6 +30,7 @@ import Footer from '@/src/components/Footer';
 import { orderLogger } from '@/src/utils/logger/flowLogger';
 import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
+import { useTranslation } from 'react-i18next';
 
 interface OrderRowProps {
   order: any;
@@ -39,6 +40,7 @@ interface OrderRowProps {
   isCancelling: boolean;
   getStatusColor: (status: OrderStatus) => any;
   router: any;
+  t: any;
 }
 
 function OrderRow({
@@ -49,6 +51,7 @@ function OrderRow({
   isCancelling,
   getStatusColor,
   router,
+  t,
 }: OrderRowProps) {
   return (
     <>
@@ -60,21 +63,21 @@ function OrderRow({
         </TableCell>
         {/* <TableCell>#{order.id}</TableCell> */}
         <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-        <TableCell>{order.ticketCount} tickets</TableCell>
+        <TableCell>{order.ticketCount} {t('common.entities.ticket')}</TableCell>
         <TableCell sx={{ fontWeight: 600 }}>${order.totalAmount.toLocaleString()}</TableCell>
         <TableCell>
           <Chip label={order.status} color={getStatusColor(order.status)} size="small" />
         </TableCell>
         <TableCell>
           <Chip
-            label={order.status === OrderStatus.CONFIRMED ? 'PAID' : 'PENDING'}
+            label={order.status === OrderStatus.CONFIRMED ? t('common.status.paid') : t('common.status.pendingPayment')}
             color={order.status === OrderStatus.CONFIRMED ? 'success' : 'warning'}
             size="small"
           />
         </TableCell>
         <TableCell>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Tooltip title="View Details">
+            <Tooltip title={t('customer.viewDetails')}>
               <IconButton
                 size="small"
                 onClick={() => router.push(`/dashboard/customer/cart/${order.id}`)}
@@ -84,7 +87,7 @@ function OrderRow({
               </IconButton>
             </Tooltip>
             {order.status === OrderStatus.PENDING && (
-              <Tooltip title="Cancel Order">
+              <Tooltip title={t('customer.cancelOrder')}>
                 <IconButton
                   size="small"
                   onClick={() => onCancel(order.id)}
@@ -105,34 +108,34 @@ function OrderRow({
               {order.items && order.items.length > 0 ? (
                 <>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#2A3363' }}>
-                    Order Items
+                    {t('customer.orderItems')}
                   </Typography>
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ backgroundColor: '#F9F9F9' }}>
                         <TableCell>
                           <Typography variant="body2" fontWeight={600}>
-                            Event
+                            {t('common.labels.event')}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight={600}>
-                            Ticket Type
+                            {t('common.labels.ticketType')}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight={600}>
-                            Price
+                            {t('common.labels.price')}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight={600}>
-                            Quantity
+                            {t('common.labels.quantity')}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight={600}>
-                            Subtotal
+                            {t('common.labels.subtotal')}
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -154,7 +157,7 @@ function OrderRow({
                 </>
               ) : (
                 <Typography variant="body2" color="text.secondary">
-                  No items found
+                  {t('customer.noItemsFound')}
                 </Typography>
               )}
             </Box>
@@ -167,6 +170,7 @@ function OrderRow({
 
 export default function MyOrdersPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
@@ -193,7 +197,7 @@ export default function MyOrdersPage() {
   };
 
   const handleCancelOrder = async (orderId: number) => {
-    if (!confirm('Are you sure you want to cancel this order?')) {
+    if (!confirm(t('customer.confirmCancelOrder'))) {
       return;
     }
 
@@ -201,10 +205,10 @@ export default function MyOrdersPage() {
       orderLogger.info('Cancelling order', { orderId });
       await cancelOrder(orderId).unwrap();
       orderLogger.info('Order cancelled successfully', { orderId });
-      showSnackbar('Order cancelled successfully', 'success');
+      showSnackbar(t('messages.success.orderCancelled'), 'success');
     } catch (error: any) {
       orderLogger.error('Failed to cancel order', { orderId, error });
-      showSnackbar(`Failed to cancel order: ${error?.data?.message || 'Please try again'}`, 'error');
+      showSnackbar(t('messages.error.cancelFailed', { item: t('common.entities.order'), reason: error?.data?.message || '' }), 'error');
     }
   };
 
@@ -226,15 +230,15 @@ export default function MyOrdersPage() {
 
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#2A3363', mb: 4 }}>
-          My Orders
+          {t('customer.myOrders')}
         </Typography>
 
         {error ? (
-          <Alert severity="error">Failed to load orders. Please try again later.</Alert>
+          <Alert severity="error">{t('messages.error.loadFailed', { item: t('common.entities.order') })}</Alert>
         ) : orders.length === 0 ? (
           <Card sx={{ p: 6, textAlign: 'center', borderRadius: '16px' }}>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-              No orders yet
+              {t('customer.noOrdersYet')}
             </Typography>
             <Button
               variant="contained"
@@ -244,7 +248,7 @@ export default function MyOrdersPage() {
                 '&:hover': { backgroundColor: '#e55ae0' },
               }}
             >
-              Browse Events
+              {t('customer.browseEvents')}
             </Button>
           </Card>
         ) : (
@@ -255,12 +259,12 @@ export default function MyOrdersPage() {
                   <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
                     <TableCell sx={{ fontWeight: 700, width: '50px' }} />
                     {/* <TableCell sx={{ fontWeight: 700 }}>Order ID</TableCell> */}
-                    <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Items</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Payment</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{t('common.labels.date')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{t('common.labels.items')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{t('common.labels.total')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{t('common.labels.status')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{t('common.labels.payment')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{t('common.labels.actions')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -274,6 +278,7 @@ export default function MyOrdersPage() {
                       isCancelling={isCancelling}
                       getStatusColor={getStatusColor}
                       router={router}
+                      t={t}
                     />
                   ))}
                 </TableBody>

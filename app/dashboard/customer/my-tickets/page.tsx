@@ -24,9 +24,11 @@ import { TicketStatus } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 export default function MyTicketsPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { data, isLoading, error } = useGetMyTicketsQuery();
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
 
@@ -50,15 +52,15 @@ export default function MyTicketsPage() {
 
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#2A3363', mb: 4 }}>
-          My Tickets
+          {t('customer.myTickets')}
         </Typography>
 
         {error ? (
-          <Alert severity="error">Failed to load tickets. Please try again later.</Alert>
+          <Alert severity="error">{t('messages.error.loadFailed', { item: t('common.entities.ticket') })}</Alert>
         ) : tickets.length === 0 ? (
           <Card sx={{ p: 6, textAlign: 'center', borderRadius: '16px' }}>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-              No tickets yet
+              {t('customer.noTicketsYet')}
             </Typography>
             <Button
               variant="contained"
@@ -68,7 +70,7 @@ export default function MyTicketsPage() {
                 '&:hover': { backgroundColor: '#e55ae0' },
               }}
             >
-              Browse Events
+              {t('customer.browseEvents')}
             </Button>
           </Card>
         ) : (
@@ -104,7 +106,7 @@ export default function MyTicketsPage() {
                   <Box sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Ticket ID:
+                        {t('common.labels.ticketId')}:
                       </Typography>
                       <Typography variant="body2" fontWeight={600}>
                         #{ticket.id}
@@ -113,7 +115,7 @@ export default function MyTicketsPage() {
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Status:
+                        {t('common.labels.status')}:
                       </Typography>
                       <Chip
                         label={ticket.status}
@@ -124,7 +126,7 @@ export default function MyTicketsPage() {
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Issued:
+                        {t('common.labels.issued')}:
                       </Typography>
                       <Typography variant="body2">
                         {new Date(ticket.issuedAt).toLocaleDateString()}
@@ -142,13 +144,13 @@ export default function MyTicketsPage() {
                           '&:hover': { backgroundColor: '#e55ae0' },
                         }}
                       >
-                        View QR Code
+                        {t('customer.viewQRCode')}
                       </Button>
                     )}
 
                     {ticket.status === TicketStatus.USED && (
                       <Alert severity="info" sx={{ mt: 2 }}>
-                        Used on {new Date(ticket.usedAt!).toLocaleDateString()}
+                        {t('customer.usedOn', { date: new Date(ticket.usedAt!).toLocaleDateString() })}
                       </Alert>
                     )}
                   </Box>
@@ -169,7 +171,7 @@ export default function MyTicketsPage() {
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="h6" fontWeight={700}>
-              Ticket QR Code
+              {t('customer.ticketQRCode')}
             </Typography>
             <IconButton onClick={() => setSelectedTicket(null)}>
               <Close />
@@ -201,7 +203,7 @@ export default function MyTicketsPage() {
               <Grid container spacing={2} sx={{ textAlign: 'left' }}>
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Ticket ID:
+                    {t('common.labels.ticketId')}:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
                     #{selectedTicket.id}
@@ -210,7 +212,7 @@ export default function MyTicketsPage() {
 
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Ticket Type:
+                    {t('common.labels.ticketType')}:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
                     {selectedTicket.orderItem?.ticketType?.name}
@@ -219,7 +221,7 @@ export default function MyTicketsPage() {
 
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Owner:
+                    {t('common.labels.owner')}:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
                     {selectedTicket.user.name}
@@ -228,7 +230,7 @@ export default function MyTicketsPage() {
 
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Issued:
+                    {t('common.labels.issued')}:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
                     {new Date(selectedTicket.issuedAt).toLocaleDateString()}
@@ -237,7 +239,7 @@ export default function MyTicketsPage() {
               </Grid>
 
               <Alert severity="info" sx={{ mt: 3 }}>
-                Please present this QR code at the event entrance
+                {t('customer.presentQRCode')}
               </Alert>
             </Box>
           )}

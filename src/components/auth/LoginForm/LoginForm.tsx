@@ -2,6 +2,7 @@
 
 import { Box, Typography } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import Forms from '@components/Forms';
 import FormTextField from '@components/FormTextField';
 import FormButton from '@components/FormButton';
@@ -19,6 +20,7 @@ interface LoginFormValues {
  * Login form component with validation and submission logic
  */
 export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
+  const { t } = useTranslation();
   const { login, isLoading } = useLogin();
 
   const handleSubmit = async (values: LoginFormValues) => {
@@ -41,27 +43,27 @@ export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
           <FormTextField
             id="login-email"
             name="email"
-            label="Email"
+            label={t('common.labels.email')}
             type="email"
             required={true}
-            placeholder="Enter your email"
+            placeholder={t('auth.placeholders.enterEmail')}
             autoComplete="username"
           />
 
           <FormTextField
             id="login-password"
             name="password"
-            label="Password"
+            label={t('common.labels.password')}
             type="password"
             required={true}
-            placeholder="Enter your password"
+            placeholder={t('auth.placeholders.enterPassword')}
             autoComplete="new-password"
           />
 
           <FormButton
             isRegister={false}
             disabled={!formikProps.isValid || formikProps.isSubmitting || isLoading}
-            loginBtnLabelText={formikProps.isSubmitting || isLoading ? 'Logging in...' : 'Login'}
+            loginBtnLabelText={formikProps.isSubmitting || isLoading ? t('auth.login.loggingIn') : t('auth.login.title')}
           />
 
           <Box
@@ -76,11 +78,11 @@ export function LoginForm({ onSubmitSuccess }: LoginFormProps) {
             }}
           >
             <Typography variant="body2" component="span" sx={{ color: 'primary.main' }}>
-              Don&apos;t have an account? Register as:
+              {t('auth.login.dontHaveAccount')}
             </Typography>
 
-            <AuthLink href="/register">Customer</AuthLink>
-            <AuthLink href="/register/organizer">Organization</AuthLink>
+            <AuthLink href="/register">{t('auth.login.customer')}</AuthLink>
+            <AuthLink href="/register/organizer">{t('auth.login.organization')}</AuthLink>
           </Box>
         </>
       )}

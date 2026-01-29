@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Box, Breadcrumbs, Typography, IconButton, Avatar, Badge } from '@mui/material';
 import { Notifications, Settings, NavigateNext } from '@mui/icons-material';
 import Link from 'next/link';
 import { DashboardHeaderProps } from './types';
+import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
 
 export function DashboardHeader({
   title,
@@ -14,6 +16,8 @@ export function DashboardHeader({
   onSettingsClick,
   onProfileClick,
 }: DashboardHeaderProps) {
+  const [languageSwitcherOpen, setLanguageSwitcherOpen] = useState(false);
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -21,6 +25,11 @@ export function DashboardHeader({
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleSettingsClick = () => {
+    setLanguageSwitcherOpen(true);
+    onSettingsClick?.();
   };
 
   return (
@@ -99,7 +108,7 @@ export function DashboardHeader({
 
         {/* Settings */}
         <IconButton
-          onClick={onSettingsClick}
+          onClick={handleSettingsClick}
           size="medium"
           sx={{
             borderRadius: '50%',
@@ -145,6 +154,9 @@ export function DashboardHeader({
           </Typography>
         </Box>
       </Box>
+
+      {/* Language Switcher Modal */}
+      <LanguageSwitcher open={languageSwitcherOpen} onClose={() => setLanguageSwitcherOpen(false)} />
     </Box>
   );
 }

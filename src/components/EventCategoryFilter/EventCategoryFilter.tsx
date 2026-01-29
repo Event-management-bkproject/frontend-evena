@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Box, Chip, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import { CategoryResponse } from '@/src/stores/types';
+import { useTranslation } from 'react-i18next';
 
 interface EventCategoryFilterProps {
   categories: CategoryResponse[];
@@ -15,6 +16,7 @@ export default function EventCategoryFilter({
   onCategoryChange,
   onTimePeriodChange,
 }: EventCategoryFilterProps) {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [timePeriod, setTimePeriod] = useState<'today' | 'week' | 'month' | 'all'>('all');
 
@@ -35,7 +37,7 @@ export default function EventCategoryFilter({
       {/* Time Period Filter */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2A3363', minWidth: '100px' }}>
-          Time Period:
+          {t('filter.timePeriod')}
         </Typography>
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <Select
@@ -55,10 +57,10 @@ export default function EventCategoryFilter({
               },
             }}
           >
-            <MenuItem value="all">All Time</MenuItem>
-            <MenuItem value="today">Today</MenuItem>
-            <MenuItem value="week">This Week</MenuItem>
-            <MenuItem value="month">This Month</MenuItem>
+            <MenuItem value="all">{t('filter.allTime')}</MenuItem>
+            <MenuItem value="today">{t('filter.today')}</MenuItem>
+            <MenuItem value="week">{t('filter.thisWeek')}</MenuItem>
+            <MenuItem value="month">{t('filter.thisMonth')}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -66,11 +68,11 @@ export default function EventCategoryFilter({
       {/* Category Chips */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2A3363', minWidth: '100px' }}>
-          Categories:
+          {t('filter.categories')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Chip
-            label="All"
+            label={t('filter.all')}
             onClick={() => {
               setSelectedCategory(null);
               onCategoryChange(null);

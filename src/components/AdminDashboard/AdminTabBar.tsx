@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, TextField, Paper } from '@mui/material';
 import { Add as AddIcon, Category as CategoryIcon, Place as PlaceIcon, Search as SearchIcon, Business as BusinessIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface AdminTabBarProps {
   activeTab: number;
@@ -19,11 +20,13 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
   onAddClick,
   showAddButton = true,
 }) => {
+  const { t } = useTranslation();
+
   const getTabLabel = () => {
     switch (activeTab) {
-      case 0: return 'Category';
-      case 1: return 'Venue';
-      case 2: return 'Organization';
+      case 0: return t('common.entities.category');
+      case 1: return t('common.entities.venue');
+      case 2: return t('common.entities.organization');
       default: return '';
     }
   };
@@ -54,7 +57,7 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
             }}
             startIcon={<CategoryIcon />}
           >
-            Categories
+            {t('admin.tabs.categories')}
           </Button>
           <Button
             variant={activeTab === 1 ? 'contained' : 'text'}
@@ -69,7 +72,7 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
             }}
             startIcon={<PlaceIcon />}
           >
-            Venues
+            {t('admin.tabs.venues')}
           </Button>
           <Button
             variant={activeTab === 2 ? 'contained' : 'text'}
@@ -83,14 +86,14 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
             }}
             startIcon={<BusinessIcon />}
           >
-            Organizations
+            {t('admin.tabs.organizations')}
           </Button>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
             size="small"
-            placeholder="Search..."
+            placeholder={t('common.labels.search')}
             value={searchTerm}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
             InputProps={{
@@ -108,7 +111,7 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
                 '&:hover': { bgcolor: '#e055e9' },
               }}
             >
-              Add {getTabLabel()}
+              {t('admin.tabs.add', { item: getTabLabel() })}
             </Button>
           )}
         </Box>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import { Category as CategoryIcon, Place as PlaceIcon, Business as BusinessIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface AdminStatsCardsProps {
   categoriesCount: number;
@@ -13,6 +14,8 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
   venuesCount,
   organizationsCount = 0
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Box
       sx={{
@@ -31,7 +34,7 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
                 <Typography variant="h4" fontWeight="bold">
                   {categoriesCount}
                 </Typography>
-                <Typography variant="body2">Total Categories</Typography>
+                <Typography variant="body2">{t('admin.stats.total', { item: t('common.entities.category') })}</Typography>
               </Box>
             </Stack>
           </CardContent>
@@ -46,7 +49,7 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
                 <Typography variant="h4" fontWeight="bold">
                   {venuesCount}
                 </Typography>
-                <Typography variant="body2">Total Venues</Typography>
+                <Typography variant="body2">{t('admin.stats.total', { item: t('common.entities.venue') })}</Typography>
               </Box>
             </Stack>
           </CardContent>
@@ -61,7 +64,7 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
                 <Typography variant="h4" fontWeight="bold">
                   {organizationsCount}
                 </Typography>
-                <Typography variant="body2">Total Organizations</Typography>
+                <Typography variant="body2">{t('admin.stats.total', { item: t('common.entities.organization') })}</Typography>
               </Box>
             </Stack>
           </CardContent>

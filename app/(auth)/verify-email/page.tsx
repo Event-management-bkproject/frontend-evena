@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Box, Typography, Paper, Button, CircularProgress, Alert } from '@mui/material';
 import Image from 'next/image';
+import { useTranslation } from 'react-i18next';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function VerifyEmailPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const hasVerified = useRef(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Prevent double verification (React StrictMode calls useEffect twice)
@@ -24,7 +26,7 @@ export default function VerifyEmailPage() {
     const verifyEmail = async () => {
       if (!token) {
         setStatus('error');
-        setMessage('Liên kết xác thực không hợp lệ');
+        setMessage(t('verifyEmail.invalidLink'));
         return;
       }
 
@@ -40,14 +42,14 @@ export default function VerifyEmailPage() {
 
         if (res.ok && data.success) {
           setStatus('success');
-          setMessage(data.message || 'Xác thực email thành công!');
+          setMessage(data.message || t('verifyEmail.success'));
         } else {
           setStatus('error');
-          setMessage(data.message || 'Xác thực email thất bại');
+          setMessage(data.message || t('verifyEmail.failed'));
         }
       } catch (error) {
         setStatus('error');
-        setMessage('Có lỗi xảy ra khi xác thực email');
+        setMessage(t('verifyEmail.networkError'));
       }
     };
 
@@ -80,14 +82,14 @@ export default function VerifyEmailPage() {
         </Box>
 
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#37437D' }}>
-          Xác Thực Email
+          {t('verifyEmail.title')}
         </Typography>
 
         {status === 'loading' && (
           <Box sx={{ my: 4 }}>
             <CircularProgress size={60} sx={{ color: '#37437D', mb: 2 }} />
             <Typography variant="body1" sx={{ color: '#37437D' }}>
-              Đang xác thực email của bạn...
+              {t('verifyEmail.verifying')}
             </Typography>
           </Box>
         )}
@@ -98,7 +100,7 @@ export default function VerifyEmailPage() {
               {message}
             </Alert>
             <Typography variant="body1" sx={{ color: '#37437D', mb: 3 }}>
-              Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập vào tài khoản.
+              {t('verifyEmail.successMessage')}
             </Typography>
             <Button
               variant="contained"
@@ -111,7 +113,7 @@ export default function VerifyEmailPage() {
                 py: 1.5,
               }}
             >
-              Đăng Nhập
+              {t('common.buttons.login')}
             </Button>
           </Box>
         )}
@@ -122,7 +124,7 @@ export default function VerifyEmailPage() {
               {message}
             </Alert>
             <Typography variant="body1" sx={{ color: '#37437D', mb: 3 }}>
-              Vui lòng thử lại hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn.
+              {t('verifyEmail.errorMessage')}
             </Typography>
             <Button
               variant="outlined"
@@ -137,7 +139,7 @@ export default function VerifyEmailPage() {
                 mr: 2,
               }}
             >
-              Đăng Ký Lại
+              {t('verifyEmail.registerAgain')}
             </Button>
             <Button
               variant="contained"
@@ -150,7 +152,7 @@ export default function VerifyEmailPage() {
                 py: 1.5,
               }}
             >
-              Đăng Nhập
+              {t('common.buttons.login')}
             </Button>
           </Box>
         )}

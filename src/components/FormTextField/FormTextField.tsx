@@ -3,7 +3,7 @@
 import { CharacterKeyCode } from '@/src/utils/constants/constant';
 import { TextField, TextFieldProps, Typography, Autocomplete, InputAdornment, IconButton } from '@mui/material';
 import { Field, FieldProps, useFormikContext } from 'formik';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { StyledFormTextField } from './styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -85,7 +85,9 @@ const FormTextField = ({
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
   };
-  const onKeyDown = (e: any) => {
+
+  // Memoize onKeyDown to prevent memory leaks
+  const onKeyDown = useCallback((e: any) => {
     if (e.target.type === 'number' && e.target.nodeName === 'INPUT') {
       if (
         (disabledDecimal && CharacterKeyCode.DECIMALPOINT_KEYCODE.includes(e.keyCode)) ||
@@ -98,17 +100,21 @@ const FormTextField = ({
       }
     }
     return;
-  };
+  }, [disabledDecimal, disabledNaturalBase, disabledNegative, disabledPositive]);
 
   const { setFieldValue } = useFormikContext();
 
+  // Fix memory leak: properly clean up event listener
   useEffect(() => {
     const inputElement = document.getElementById(id);
-    inputElement?.addEventListener('keydown', onKeyDown);
-    return function () {
-      inputElement?.removeEventListener('keydown', onKeyDown);
+    if (!inputElement) return;
+
+    inputElement.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      inputElement.removeEventListener('keydown', onKeyDown);
     };
-  }, [id]);
+  }, [id, onKeyDown]);
 
   const handleBlur = (field: any) => (e: React.FocusEvent<HTMLInputElement>) => {
     field.onBlur(e);

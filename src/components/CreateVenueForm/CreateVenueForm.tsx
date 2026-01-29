@@ -6,8 +6,10 @@ import FormTextField from '../FormTextField';
 import FormTextareaField from '../FormTextAreaField';
 import { venueSchema } from '@/src/utils/validationSchema/venueValidationSchema';
 import { CreateVenueFormProps, VenueFormData } from './types';
+import { useTranslation } from 'react-i18next';
 
 const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValues, title }: CreateVenueFormProps) => {
+  const { t } = useTranslation();
   const defaultValues: VenueFormData = {
     name: '',
     address: '',
@@ -24,9 +26,13 @@ const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValu
     actions.setSubmitting(false);
   };
 
+  // Determine if we're in edit mode - use title prop first, then check initialValues
+  const isEditMode = initialValues && Object.keys(initialValues).length > 0;
+  const dialogTitle = title || (isEditMode ? t('venue.edit') : t('venue.createNew'));
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{title || (initialValues?.name ? 'Edit Venue' : 'Create New Venue')}</DialogTitle>
+      <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent>
         <Box sx={{ mt: 2 }}>
           <Forms
@@ -41,41 +47,48 @@ const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValu
               <FormTextField
                 id="venue-name"
                 name="name"
-                label="Venue Name"
+                label={t('venue.form.name')}
                 type="text"
                 required
-                placeholder="Enter venue name"
+                placeholder={t('venue.form.namePlaceholder')}
               />
 
               {/* Address Field */}
               <FormTextField
                 id="venue-address"
                 name="address"
-                label="Address"
+                label={t('venue.form.address')}
                 type="text"
                 required
-                placeholder="Enter full address"
+                placeholder={t('venue.form.addressPlaceholder')}
               />
 
               {/* City Field */}
-              <FormTextField id="venue-city" name="city" label="City" type="text" required placeholder="Enter city" />
+              <FormTextField
+                id="venue-city"
+                name="city"
+                label={t('venue.form.city')}
+                type="text"
+                required
+                placeholder={t('venue.form.cityPlaceholder')}
+              />
 
               {/* Coordinates */}
               <Box display="flex" gap={2}>
                 <FormTextField
                   id="venue-lat"
                   name="lat"
-                  label="Latitude"
+                  label={t('venue.form.latitude')}
                   type="number"
-                  placeholder="e.g., 10.762622"
+                  placeholder={t('venue.form.latitudePlaceholder')}
                   fullWidth
                 />
                 <FormTextField
                   id="venue-lng"
                   name="lng"
-                  label="Longitude"
+                  label={t('venue.form.longitude')}
                   type="number"
-                  placeholder="e.g., 106.660172"
+                  placeholder={t('venue.form.longitudePlaceholder')}
                   fullWidth
                 />
               </Box>
@@ -84,15 +97,15 @@ const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValu
               <FormTextField
                 id="venue-capacity"
                 name="capacity"
-                label="Capacity"
+                label={t('venue.form.capacity')}
                 type="number"
                 required
                 disabledNaturalBase
-                placeholder="Enter capacity"
+                placeholder={t('venue.form.capacityPlaceholder')}
               />
 
               {/* Description Field */}
-              <FormTextareaField id="venue-description" name="description" label="Enter venue description" />
+              <FormTextareaField id="venue-description" name="description" label={t('venue.form.descriptionPlaceholder')} />
             </Box>
 
             {/* Actions */}
@@ -108,7 +121,7 @@ const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValu
                   fontSize: '16px',
                 }}
               >
-                Cancel
+                {t('common.buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -129,13 +142,7 @@ const CreateVenueForm = ({ open, onSubmit, onClose, loading = false, initialValu
                   },
                 }}
               >
-                {loading
-                  ? initialValues?.name
-                    ? 'Updating...'
-                    : 'Creating...'
-                  : initialValues?.name
-                  ? 'Update Venue'
-                  : 'Create Venue'}
+                {loading ? (isEditMode ? t('venue.updating') : t('venue.creating')) : isEditMode ? t('venue.update') : t('venue.create')}
               </Button>
             </DialogActions>
           </Forms>

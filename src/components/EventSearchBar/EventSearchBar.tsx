@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { Box, TextField, InputAdornment, IconButton } from '@mui/material';
 import { Search, Place, CalendarToday } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface EventSearchBarProps {
   onSearch: (keyword: string, place: string, date: string) => void;
 }
 
 export default function EventSearchBar({ onSearch }: EventSearchBarProps) {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState('');
   const [place, setPlace] = useState('');
   const [date, setDate] = useState('');
@@ -38,7 +40,7 @@ export default function EventSearchBar({ onSearch }: EventSearchBarProps) {
     >
       {/* Search by Event Name/Keyword */}
       <TextField
-        placeholder="Search events..."
+        placeholder={t('searchBar.searchEvents')}
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         onKeyPress={handleKeyPress}
@@ -70,7 +72,7 @@ export default function EventSearchBar({ onSearch }: EventSearchBarProps) {
 
       {/* Search by Place */}
       <TextField
-        placeholder="Location"
+        placeholder={t('searchBar.location')}
         value={place}
         onChange={(e) => setPlace(e.target.value)}
         onKeyPress={handleKeyPress}

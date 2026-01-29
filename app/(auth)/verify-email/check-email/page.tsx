@@ -4,11 +4,13 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Box, Typography, Paper, Button } from '@mui/material';
 import Image from 'next/image';
+import { useTranslation } from 'react-i18next';
 
 export default function CheckEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
+  const { t } = useTranslation();
 
   return (
     <Box
@@ -36,19 +38,17 @@ export default function CheckEmailPage() {
         </Box>
 
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#37437D' }}>
-          Kiểm Tra Email
+          {t('checkEmail.title')}
         </Typography>
 
         <Typography variant="body1" sx={{ color: '#37437D', mb: 3, lineHeight: 1.6 }}>
-          Chúng tôi đã gửi liên kết xác thực đến:
+          {t('checkEmail.sentTo')}
           <br />
-          <strong>{email || 'email của bạn'}</strong>
+          <strong>{email || t('checkEmail.yourEmail')}</strong>
         </Typography>
 
         <Typography variant="body2" sx={{ color: '#666', mb: 4, lineHeight: 1.6 }}>
-          Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác thực để kích hoạt tài khoản.
-          <br />
-          Nếu không thấy email, hãy kiểm tra thư mục spam.
+          {t('checkEmail.instructions')}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -62,7 +62,7 @@ export default function CheckEmailPage() {
               px: 3,
             }}
           >
-            Quay lại Đăng ký
+            {t('checkEmail.backToRegister')}
           </Button>
           <Button
             variant="contained"
@@ -73,7 +73,7 @@ export default function CheckEmailPage() {
               px: 3,
             }}
           >
-            Đến trang Đăng nhập
+            {t('checkEmail.goToLogin')}
           </Button>
         </Box>
       </Paper>

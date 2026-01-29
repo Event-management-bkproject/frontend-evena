@@ -16,6 +16,7 @@ import {
   Stack,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 // Helper function to check if iconUrl is an emoji or a URL
 const isEmoji = (text: string): boolean => {
@@ -108,6 +109,8 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
   onEditCategory,
   onDeleteCategory,
 }) => {
+  const { t } = useTranslation();
+
   // Filter categories
   const filteredCategories = categories
     .filter(
@@ -125,19 +128,19 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
           <TableHead>
             <TableRow sx={{ bgcolor: '#f8f9fa' }}>
               <TableCell>
-                <strong>ID</strong>
+                <strong>{t('common.labels.id')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Icon</strong>
+                <strong>{t('common.labels.icon')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Name</strong>
+                <strong>{t('common.labels.name')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Description</strong>
+                <strong>{t('common.labels.description')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Actions</strong>
+                <strong>{t('common.labels.actions')}</strong>
               </TableCell>
             </TableRow>
           </TableHead>
@@ -145,13 +148,13 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  Loading...
+                  {t('common.labels.loading')}
                 </TableCell>
               </TableRow>
             ) : filteredCategories.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  {searchTerm ? 'No categories found' : 'No categories available'}
+                  {searchTerm ? t('admin.table.noItemsFound', { item: t('common.entities.category') }) : t('admin.table.noItems', { item: t('common.entities.category') })}
                 </TableCell>
               </TableRow>
             ) : (
@@ -164,7 +167,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
-                      {category.description || 'No description'}
+                      {category.description || ''}
                     </Typography>
                   </TableCell>
                   <TableCell>

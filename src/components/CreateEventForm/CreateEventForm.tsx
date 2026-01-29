@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Box, Button, MenuItem, Chip, Typography } from '@mui/material';
 import { FormikHelpers } from 'formik';
+import { useTranslation } from 'react-i18next';
 import FormTextField from '../FormTextField';
 import { eventSchema } from '@/src/utils/validationSchema/eventValidationSchema';
 import Forms from '../Forms';
@@ -31,6 +32,7 @@ const CreateEventForm = ({
   venues,
   isEdit = false,
 }: CreateEventFormProps) => {
+  const { t } = useTranslation();
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>(initialValues?.imageUrls || []);
 
@@ -92,10 +94,10 @@ const CreateEventForm = ({
         <FormTextField
           id="event-title"
           name="title"
-          label="Event Title"
+          label={t('event.form.title')}
           type="text"
           required={true}
-          placeholder="Enter event title"
+          placeholder={t('event.form.titlePlaceholder')}
         />
 
         {/* Date Fields - THAY ĐỔI: Sử dụng datetime-local thay vì DateRangePicker */}
@@ -103,7 +105,7 @@ const CreateEventForm = ({
           <FormTextField
             id="event-startAt"
             name="startAt"
-            label="Start Date & Time"
+            label={t('event.form.startDate')}
             type="datetime-local"
             required={true}
             InputLabelProps={{ shrink: true }}
@@ -112,7 +114,7 @@ const CreateEventForm = ({
           <FormTextField
             id="event-endAt"
             name="endAt"
-            label="End Date & Time"
+            label={t('event.form.endDate')}
             type="datetime-local"
             required={true}
             InputLabelProps={{ shrink: true }}
@@ -124,22 +126,22 @@ const CreateEventForm = ({
         <FormTextField
           id="event-coverUrl"
           name="coverUrl"
-          label="Cover Image URL"
+          label={t('event.form.coverImage')}
           type="url"
           required={true}
-          placeholder="https://example.com/cover.jpg"
+          placeholder={t('event.form.coverImagePlaceholder')}
         />
 
         {/* Dropdown Fields */}
         <FormTextField
           id="event-organizerId"
           name="organizerId"
-          label="Organizer"
+          label={t('event.form.organizer')}
           type="text"
           required={true}
           select={true}
         >
-          <MenuItem value={0}>Select Organizer</MenuItem>
+          <MenuItem value={0}>{t('event.form.selectOrganizer')}</MenuItem>
           {organizers.map((organizer) => (
             <MenuItem key={organizer.id} value={organizer.id}>
               {organizer.name}
@@ -150,12 +152,12 @@ const CreateEventForm = ({
         <FormTextField
           id="event-categoryId"
           name="categoryId"
-          label="Category"
+          label={t('event.form.category')}
           type="text"
           required={true}
           select={true}
         >
-          <MenuItem value={0}>Select Category</MenuItem>
+          <MenuItem value={0}>{t('event.form.selectCategory')}</MenuItem>
           {categories.map((category) => (
             <MenuItem key={category.id} value={category.id}>
               {category.name}
@@ -163,8 +165,8 @@ const CreateEventForm = ({
           ))}
         </FormTextField>
 
-        <FormTextField id="event-venueId" name="venueId" label="Venue" type="text" required={true} select={true}>
-          <MenuItem value={0}>Select Venue</MenuItem>
+        <FormTextField id="event-venueId" name="venueId" label={t('event.form.venue')} type="text" required={true} select={true}>
+          <MenuItem value={0}>{t('event.form.selectVenue')}</MenuItem>
           {venues.map((venue) => (
             <MenuItem key={venue.id} value={venue.id}>
               {venue.name}
@@ -192,7 +194,7 @@ const CreateEventForm = ({
               fontSize: '1rem',
             }}
           >
-            Additional Image URLs (Optional)
+            {t('event.form.additionalImages')}
           </Typography>
 
           <Box display="flex" gap={1.5} mb={2} alignItems="center">
@@ -202,7 +204,7 @@ const CreateEventForm = ({
                 name="imageUrlInput"
                 label=""
                 type="url"
-                placeholder="https://example.com/image.jpg"
+                placeholder={t('event.form.imageUrlPlaceholder')}
                 value={imageUrlInput}
                 onChange={handleImageUrlChange}
                 onKeyPress={handleKeyPress}
@@ -238,7 +240,7 @@ const CreateEventForm = ({
                 },
               }}
             >
-              Add
+              {t('common.buttons.add')}
             </Button>
           </Box>
 
@@ -261,7 +263,7 @@ const CreateEventForm = ({
                   fontWeight: 500,
                 }}
               >
-                {imageUrls.length} {imageUrls.length === 1 ? 'image' : 'images'} added
+                {t('event.form.imagesAdded', { count: imageUrls.length })}
               </Typography>
               <Box display="flex" flexWrap="wrap" gap={1}>
                 {imageUrls.map((url, index) => (
@@ -290,7 +292,7 @@ const CreateEventForm = ({
         </Box>
 
         {/* Description Field */}
-        <FormTextareaField id="event-description" name="description" label="Enter event description" required={true} />
+        <FormTextareaField id="event-description" name="description" label={t('event.form.descriptionPlaceholder')} required={true} />
 
         {/* Actions */}
         <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>
@@ -306,7 +308,7 @@ const CreateEventForm = ({
                 fontSize: '16px',
               }}
             >
-              Cancel
+              {t('common.buttons.cancel')}
             </Button>
           )}
           <Button
@@ -328,7 +330,7 @@ const CreateEventForm = ({
               },
             }}
           >
-            {loading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Event' : 'Create Event')}
+            {loading ? (isEdit ? t('event.updating') : t('event.creating')) : (isEdit ? t('event.update') : t('event.create'))}
           </Button>
         </Box>
       </Box>

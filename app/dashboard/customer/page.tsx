@@ -11,8 +11,11 @@ import EventCategoryFilter from '@/src/components/EventCategoryFilter';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { calculateHotEvents, filterUpcomingEvents } from '@/src/utils/hotEventsAlgorithm';
+import { useTranslation } from 'react-i18next';
 
 export default function CustomerDashboard() {
+  const { t } = useTranslation();
+
   // Search filters state
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchPlace, setSearchPlace] = useState('');
@@ -68,7 +71,7 @@ export default function CustomerDashboard() {
   if (eventsError) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">Failed to load events. Please try again later.</Alert>
+        <Alert severity="error">{t('messages.error.loadFailed', { item: t('common.entities.event') })}</Alert>
       </Container>
     );
   }
@@ -100,10 +103,10 @@ export default function CustomerDashboard() {
                   mb: 1,
                 }}
               >
-                Discover Events
+                {t('customer.discoverEvents')}
               </Typography>
               <Typography variant="body1" sx={{ color: '#666' }}>
-                Find and book tickets for the best events happening around you
+                {t('customer.discoverEventsSubtitle')}
               </Typography>
             </Box>
 
@@ -117,12 +120,12 @@ export default function CustomerDashboard() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                 <LocalFireDepartment sx={{ color: '#F36BF9', fontSize: 32 }} />
                 <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363' }}>
-                  Hot Events
+                  {t('customer.hotEvents')}
                 </Typography>
               </Box>
 
               {hotEvents.length === 0 ? (
-                <Alert severity="info">No hot events available at the moment. Check back later!</Alert>
+                <Alert severity="info">{t('customer.noHotEvents')}</Alert>
               ) : (
                 <Grid container spacing={3}>
                   {hotEvents.map((event) => (
@@ -148,7 +151,7 @@ export default function CustomerDashboard() {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                 <Event sx={{ color: '#36437C', fontSize: 32 }} />
                 <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363' }}>
-                  Upcoming Events
+                  {t('customer.upcomingEvents')}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -158,13 +161,13 @@ export default function CustomerDashboard() {
                     mt: 0.5,
                   }}
                 >
-                  ({upcomingEvents.length} events)
+                  {t('customer.eventsCount', { count: upcomingEvents.length })}
                 </Typography>
               </Box>
 
               {upcomingEvents.length === 0 ? (
                 <Alert severity="info">
-                  No events found matching your filters. Try adjusting your search criteria.
+                  {t('customer.noEventsFound')}
                 </Alert>
               ) : (
                 <Grid container spacing={3}>

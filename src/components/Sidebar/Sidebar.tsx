@@ -23,6 +23,7 @@ import {
   Place as PlaceIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import Image from 'next/image';
 
@@ -38,11 +39,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { logout, auth } = useAuth();
+  const { t } = useTranslation();
 
   const menuItems = [
-    { text: 'Dashboard', path: '/dashboard/organizer', icon: <DashboardIcon />, exact: true },
-    { text: 'Organizations', path: '/dashboard/organizer/organizations', icon: <BusinessIcon />, exact: false },
-    { text: 'Events', path: '/dashboard/organizer/events', icon: <EventIcon />, exact: false },
+    { text: t('common.navigation.dashboard'), path: '/dashboard/organizer', icon: <DashboardIcon />, exact: true },
+    { text: t('common.navigation.organizations'), path: '/dashboard/organizer/organizations', icon: <BusinessIcon />, exact: false },
+    { text: t('common.navigation.events'), path: '/dashboard/organizer/events', icon: <EventIcon />, exact: false },
     // { text: 'Venues', path: '/venues', icon: <PlaceIcon /> },
   ];
 
@@ -200,7 +202,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
               },
             }}
           >
-            Logout
+            {t('common.buttons.logout')}
           </Button>
         </Box>
       </Drawer>
@@ -320,7 +322,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
               },
             }}
           >
-            Logout
+            {t('common.buttons.logout')}
           </Button>
         </Box>
       </Drawer>

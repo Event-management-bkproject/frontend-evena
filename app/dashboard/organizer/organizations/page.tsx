@@ -30,11 +30,13 @@ import { OrganizationRowList } from '@/src/components/OrganizationCard/Organizat
 import InviteMemberModal from '@/src/components/InviteMemberModal';
 import MemberManagementModal from '@/src/components/MemberManagementModal';
 import { OrganizationRole } from '@/src/stores/types/enums';
+import { useTranslation } from 'react-i18next';
 
 export default function OrganizationsPage() {
   const { auth } = useAuth();
   const router = useRouter();
   const { lastEvent } = useSSE();
+  const { t } = useTranslation();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -118,11 +120,11 @@ export default function OrganizationsPage() {
   const handleCreateOrganization = async (formData: OrganizationFormData) => {
     try {
       await createOrganization(formData).unwrap();
-      showSuccessMessage('Organization created successfully!');
+      showSuccessMessage(t('messages.success.created', { item: t('common.entities.organization') }));
       setCreateModalOpen(false);
       refetchOrganizers();
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || 'Failed to create organization');
+      showErrorMessage(error?.data?.message || t('messages.error.updateFailed', { item: t('common.entities.organization') }));
     }
   };
 
@@ -131,16 +133,16 @@ export default function OrganizationsPage() {
 
     try {
       await updateOrganization({ id: selectedOrganization.id, data: formData }).unwrap();
-      showSuccessMessage('Organization updated successfully!');
+      showSuccessMessage(t('messages.success.updated', { item: t('common.entities.organization') }));
       setUpdateModalOpen(false);
       setSelectedOrganization(null);
       refetchOrganizers();
     } catch (error: any) {
-      const errorMessage = error?.data?.message || 'Failed to update organization';
+      const errorMessage = error?.data?.message || t('messages.error.updateFailed', { item: t('common.entities.organization') });
 
       // Check for version conflict error (optimistic locking)
       if (errorMessage.includes('has been modified by another user')) {
-        showErrorMessage('This organization was modified by someone else. Please close the form and try again with fresh data.');
+        showErrorMessage(t('messages.error.conflictUpdate', { item: t('common.entities.organization') }));
         setUpdateModalOpen(false);
         setSelectedOrganization(null);
         refetchOrganizers();
@@ -155,7 +157,7 @@ export default function OrganizationsPage() {
 
     try {
       await deleteOrganization(selectedOrganization.id).unwrap();
-      showSuccessMessage('Organization deleted successfully!');
+      showSuccessMessage(t('messages.success.deleted', { item: t('common.entities.organization') }));
       setDeleteDialogOpen(false);
       setSelectedOrganization(null);
       refetchOrganizers();
@@ -165,7 +167,7 @@ export default function OrganizationsPage() {
         error?.data?.message ||
         error?.data?.error ||
         error?.message ||
-        'Failed to delete organization. It may have active events or members.';
+        t('messages.error.deleteFailed');
       showErrorMessage(errorMessage);
       setDeleteDialogOpen(false);
     }
@@ -204,7 +206,7 @@ export default function OrganizationsPage() {
 
     // Client-side validation: prevent inviting yourself
     if (auth?.user?.email && email.toLowerCase() === auth.user.email.toLowerCase()) {
-      showErrorMessage("You cannot invite yourself. Please enter a different organizer's email address.");
+      showErrorMessage(t('messages.error.cannotInviteSelf'));
       throw new Error('Cannot invite yourself');
     }
 
@@ -221,7 +223,7 @@ export default function OrganizationsPage() {
       }).unwrap();
 
       console.log('Invitation result:', result);
-      showSuccessMessage(`Invitation sent to ${email}`);
+      showSuccessMessage(t('messages.success.invitationSent', { email }));
       setInviteModalOpen(false);
     } catch (error: any) {
       console.error('Error inviting member:', error);
@@ -231,7 +233,7 @@ export default function OrganizationsPage() {
         message: error?.data?.message,
       });
 
-      const errorMessage = error?.data?.message || error?.message || 'Failed to send invitation';
+      const errorMessage = error?.data?.message || error?.message || t('messages.error.invitationFailed');
       showErrorMessage(errorMessage);
       throw error; // Re-throw to let InviteMemberModal handle it
     }
@@ -259,8 +261,8 @@ export default function OrganizationsPage() {
           {/* Header */}
           <Box sx={{ mb: '10px' }}>
             <DashboardHeader
-              title="Organizations"
-              breadcrumbs={[{ label: 'Dashboard', href: '/dashboard/organizer' }, { label: 'Organizations' }]}
+              title={t('common.navigation.organizations')}
+              breadcrumbs={[{ label: t('common.navigation.dashboard'), href: '/dashboard/organizer' }, { label: t('common.navigation.organizations') }]}
               userName={auth.user?.name || 'User'}
             />
           </Box>
@@ -278,7 +280,7 @@ export default function OrganizationsPage() {
             {/* Error Display */}
             {organizersError && (
               <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', borderRadius: 1, color: 'error.contrastText' }}>
-                Error loading organizations: {(organizersError as any)?.data?.message || 'Unknown error occurred'}
+                Error loading organizations: {(organizersError as any)?.data?.message || t('messages.error.operationFailed')}
               </Box>
             )}
 
@@ -298,7 +300,7 @@ export default function OrganizationsPage() {
         <BaseModal
           open={createModalOpen}
           onClose={() => setCreateModalOpen(false)}
-          title="Create New Organization"
+          title={t('organizer.createOrganization')}
           maxWidth="md"
         >
           <CreateOrganizationForm
@@ -313,7 +315,7 @@ export default function OrganizationsPage() {
           <BaseModal
             open={updateModalOpen}
             onClose={handleCloseUpdateModal}
-            title="Edit Organization"
+            title={`${t('common.buttons.edit')} ${t('common.entities.organization')}`}
             maxWidth="md"
           >
             <UpdateOrganizationForm
@@ -330,8 +332,8 @@ export default function OrganizationsPage() {
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
           onConfirm={handleDeleteOrganization}
-          title="Delete Organization"
-          message={`Are you sure you want to delete "${selectedOrganization?.name}"? This action cannot be undone.`}
+          title={`${t('common.buttons.delete')} ${t('common.entities.organization')}`}
+          message={t('dialog.delete.message', { name: selectedOrganization?.name || '' })}
           loading={deletingOrganization}
         />
 

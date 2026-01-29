@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { MoreVert, CalendarToday, Place, Category, Edit, Delete, Groups, Public, Drafts, Event as EventIcon } from '@mui/icons-material';
 import Image from 'next/image';
+import { useTranslation } from 'react-i18next';
 import { EventListResponse, EventResponse, EventStatus } from '@/src/stores/types';
 
 interface EventCardProps {
@@ -35,6 +36,7 @@ const EventCard: React.FC<EventCardProps> = ({
   showActions = true,
   variant = 'default',
 }) => {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -476,15 +478,16 @@ const EventCard: React.FC<EventCardProps> = ({
       >
         <MenuItem onClick={handleEdit}>
           <Edit fontSize="small" sx={{ mr: 1 }} />
-          Edit
+          {t('common.buttons.edit')}
         </MenuItem>
         <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
           <Delete fontSize="small" sx={{ mr: 1 }} />
-          Delete
+          {t('common.buttons.delete')}
         </MenuItem>
       </Menu>
     </>
   );
 };
 
-export default EventCard;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(EventCard);

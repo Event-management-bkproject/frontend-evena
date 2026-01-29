@@ -90,4 +90,5 @@ const EventGrid: React.FC<EventGridProps> = ({
   );
 };
 
-export default EventGrid;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(EventGrid);

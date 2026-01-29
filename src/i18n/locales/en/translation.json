@@ -1,0 +1,539 @@
+{
+  "common": {
+    "buttons": {
+      "login": "Login",
+      "logout": "Logout",
+      "register": "Register",
+      "cancel": "Cancel",
+      "submit": "Submit",
+      "save": "Save",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "remove": "Remove",
+      "accept": "Accept",
+      "reject": "Reject",
+      "goBack": "Go Back",
+      "close": "Close",
+      "buyTicket": "Buy Ticket",
+      "invite": "Invite Member",
+      "sendInvitation": "Send Invitation",
+      "browseEvents": "Browse Events",
+      "checkout": "Checkout",
+      "bookNow": "Book Now!"
+    },
+    "labels": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "fullName": "Full Name",
+      "phoneNumber": "Phone Number",
+      "description": "Description",
+      "name": "Name",
+      "status": "Status",
+      "actions": "Actions",
+      "role": "Role",
+      "loading": "Loading...",
+      "search": "Search",
+      "id": "ID",
+      "icon": "Icon",
+      "address": "Address",
+      "city": "City",
+      "capacity": "Capacity",
+      "contact": "Contact",
+      "date": "Date",
+      "items": "Items",
+      "total": "Total",
+      "payment": "Payment",
+      "price": "Price",
+      "quantity": "Quantity",
+      "subtotal": "Subtotal",
+      "ticketType": "Ticket Type",
+      "ticketId": "Ticket ID",
+      "owner": "Owner",
+      "issued": "Issued",
+      "event": "Event",
+      "organizedBy": "Organized by",
+      "category": "Category",
+      "location": "Location"
+    },
+    "navigation": {
+      "home": "Home",
+      "aboutUs": "About Us",
+      "services": "Services",
+      "contact": "Contact",
+      "myAccount": "My Account",
+      "myTickets": "My Tickets",
+      "dashboard": "Dashboard",
+      "organizations": "Organizations",
+      "events": "Events",
+      "menu": "Menu"
+    },
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "draft": "Draft",
+      "published": "Published",
+      "ongoing": "Ongoing",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "soldOut": "Sold Out",
+      "paid": "PAID",
+      "pendingPayment": "PENDING"
+    },
+    "entities": {
+      "category": "category",
+      "venue": "venue",
+      "organization": "organization",
+      "event": "event",
+      "ticket": "ticket",
+      "order": "order"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "loggingIn": "Logging in...",
+      "dontHaveAccount": "Don't have an account? Register as:",
+      "customer": "Customer",
+      "organization": "Organization"
+    },
+    "register": {
+      "customerTitle": "Customer Registration",
+      "organizerTitle": "Organizer Registration",
+      "registering": "Registering...",
+      "alreadyHaveAccount": "Already have an account?",
+      "loginHere": "Login here"
+    },
+    "placeholders": {
+      "enterEmail": "Enter your email",
+      "enterPassword": "Enter your password",
+      "reEnterPassword": "Re-enter your password",
+      "enterFullName": "Enter your full name",
+      "enterPhoneNumber": "Enter your phone number"
+    }
+  },
+  "event": {
+    "create": "Create Event",
+    "update": "Update Event",
+    "delete": "Delete Event",
+    "cancel": "Cancel Event",
+    "createNew": "Create New Event",
+    "edit": "Edit Event",
+    "creating": "Creating...",
+    "updating": "Updating...",
+    "cancelling": "Cancelling...",
+    "searchPlaceholder": "Search events...",
+    "form": {
+      "title": "Event Title",
+      "titlePlaceholder": "Enter event title",
+      "startDate": "Start Date & Time",
+      "endDate": "End Date & Time",
+      "coverImage": "Cover Image URL",
+      "coverImagePlaceholder": "https://example.com/cover.jpg",
+      "organizer": "Organizer",
+      "selectOrganizer": "Select organizer",
+      "category": "Category",
+      "selectCategory": "Select category",
+      "venue": "Venue",
+      "selectVenue": "Select venue",
+      "descriptionPlaceholder": "Enter event description",
+      "additionalImages": "Additional Image URLs (Optional)",
+      "imageUrlPlaceholder": "https://example.com/image.jpg",
+      "imagesAdded": "{{count}} images added",
+      "imagesAdded_other": "{{count}} images added"
+    },
+    "filter": {
+      "category": "Category",
+      "allCategories": "All Categories",
+      "allTime": "All Time",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "thisYear": "This Year"
+    },
+    "confirmCancel": {
+      "title": "Cancel Event",
+      "message": "Are you sure you want to cancel \"{{eventTitle}}\"?",
+      "warning": "This action cannot be undone. The event will be marked as cancelled.",
+      "info": "Cancelled events will no longer be visible to customers and ticket sales will be stopped.",
+      "confirm": "Confirm Cancel Event"
+    },
+    "needOrganization": "You need to create an organization first."
+  },
+  "organization": {
+    "title": "Organization",
+    "form": {
+      "name": "Organization Name",
+      "namePlaceholder": "Enter organization name",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter organization description",
+      "logoUrl": "Logo URL",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "website": "Website",
+      "websitePlaceholder": "https://example.com",
+      "emailPlaceholder": "organization@example.com",
+      "phonePlaceholder": "Enter phone number"
+    },
+    "empty": "No organizations yet",
+    "notFound": "No matching organizations found",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "verificationPending": "This organization is pending verification from admin. You cannot invite members until verified.",
+    "createFirst": "You need to create an organization first."
+  },
+  "member": {
+    "title": "Team Members - {{organizationName}}",
+    "invite": "Invite Team Member",
+    "remove": "Remove Team Member",
+    "manage": "Manage team members and their roles",
+    "viewOnly": "View team members",
+    "noMembers": "No members yet",
+    "noMembersInfo": "Click the \"Invite Member\" button above to add collaborators to the event",
+    "removing": "Removing...",
+    "accepting": "Accepting...",
+    "rejecting": "Rejecting...",
+    "cannotChangeOwnRole": "You cannot change your own role",
+    "onlyOwnerCanChange": "Only the owner can change roles",
+    "roles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "managerDesc": "Can manage events and team members",
+      "coordinator": "Coordinator",
+      "coordinatorDesc": "Can manage events",
+      "scanner": "Scanner",
+      "scannerDesc": "Can only scan tickets",
+      "viewer": "Viewer",
+      "viewerDesc": "View only, no editing"
+    },
+    "invitation": {
+      "title": "Invite Team Member",
+      "emailLabel": "Organizer Email Address",
+      "emailPlaceholder": "organizer@example.com",
+      "roleLabel": "Role",
+      "sending": "Sending invitation...",
+      "warningTitle": "⚠️ Important",
+      "loggedInAs": "You are logged in as {{email}}",
+      "cannotInviteSelf": "You cannot invite yourself. Please enter a different email.",
+      "requirementsTitle": "📋 Invitation Requirements",
+      "requirement1": "Email must belong to an existing Organizer account",
+      "requirement2": "User must have registered with the \"Organizer\" role",
+      "requirement3": "Customer accounts cannot be invited to organizations",
+      "rolePermissions": "Role permissions:",
+      "verificationRequired": "Organization must be verified by admin before inviting members. Please wait for verification."
+    },
+    "invitations": {
+      "title": "Organization Invitations",
+      "noPending": "You have no pending invitations",
+      "roleLabel": "Role:"
+    }
+  },
+  "venue": {
+    "create": "Create Venue",
+    "update": "Update Venue",
+    "createNew": "Create New Venue",
+    "edit": "Edit Venue",
+    "creating": "Creating...",
+    "updating": "Updating...",
+    "form": {
+      "name": "Venue Name",
+      "namePlaceholder": "Enter venue name",
+      "address": "Address",
+      "addressPlaceholder": "Enter full address",
+      "city": "City",
+      "cityPlaceholder": "Enter city",
+      "latitude": "Latitude",
+      "latitudePlaceholder": "e.g. 10.762622",
+      "longitude": "Longitude",
+      "longitudePlaceholder": "e.g. 106.660172",
+      "capacity": "Capacity",
+      "capacityPlaceholder": "Enter capacity",
+      "descriptionPlaceholder": "Enter venue description"
+    }
+  },
+  "category": {
+    "create": "Create Category",
+    "update": "Update Category",
+    "createNew": "Create New Category",
+    "edit": "Edit Category",
+    "noCategories": "No categories",
+    "notFound": "No categories found",
+    "form": {
+      "name": "Category Name",
+      "namePlaceholder": "Enter category name",
+      "icon": "Icon URL or Emoji",
+      "iconPlaceholder": "https://example.com/icon.png or 🎭",
+      "iconHelper": "Enter a URL or emoji",
+      "descriptionPlaceholder": "Enter category description"
+    },
+    "table": {
+      "id": "ID",
+      "icon": "Icon",
+      "name": "Name",
+      "description": "Description",
+      "actions": "Actions"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": {
+      "invalid": "Invalid email",
+      "required": "Email is required",
+      "validFormat": "Please enter a valid email"
+    },
+    "password": {
+      "minLength": "Password must be at least 6 characters",
+      "maxLength": "Password must not exceed 100 characters",
+      "strength": "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@#$%^&+=)",
+      "noMatch": "Passwords do not match"
+    },
+    "phone": {
+      "invalid": "Invalid phone number",
+      "format": "Phone number must be 10-15 digits and can start with +",
+      "numbersOnly": "Phone number can only contain digits",
+      "minLength": "Phone number must be at least 10 digits"
+    },
+    "name": {
+      "minLength": "Name must be at least 2 characters",
+      "maxLength": "Name must not exceed 100 characters"
+    },
+    "event": {
+      "titleRequired": "Event title is required",
+      "titleMinLength": "Title must be at least 3 characters",
+      "descriptionRequired": "Description is required",
+      "descriptionMinLength": "Description must be at least 10 characters",
+      "startDateRequired": "Start date is required",
+      "startDateFuture": "Start date must be in the future",
+      "endDateRequired": "End date is required",
+      "endDateAfterStart": "End date must be after start date",
+      "organizerRequired": "Please select an organizer",
+      "categoryRequired": "Please select a category",
+      "venueRequired": "Please select a venue",
+      "validUrl": "Please enter a valid URL",
+      "coverImageRequired": "Cover image URL is required"
+    },
+    "venue": {
+      "nameRequired": "Venue name is required",
+      "addressRequired": "Address is required",
+      "cityRequired": "City is required",
+      "latitudeRange": "Latitude must be between -90 and 90",
+      "latitudeRequired": "Latitude is required",
+      "longitudeRange": "Longitude must be between -180 and 180",
+      "longitudeRequired": "Longitude is required",
+      "capacityMin": "Capacity must be at least 1",
+      "capacityRequired": "Capacity is required",
+      "descriptionRequired": "Description is required"
+    },
+    "category": {
+      "nameRequired": "Category name is required",
+      "descriptionRequired": "Description is required",
+      "validUrl": "Must be a valid URL",
+      "iconRequired": "Icon URL is required"
+    },
+    "organization": {
+      "nameRequired": "Organization name is required",
+      "descriptionRequired": "Description is required",
+      "validUrl": "Must be a valid URL",
+      "logoRequired": "Logo URL is required",
+      "websiteRequired": "Website is required",
+      "emailRequired": "Email is required",
+      "phoneRequired": "Phone number is required"
+    }
+  },
+  "messages": {
+    "success": {
+      "login": "Login successful!",
+      "register": "Registration successful! Please check your email.",
+      "eventCreated": "Event created successfully!",
+      "eventUpdated": "Event updated successfully!",
+      "eventDeleted": "Event deleted successfully!",
+      "invitationAccepted": "Accepted invitation to join {{organizationName}}",
+      "invitationRejected": "Rejected invitation to join {{organizationName}}",
+      "created": "{{item}} created successfully!",
+      "updated": "{{item}} updated successfully!",
+      "deleted": "{{item}} deleted successfully!",
+      "verified": "{{item}} verified successfully!",
+      "orderCancelled": "Order cancelled successfully",
+      "invitationSent": "Invitation sent to {{email}}"
+    },
+    "error": {
+      "loginFailed": "Login failed",
+      "registerFailed": "Registration failed",
+      "eventCreateFailed": "Failed to create event",
+      "eventUpdateFailed": "Failed to update event",
+      "eventDeleteFailed": "Failed to delete event",
+      "memberRemoveFailed": "Failed to remove member",
+      "memberRoleUpdateFailed": "Failed to update member role",
+      "invitationSendFailed": "Failed to send invitation",
+      "invitationAcceptFailed": "Failed to accept invitation",
+      "invitationRejectFailed": "Failed to reject invitation",
+      "invitationsLoadFailed": "Failed to load invitations. Please try again.",
+      "operationFailed": "Operation failed",
+      "deleteFailed": "Failed to delete",
+      "verificationFailed": "Failed to verify",
+      "loadFailed": "Failed to load {{item}}. Please try again later.",
+      "notFound": "{{item}} not found",
+      "updateFailed": "Failed to update {{item}}. Please try again.",
+      "cancelFailed": "Failed to cancel {{item}}: {{reason}}",
+      "conflictUpdate": "{{item}} was modified by someone else. Please close the form and try again.",
+      "cannotInviteSelf": "You cannot invite yourself. Please enter a different email.",
+      "invitationFailed": "Failed to send invitation"
+    },
+    "info": {
+      "featureComingSoon": "{{item}} editing feature coming soon"
+    }
+  },
+  "dialog": {
+    "delete": {
+      "title": "Delete {{item}}",
+      "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "deleting": "Deleting...",
+      "confirm": "Delete"
+    },
+    "confirmAction": "Are you sure?"
+  },
+  "admin": {
+    "subtitle": "Manage categories, venues, and organizations for the platform",
+    "confirmDelete": "Are you sure you want to delete this {{item}}? This action cannot be undone.",
+    "confirmDeleteWithWarning": "Are you sure you want to delete this {{item}}? This action cannot be undone and will affect all related events.",
+    "stats": {
+      "total": "Total {{item}}"
+    },
+    "tabs": {
+      "categories": "Categories",
+      "venues": "Venues",
+      "organizations": "Organizations",
+      "add": "Add {{item}}"
+    },
+    "table": {
+      "noItems": "No {{item}}",
+      "noItemsFound": "No {{item}} found"
+    },
+    "actions": {
+      "verifyOrganization": "Verify Organization",
+      "deleting": "Deleting..."
+    }
+  },
+  "customer": {
+    "discoverEvents": "Discover Events",
+    "discoverEventsSubtitle": "Find and book tickets for the best events happening around you",
+    "hotEvents": "Hot Events",
+    "noHotEvents": "No hot events available at the moment. Check back later!",
+    "upcomingEvents": "Upcoming Events",
+    "eventsCount": "({{count}} events)",
+    "noEventsFound": "No events found matching your filters. Try adjusting your search criteria.",
+    "myTickets": "My Tickets",
+    "myOrders": "My Orders",
+    "noTicketsYet": "No tickets yet",
+    "noOrdersYet": "No orders yet",
+    "browseEvents": "Browse Events",
+    "viewQRCode": "View QR Code",
+    "ticketQRCode": "Ticket QR Code",
+    "presentQRCode": "Please present this QR code at the event entrance",
+    "usedOn": "Used on {{date}}",
+    "backToOrders": "Back to Orders",
+    "backToEvents": "Back to Events",
+    "selectTickets": "Select Tickets",
+    "noTicketsAvailable": "No tickets available for this event",
+    "soldOut": "Sold Out",
+    "orderSummary": "Order Summary",
+    "paymentMethod": "Payment Method:",
+    "processing": "Processing...",
+    "selectAtLeastOneTicket": "Please select at least one ticket",
+    "maxTicketsPerUser": "Maximum {{count}} tickets per user for {{name}}",
+    "onlyTicketsAvailable": "Only {{count}} tickets available for {{name}}",
+    "earlyBird": "Early Bird",
+    "maxPerUser": "Max {{count}} per user",
+    "available": "{{count}} available",
+    "packages": "Packages",
+    "aboutEvent": "About Event",
+    "eventDetails": "Event Details",
+    "organizedBy": "Organized by",
+    "eventOrganizer": "Event Organizer",
+    "standardAdmission": "Standard admission ticket",
+    "bookNow": "Book Now!",
+    "saleFrom": "SALE FROM",
+    "dateAndTime": "DATE & TIME",
+    "location": "LOCATION",
+    "startingFrom": "STARTING FROM",
+    "theEvents": "THE EVENTS",
+    "percentOff": "{{percent}}% OFF",
+    "orderItems": "Order Items",
+    "totalTickets": "Total Tickets",
+    "orderDate": "Order Date",
+    "paymentSummary": "Payment Summary",
+    "paymentStatus": "Payment Status",
+    "viewMyTickets": "View My Tickets",
+    "noItemsFound": "No items found",
+    "viewDetails": "View Details",
+    "cancelOrder": "Cancel Order",
+    "confirmCancelOrder": "Are you sure you want to cancel this order?",
+    "orderPlacedSuccess": "Order placed successfully! Your tickets have been sent to your email."
+  },
+  "organizer": {
+    "allEvents": "All Events",
+    "totalEvents": "{{count}} total events",
+    "viewAllEvents": "View All Events",
+    "noEventsYet": "No events yet",
+    "createFirstEvent": "Create your first event to get started",
+    "goToEvents": "Go to Events",
+    "eventDetails": "Event Details",
+    "backToOrganizations": "Back to Organizations",
+    "noDescriptionProvided": "No description provided",
+    "organizationEvents": "Organization Events ({{count}})",
+    "noEventsForOrganization": "No events found for this organization",
+    "statistics": "Statistics",
+    "totalEventsLabel": "Total Events",
+    "totalMembersLabel": "Total Members",
+    "members": "Members",
+    "pendingInvitation": "Pending",
+    "createOrganization": "Create New Organization"
+  },
+  "searchBar": {
+    "searchEvents": "Search events...",
+    "searchOrganizations": "Search organizations...",
+    "location": "Location"
+  },
+  "filter": {
+    "timePeriod": "Time Period:",
+    "categories": "Categories:",
+    "allTime": "All Time",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "all": "All"
+  },
+  "organizationFilter": {
+    "totalOrganizations": "Total Organizations",
+    "verified": "Verified",
+    "pendingVerification": "Pending Verification",
+    "createOrganization": "Create Organization"
+  },
+  "verifyEmail": {
+    "title": "Email Verification",
+    "verifying": "Verifying your email...",
+    "successMessage": "Your email has been verified successfully. You can now login to your account.",
+    "errorMessage": "Please try again or contact support if the issue persists.",
+    "invalidLink": "Invalid verification link",
+    "success": "Email verified successfully!",
+    "failed": "Email verification failed",
+    "networkError": "An error occurred while verifying email",
+    "registerAgain": "Register Again"
+  },
+  "checkEmail": {
+    "title": "Check Email",
+    "sentTo": "We have sent a verification link to:",
+    "yourEmail": "your email",
+    "instructions": "Please check your inbox and click the verification link to activate your account. If you don't see the email, check your spam folder.",
+    "backToRegister": "Back to Register",
+    "goToLogin": "Go to Login"
+  },
+  "language": {
+    "title": "Language Settings",
+    "select": "Select Language",
+    "current": "Current Language",
+    "english": "English",
+    "vietnamese": "Tiếng Việt (Vietnamese)"
+  }
+}

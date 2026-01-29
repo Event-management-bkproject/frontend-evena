@@ -1,6 +1,7 @@
 'use client';
 
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import Forms from '../Forms';
 import FormTextField from '../FormTextField';
 import FormTextareaField from '../FormTextAreaField';
@@ -15,6 +16,8 @@ const CreateCategoryForm = ({
   initialValues,
   title,
 }: CreateCategoryFormProps) => {
+  const { t } = useTranslation();
+
   const defaultValues: CategoryFormData = {
     name: '',
     description: '',
@@ -29,7 +32,7 @@ const CreateCategoryForm = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{title || (initialValues?.name ? 'Edit Category' : 'Create New Category')}</DialogTitle>
+      <DialogTitle>{title || (initialValues?.name ? t('category.edit') : t('category.createNew'))}</DialogTitle>
       <DialogContent>
         <Box sx={{ mt: 2 }}>
           <Forms
@@ -44,28 +47,28 @@ const CreateCategoryForm = ({
               <FormTextField
                 id="category-name"
                 name="name"
-                label="Category Name"
+                label={t('category.form.name')}
                 type="text"
                 required
-                placeholder="Enter category name"
+                placeholder={t('category.form.namePlaceholder')}
               />
 
               {/* Icon URL Field */}
               <FormTextField
                 id="category-iconUrl"
                 name="iconUrl"
-                label="Icon URL or Emoji"
+                label={t('category.form.icon')}
                 type="text"
                 required
-                placeholder="https://example.com/icon.png or 🎭"
-                helperText="Enter a URL or an emoji"
+                placeholder={t('category.form.iconPlaceholder')}
+                helperText={t('category.form.iconHelper')}
               />
 
               {/* Description Field */}
               <FormTextareaField
                 id="category-description"
                 name="description"
-                label="Enter category description"
+                label={t('category.form.descriptionPlaceholder')}
                 required
               />
             </Box>
@@ -83,7 +86,7 @@ const CreateCategoryForm = ({
                   fontSize: '16px',
                 }}
               >
-                Cancel
+                {t('common.buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -106,11 +109,11 @@ const CreateCategoryForm = ({
               >
                 {loading
                   ? initialValues?.name
-                    ? 'Updating...'
-                    : 'Creating...'
+                    ? t('event.updating')
+                    : t('event.creating')
                   : initialValues?.name
-                  ? 'Update Category'
-                  : 'Create Category'}
+                  ? t('category.update')
+                  : t('category.create')}
               </Button>
             </DialogActions>
           </Forms>

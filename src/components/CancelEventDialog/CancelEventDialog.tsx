@@ -12,6 +12,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Warning } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface CancelEventDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface CancelEventDialogProps {
 }
 
 const CancelEventDialog = ({ open, onClose, onConfirm, eventTitle, loading = false }: CancelEventDialogProps) => {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -38,19 +40,19 @@ const CancelEventDialog = ({ open, onClose, onConfirm, eventTitle, loading = fal
         <Box display="flex" alignItems="center" gap={1.5}>
           <Warning sx={{ color: '#FF5B5E', fontSize: 28 }} />
           <Typography variant="h6" fontWeight="bold">
-            Cancel Event
+            {t('event.confirmCancel.title')}
           </Typography>
         </Box>
       </DialogTitle>
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 2, borderRadius: '12px' }}>
-          This action cannot be undone. The event will be marked as cancelled.
+          {t('event.confirmCancel.warning')}
         </Alert>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          Are you sure you want to cancel <strong>"{eventTitle}"</strong>?
+          {t('event.confirmCancel.message', { eventTitle })}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Cancelled events will no longer be visible to customers and ticket sales will be stopped.
+          {t('event.confirmCancel.info')}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -63,7 +65,7 @@ const CancelEventDialog = ({ open, onClose, onConfirm, eventTitle, loading = fal
             color: '#666',
           }}
         >
-          Go Back
+          {t('common.buttons.goBack')}
         </Button>
         <Button
           onClick={onConfirm}
@@ -79,7 +81,7 @@ const CancelEventDialog = ({ open, onClose, onConfirm, eventTitle, loading = fal
             },
           }}
         >
-          {loading ? 'Cancelling...' : 'Yes, Cancel Event'}
+          {loading ? t('event.cancelling') : t('event.confirmCancel.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

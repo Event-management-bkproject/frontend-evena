@@ -11,6 +11,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Warning } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { DeleteConfirmDialogProps } from './types';
 
 export function DeleteConfirmDialog({
@@ -21,6 +22,7 @@ export function DeleteConfirmDialog({
   message,
   loading = false,
 }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -48,7 +50,7 @@ export function DeleteConfirmDialog({
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} disabled={loading} color="inherit">
-          Cancel
+          {t('common.buttons.cancel')}
         </Button>
         <Button
           onClick={onConfirm}
@@ -57,7 +59,7 @@ export function DeleteConfirmDialog({
           color="error"
           startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
         >
-          {loading ? 'Deleting...' : 'Delete'}
+          {loading ? t('dialog.delete.deleting') : t('common.buttons.delete')}
         </Button>
       </DialogActions>
     </Dialog>

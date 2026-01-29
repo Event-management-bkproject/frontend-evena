@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, CheckCircle as VerifyIcon } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
+import { useTranslation } from 'react-i18next';
 
 interface AdminOrganizationTableProps {
   organizations: OrganizationResponse[];
@@ -36,6 +37,8 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
   onDeleteOrganization,
   onVerifyOrganization,
 }) => {
+  const { t } = useTranslation();
+
   // Filter organizations based on search term
   const filteredOrganizations = organizations.filter(
     (org) =>
@@ -56,7 +59,7 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
     return (
       <Paper sx={{ p: 4, textAlign: 'center' }}>
         <Typography variant="h6" color="text.secondary">
-          {searchTerm ? 'No organizations found matching your search' : 'No organizations yet'}
+          {searchTerm ? t('admin.table.noItemsFound', { item: t('common.entities.organization') }) : t('admin.table.noItems', { item: t('common.entities.organization') })}
         </Typography>
       </Paper>
     );
@@ -67,13 +70,13 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
       <Table>
         <TableHead>
           <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-            <TableCell sx={{ fontWeight: 'bold' }}>Organization Name</TableCell>
-            <TableCell sx={{ fontWeight: 'bold' }}>Contact</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>{t('common.labels.name')}</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>{t('common.labels.contact')}</TableCell>
             <TableCell sx={{ fontWeight: 'bold' }} align="center">
-              Status
+              {t('common.labels.status')}
             </TableCell>
             <TableCell sx={{ fontWeight: 'bold' }} align="center">
-              Actions
+              {t('common.labels.actions')}
             </TableCell>
           </TableRow>
         </TableHead>
@@ -104,7 +107,7 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
               </TableCell>
               <TableCell align="center">
                 <Chip
-                  label={org.verified ? 'Verified' : 'Unverified'}
+                  label={org.verified ? t('common.status.verified') : t('common.status.unverified')}
                   color={org.verified ? 'success' : 'warning'}
                   size="small"
                   icon={org.verified ? <CheckCircle /> : undefined}
@@ -113,7 +116,7 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
               <TableCell align="center">
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                   {!org.verified && (
-                    <Tooltip title="Verify Organization">
+                    <Tooltip title={t('admin.actions.verifyOrganization')}>
                       <IconButton
                         onClick={() => onVerifyOrganization(org.id)}
                         disabled={isVerifying}
@@ -126,7 +129,7 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
                       </IconButton>
                     </Tooltip>
                   )}
-                  <Tooltip title="Edit">
+                  <Tooltip title={t('common.buttons.edit')}>
                     <IconButton
                       onClick={() => onEditOrganization(org)}
                       sx={{
@@ -137,7 +140,7 @@ export const AdminOrganizationTable: React.FC<AdminOrganizationTableProps> = ({
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Delete">
+                  <Tooltip title={t('common.buttons.delete')}>
                     <IconButton
                       onClick={() => onDeleteOrganization(org.id)}
                       sx={{

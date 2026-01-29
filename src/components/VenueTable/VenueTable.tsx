@@ -17,6 +17,7 @@ import {
   Stack,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface VenueTableProps {
   venues: any[];
@@ -35,6 +36,8 @@ const VenueTable: React.FC<VenueTableProps> = ({
   onEditVenue,
   onDeleteVenue,
 }) => {
+  const { t } = useTranslation();
+
   // Filter venues
   const filteredVenues = venues
     .filter(
@@ -53,22 +56,22 @@ const VenueTable: React.FC<VenueTableProps> = ({
           <TableHead>
             <TableRow sx={{ bgcolor: '#f8f9fa' }}>
               <TableCell>
-                <strong>ID</strong>
+                <strong>{t('common.labels.id')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Name</strong>
+                <strong>{t('common.labels.name')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Address</strong>
+                <strong>{t('common.labels.address')}</strong>
               </TableCell>
               <TableCell>
-                <strong>City</strong>
+                <strong>{t('common.labels.city')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Capacity</strong>
+                <strong>{t('common.labels.capacity')}</strong>
               </TableCell>
               <TableCell>
-                <strong>Actions</strong>
+                <strong>{t('common.labels.actions')}</strong>
               </TableCell>
             </TableRow>
           </TableHead>
@@ -76,13 +79,13 @@ const VenueTable: React.FC<VenueTableProps> = ({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  Loading...
+                  {t('common.labels.loading')}
                 </TableCell>
               </TableRow>
             ) : filteredVenues.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  {searchTerm ? 'No venues found' : 'No venues available'}
+                  {searchTerm ? t('admin.table.noItemsFound', { item: t('common.entities.venue') }) : t('admin.table.noItems', { item: t('common.entities.venue') })}
                 </TableCell>
               </TableRow>
             ) : (

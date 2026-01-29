@@ -3,6 +3,7 @@ import AuthInitializer from '@/src/components/AuthInitializer';
 import { Providers } from './providers';
 import { QueryProvider } from '@/src/providers/QueryProvider';
 import { SSEProvider } from '@/src/providers/SSEProvider';
+import { I18nProvider } from '@/src/providers/I18nProvider';
 
 export const metadata: Metadata = {
   title: {
@@ -72,10 +73,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ margin: 0, padding: 0 }} suppressHydrationWarning>
         <QueryProvider>
           <Providers>
-            <SSEProvider>
-              <AuthInitializer />
-              {children}
-            </SSEProvider>
+            <I18nProvider>
+              <SSEProvider>
+                <AuthInitializer />
+                {children}
+              </SSEProvider>
+            </I18nProvider>
           </Providers>
         </QueryProvider>
       </body>

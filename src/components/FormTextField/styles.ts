@@ -1,7 +1,7 @@
 // styles.ts
 import { css, styled } from '@mui/material/styles';
 // Import SCSS file để sử dụng biến
-import '@styles/setting/colors.scss';
+// import '@styles/setting/colors.scss'; // Commented out - colors are hardcoded below
 
 export const StyledFormTextField = styled('div')(
   () => css`

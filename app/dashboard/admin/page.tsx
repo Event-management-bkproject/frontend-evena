@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Snackbar, Alert } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import RoleGuard from '@/src/components/RoleGuard';
 
 import { CreateCategoryRequest, CreateVenueRequest } from '@/src/stores/types';
@@ -37,6 +38,7 @@ import {
 } from '@/src/components/AdminDashboard';
 
 export default function AdminPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { logout } = useAuth();
   const { lastEvent } = useSSE();
@@ -117,15 +119,15 @@ export default function AdminPage() {
     try {
       if (editingCategory) {
         await updateCategory({ id: editingCategory.id, data: values }).unwrap();
-        showSnackbar('Category updated successfully');
+        showSnackbar(t('messages.success.updated', { item: t('common.entities.category') }));
       } else {
         await createCategory(values).unwrap();
-        showSnackbar('Category created successfully');
+        showSnackbar(t('messages.success.created', { item: t('common.entities.category') }));
       }
       refetchCategories();
       closeCategoryModal();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || 'Operation failed', 'error');
+      showSnackbar(error?.data?.message || t('messages.error.operationFailed'), 'error');
     }
   };
 
@@ -139,10 +141,10 @@ export default function AdminPage() {
 
     try {
       await deleteCategory(categoryToDelete).unwrap();
-      showSnackbar('Category deleted successfully');
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.category') }));
       refetchCategories();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || 'Delete failed', 'error');
+      showSnackbar(error?.data?.message || t('messages.error.deleteFailed'), 'error');
     } finally {
       setDeleteCategoryDialogOpen(false);
       setCategoryToDelete(null);
@@ -169,15 +171,15 @@ export default function AdminPage() {
     try {
       if (editingVenue) {
         await updateVenue({ id: editingVenue.id, data: values }).unwrap();
-        showSnackbar('Venue updated successfully');
+        showSnackbar(t('messages.success.updated', { item: t('common.entities.venue') }));
       } else {
         await createVenue(values).unwrap();
-        showSnackbar('Venue created successfully');
+        showSnackbar(t('messages.success.created', { item: t('common.entities.venue') }));
       }
       refetchVenues();
       closeVenueModal();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || 'Operation failed', 'error');
+      showSnackbar(error?.data?.message || t('messages.error.operationFailed'), 'error');
     }
   };
 
@@ -191,10 +193,10 @@ export default function AdminPage() {
 
     try {
       await deleteVenue(venueToDelete).unwrap();
-      showSnackbar('Venue deleted successfully');
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.venue') }));
       refetchVenues();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || 'Delete failed', 'error');
+      showSnackbar(error?.data?.message || t('messages.error.deleteFailed'), 'error');
     } finally {
       setDeleteVenueDialogOpen(false);
       setVenueToDelete(null);
@@ -205,10 +207,10 @@ export default function AdminPage() {
   const handleVerifyOrganization = async (id: number) => {
     try {
       await verifyOrganization(id).unwrap();
-      showSnackbar('Organization verified successfully');
+      showSnackbar(t('messages.success.verified', { item: t('common.entities.organization') }));
       refetchOrganizations();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || 'Verification failed', 'error');
+      showSnackbar(error?.data?.message || t('messages.error.verificationFailed'), 'error');
     }
   };
 
@@ -222,10 +224,10 @@ export default function AdminPage() {
 
     try {
       await deleteOrganization(organizationToDelete).unwrap();
-      showSnackbar('Organization deleted successfully');
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.organization') }));
       refetchOrganizations();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || 'Delete failed', 'error');
+      showSnackbar(error?.data?.message || t('messages.error.deleteFailed'), 'error');
     } finally {
       setDeleteOrganizationDialogOpen(false);
       setOrganizationToDelete(null);
@@ -327,7 +329,7 @@ export default function AdminPage() {
             isVerifying={isVerifying}
             onEditOrganization={(org) => {
               // TODO: Implement edit organization if needed
-              showSnackbar('Edit organization feature coming soon', 'error');
+              showSnackbar(t('messages.info.featureComingSoon', { item: t('common.entities.venue') }), 'error');
             }}
             onDeleteOrganization={handleDeleteOrganizationClick}
             onVerifyOrganization={handleVerifyOrganization}
@@ -337,8 +339,8 @@ export default function AdminPage() {
         {/* Delete Confirmation Dialogs */}
         <AdminDeleteDialog
           open={deleteCategoryDialogOpen}
-          title="Confirm Delete"
-          message="Are you sure you want to delete this category? This action cannot be undone."
+          title={t('dialog.confirmAction')}
+          message={t('admin.confirmDelete', { item: t('common.entities.category') })}
           isDeleting={isDeletingCategory}
           onClose={() => setDeleteCategoryDialogOpen(false)}
           onConfirm={handleDeleteCategoryConfirm}
@@ -346,8 +348,8 @@ export default function AdminPage() {
 
         <AdminDeleteDialog
           open={deleteVenueDialogOpen}
-          title="Confirm Delete"
-          message="Are you sure you want to delete this venue? This action cannot be undone."
+          title={t('dialog.confirmAction')}
+          message={t('admin.confirmDelete', { item: t('common.entities.venue') })}
           isDeleting={isDeletingVenue}
           onClose={() => setDeleteVenueDialogOpen(false)}
           onConfirm={handleDeleteVenueConfirm}
@@ -355,8 +357,8 @@ export default function AdminPage() {
 
         <AdminDeleteDialog
           open={deleteOrganizationDialogOpen}
-          title="Confirm Delete"
-          message="Are you sure you want to delete this organization? This action cannot be undone and will affect all associated events."
+          title={t('dialog.confirmAction')}
+          message={t('admin.confirmDeleteWithWarning', { item: t('common.entities.organization') })}
           isDeleting={isDeletingOrganization}
           onClose={() => setDeleteOrganizationDialogOpen(false)}
           onConfirm={handleDeleteOrganizationConfirm}
@@ -366,7 +368,7 @@ export default function AdminPage() {
         {categoryModalOpen && (
           <AdminFormDialog
             open={categoryModalOpen}
-            title={editingCategory ? 'Edit Category' : 'Create New Category'}
+            title={editingCategory ? t('category.edit') : t('category.createNew')}
             onClose={closeCategoryModal}
             maxWidth="sm"
           >

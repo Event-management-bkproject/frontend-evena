@@ -2,6 +2,7 @@
 
 import { Box, Typography } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import Forms from '@components/Forms';
 import FormTextField from '@components/FormTextField';
 import FormButton from '@components/FormButton';
@@ -16,6 +17,7 @@ import { RegisterFormProps } from './types';
  * @param type - 'customer' or 'organizer'
  */
 export function RegisterForm({ type, onSubmitSuccess }: RegisterFormProps) {
+  const { t } = useTranslation();
   const { register, isLoading } = useRegister({ type });
 
   const handleSubmit = async (values: {
@@ -31,7 +33,7 @@ export function RegisterForm({ type, onSubmitSuccess }: RegisterFormProps) {
     }
   };
 
-  const title = type === 'customer' ? 'Customer Registration' : 'Organizer Registration';
+  const title = type === 'customer' ? t('auth.register.customerTitle') : t('auth.register.organizerTitle');
 
   return (
     <Forms
@@ -60,50 +62,50 @@ export function RegisterForm({ type, onSubmitSuccess }: RegisterFormProps) {
           <FormTextField
             id={`${type}-register-name`}
             name="name"
-            label="Full Name"
+            label={t('common.labels.fullName')}
             type="text"
             required={true}
-            placeholder="Enter your full name"
+            placeholder={t('auth.placeholders.enterFullName')}
             autoComplete="name"
           />
 
           <FormTextField
             id={`${type}-register-email`}
             name="email"
-            label="Email"
+            label={t('common.labels.email')}
             type="email"
             required={true}
-            placeholder="Enter your email"
+            placeholder={t('auth.placeholders.enterEmail')}
             autoComplete="email"
           />
 
           <FormTextField
             id={`${type}-register-phone`}
             name="phone"
-            label="Phone Number"
+            label={t('common.labels.phoneNumber')}
             type="tel"
             required={true}
-            placeholder="Enter your phone number"
+            placeholder={t('auth.placeholders.enterPhoneNumber')}
             autoComplete="tel"
           />
 
           <FormTextField
             id={`${type}-register-password`}
             name="password"
-            label="Password"
+            label={t('common.labels.password')}
             type="password"
             required={true}
-            placeholder="Enter your password"
+            placeholder={t('auth.placeholders.enterPassword')}
             autoComplete="new-password"
           />
 
           <FormTextField
             id={`${type}-register-confirmPassword`}
             name="confirmPassword"
-            label="Confirm Password"
+            label={t('common.labels.confirmPassword')}
             type="password"
             required={true}
-            placeholder="Re-enter your password"
+            placeholder={t('auth.placeholders.reEnterPassword')}
             autoComplete="new-password"
           />
 
@@ -111,7 +113,7 @@ export function RegisterForm({ type, onSubmitSuccess }: RegisterFormProps) {
             isRegister={true}
             disabled={!formikProps.isValid || formikProps.isSubmitting || isLoading}
             registerBtnLabelText={
-              formikProps.isSubmitting || isLoading ? 'Registering...' : 'Register'
+              formikProps.isSubmitting || isLoading ? t('auth.register.registering') : t('common.buttons.register')
             }
           />
 
@@ -127,9 +129,9 @@ export function RegisterForm({ type, onSubmitSuccess }: RegisterFormProps) {
             }}
           >
             <Typography variant="body2" component="span" sx={{ color: 'text.secondary' }}>
-              Already have an account?
+              {t('auth.register.alreadyHaveAccount')}
             </Typography>
-            <AuthLink href="/login">Login here</AuthLink>
+            <AuthLink href="/login">{t('auth.register.loginHere')}</AuthLink>
           </Box>
         </>
       )}

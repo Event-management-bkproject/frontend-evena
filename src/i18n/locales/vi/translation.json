@@ -1,0 +1,539 @@
+{
+  "common": {
+    "buttons": {
+      "login": "Đăng nhập",
+      "logout": "Đăng xuất",
+      "register": "Đăng ký",
+      "cancel": "Hủy",
+      "submit": "Gửi",
+      "save": "Lưu",
+      "delete": "Xóa",
+      "edit": "Chỉnh sửa",
+      "add": "Thêm",
+      "remove": "Xóa",
+      "accept": "Chấp nhận",
+      "reject": "Từ chối",
+      "goBack": "Quay lại",
+      "close": "Đóng",
+      "buyTicket": "Mua vé",
+      "invite": "Mời thành viên",
+      "sendInvitation": "Gửi lời mời",
+      "browseEvents": "Xem các sự kiện",
+      "checkout": "Thanh toán",
+      "bookNow": "Đặt ngay!"
+    },
+    "labels": {
+      "email": "Email",
+      "password": "Mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "fullName": "Họ và tên",
+      "phoneNumber": "Số điện thoại",
+      "description": "Mô tả",
+      "name": "Tên",
+      "status": "Trạng thái",
+      "actions": "Hành động",
+      "role": "Vai trò",
+      "loading": "Đang tải...",
+      "search": "Tìm kiếm",
+      "id": "ID",
+      "icon": "Biểu tượng",
+      "address": "Địa chỉ",
+      "city": "Thành phố",
+      "capacity": "Sức chứa",
+      "contact": "Liên hệ",
+      "date": "Ngày",
+      "items": "Mặt hàng",
+      "total": "Tổng",
+      "payment": "Thanh toán",
+      "price": "Giá",
+      "quantity": "Số lượng",
+      "subtotal": "Tiền lẻ",
+      "ticketType": "Loại vé",
+      "ticketId": "Mã vé",
+      "owner": "Chủ sở hữu",
+      "issued": "Phát hành",
+      "event": "Sự kiện",
+      "organizedBy": "Do tổ chức bởi",
+      "category": "Danh mục",
+      "location": "Địa điểm"
+    },
+    "navigation": {
+      "home": "Trang chủ",
+      "aboutUs": "Về chúng tôi",
+      "services": "Dịch vụ",
+      "contact": "Liên hệ",
+      "myAccount": "Tài khoản của tôi",
+      "myTickets": "Vé của tôi",
+      "dashboard": "Bảng điều khiển",
+      "organizations": "Tổ chức",
+      "events": "Sự kiện",
+      "menu": "Menu"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "pending": "Chờ xử lý",
+      "verified": "Đã xác minh",
+      "unverified": "Chưa xác minh",
+      "draft": "Bản nháp",
+      "published": "Đã xuất bản",
+      "ongoing": "Đang diễn ra",
+      "completed": "Đã hoàn thành",
+      "cancelled": "Đã hủy",
+      "soldOut": "Đã bán hết",
+      "paid": "ĐÃ THANH TOÁN",
+      "pendingPayment": "CHƯA THANH TOÁN"
+    },
+    "entities": {
+      "category": "danh mục",
+      "venue": "địa điểm",
+      "organization": "tổ chức",
+      "event": "sự kiện",
+      "ticket": "vé",
+      "order": "đơn hàng"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Đăng nhập",
+      "loggingIn": "Đang đăng nhập...",
+      "dontHaveAccount": "Chưa có tài khoản? Đăng ký với vai trò:",
+      "customer": "Khách hàng",
+      "organization": "Tổ chức"
+    },
+    "register": {
+      "customerTitle": "Đăng ký khách hàng",
+      "organizerTitle": "Đăng ký tổ chức",
+      "registering": "Đang đăng ký...",
+      "alreadyHaveAccount": "Đã có tài khoản?",
+      "loginHere": "Đăng nhập tại đây"
+    },
+    "placeholders": {
+      "enterEmail": "Nhập email của bạn",
+      "enterPassword": "Nhập mật khẩu của bạn",
+      "reEnterPassword": "Nhập lại mật khẩu của bạn",
+      "enterFullName": "Nhập họ và tên của bạn",
+      "enterPhoneNumber": "Nhập số điện thoại của bạn"
+    }
+  },
+  "event": {
+    "create": "Tạo sự kiện",
+    "update": "Cập nhật sự kiện",
+    "delete": "Xóa sự kiện",
+    "cancel": "Hủy sự kiện",
+    "createNew": "Tạo sự kiện mới",
+    "edit": "Chỉnh sửa sự kiện",
+    "creating": "Đang tạo...",
+    "updating": "Đang cập nhật...",
+    "cancelling": "Đang hủy...",
+    "searchPlaceholder": "Tìm kiếm sự kiện...",
+    "form": {
+      "title": "Tiêu đề sự kiện",
+      "titlePlaceholder": "Nhập tiêu đề sự kiện",
+      "startDate": "Ngày & giờ bắt đầu",
+      "endDate": "Ngày & giờ kết thúc",
+      "coverImage": "URL ảnh bìa",
+      "coverImagePlaceholder": "https://example.com/cover.jpg",
+      "organizer": "Đơn vị tổ chức",
+      "selectOrganizer": "Chọn đơn vị tổ chức",
+      "category": "Danh mục",
+      "selectCategory": "Chọn danh mục",
+      "venue": "Địa điểm",
+      "selectVenue": "Chọn địa điểm",
+      "descriptionPlaceholder": "Nhập mô tả sự kiện",
+      "additionalImages": "URL ảnh bổ sung (Tùy chọn)",
+      "imageUrlPlaceholder": "https://example.com/image.jpg",
+      "imagesAdded": "{{count}} ảnh đã thêm",
+      "imagesAdded_other": "{{count}} ảnh đã thêm"
+    },
+    "filter": {
+      "category": "Danh mục",
+      "allCategories": "Tất cả danh mục",
+      "allTime": "Tất cả thời gian",
+      "thisWeek": "Tuần này",
+      "thisMonth": "Tháng này",
+      "thisYear": "Năm nay"
+    },
+    "confirmCancel": {
+      "title": "Hủy sự kiện",
+      "message": "Bạn có chắc chắn muốn hủy \"{{eventTitle}}\"?",
+      "warning": "Hành động này không thể hoàn tác. Sự kiện sẽ được đánh dấu là đã hủy.",
+      "info": "Sự kiện đã hủy sẽ không còn hiển thị với khách hàng và việc bán vé sẽ bị dừng.",
+      "confirm": "Xác nhận hủy sự kiện"
+    },
+    "needOrganization": "Bạn cần tạo một tổ chức trước."
+  },
+  "organization": {
+    "title": "Tổ chức",
+    "form": {
+      "name": "Tên tổ chức",
+      "namePlaceholder": "Nhập tên tổ chức",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Nhập mô tả tổ chức",
+      "logoUrl": "URL logo",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "website": "Website",
+      "websitePlaceholder": "https://example.com",
+      "emailPlaceholder": "organization@example.com",
+      "phonePlaceholder": "Nhập số điện thoại"
+    },
+    "empty": "Chưa có tổ chức nào",
+    "notFound": "Không tìm thấy tổ chức phù hợp",
+    "verified": "Đã xác minh",
+    "unverified": "Chưa xác minh",
+    "verificationPending": "Tổ chức này đang chờ xác minh từ quản trị viên. Bạn không thể mời thành viên cho đến khi được xác minh.",
+    "createFirst": "Bạn cần tạo một tổ chức trước."
+  },
+  "member": {
+    "title": "Thành viên nhóm - {{organizationName}}",
+    "invite": "Mời thành viên nhóm",
+    "remove": "Xóa thành viên nhóm",
+    "manage": "Quản lý thành viên nhóm và vai trò của họ",
+    "viewOnly": "Xem thành viên nhóm",
+    "noMembers": "Chưa có thành viên nào",
+    "noMembersInfo": "Nhấp vào nút \"Mời thành viên\" ở trên để thêm thành viên cộng tác vào sự kiện",
+    "removing": "Đang xóa...",
+    "accepting": "Đang chấp nhận...",
+    "rejecting": "Đang từ chối...",
+    "cannotChangeOwnRole": "Bạn không thể thay đổi vai trò của chính mình",
+    "onlyOwnerCanChange": "Chỉ chủ sở hữu mới có thể thay đổi vai trò",
+    "roles": {
+      "owner": "Chủ sở hữu",
+      "manager": "Quản lý",
+      "managerDesc": "Có thể quản lý sự kiện và thành viên nhóm",
+      "coordinator": "Điều phối viên",
+      "coordinatorDesc": "Có thể quản lý sự kiện",
+      "scanner": "Quét vé",
+      "scannerDesc": "Chỉ có thể quét vé",
+      "viewer": "Người xem",
+      "viewerDesc": "Chỉ xem, không chỉnh sửa"
+    },
+    "invitation": {
+      "title": "Mời thành viên nhóm",
+      "emailLabel": "Địa chỉ email người tổ chức",
+      "emailPlaceholder": "organizer@example.com",
+      "roleLabel": "Vai trò",
+      "sending": "Đang gửi lời mời...",
+      "warningTitle": "⚠️ Quan trọng",
+      "loggedInAs": "Bạn đang đăng nhập với email {{email}}",
+      "cannotInviteSelf": "Bạn không thể tự mời chính mình. Vui lòng nhập email khác.",
+      "requirementsTitle": "📋 Yêu cầu lời mời",
+      "requirement1": "Email phải thuộc về một tài khoản Organizer hiện có",
+      "requirement2": "Người dùng phải đã đăng ký với vai trò \"Organizer\"",
+      "requirement3": "Tài khoản khách hàng không thể được mời vào tổ chức",
+      "rolePermissions": "Quyền của vai trò:",
+      "verificationRequired": "Tổ chức phải được xác minh bởi quản trị viên trước khi mời thành viên. Vui lòng chờ xác minh."
+    },
+    "invitations": {
+      "title": "Lời mời tham gia tổ chức",
+      "noPending": "Bạn không có lời mời nào đang chờ",
+      "roleLabel": "Vai trò:"
+    }
+  },
+  "venue": {
+    "create": "Tạo địa điểm",
+    "update": "Cập nhật địa điểm",
+    "createNew": "Tạo địa điểm mới",
+    "edit": "Chỉnh sửa địa điểm",
+    "creating": "Đang tạo...",
+    "updating": "Đang cập nhật...",
+    "form": {
+      "name": "Tên địa điểm",
+      "namePlaceholder": "Nhập tên địa điểm",
+      "address": "Địa chỉ",
+      "addressPlaceholder": "Nhập địa chỉ đầy đủ",
+      "city": "Thành phố",
+      "cityPlaceholder": "Nhập thành phố",
+      "latitude": "Vĩ độ",
+      "latitudePlaceholder": "ví dụ: 10.762622",
+      "longitude": "Kinh độ",
+      "longitudePlaceholder": "ví dụ: 106.660172",
+      "capacity": "Sức chứa",
+      "capacityPlaceholder": "Nhập sức chứa",
+      "descriptionPlaceholder": "Nhập mô tả địa điểm"
+    }
+  },
+  "category": {
+    "create": "Tạo danh mục",
+    "update": "Cập nhật danh mục",
+    "createNew": "Tạo danh mục mới",
+    "edit": "Chỉnh sửa danh mục",
+    "noCategories": "Không có danh mục nào",
+    "notFound": "Không tìm thấy danh mục",
+    "form": {
+      "name": "Tên danh mục",
+      "namePlaceholder": "Nhập tên danh mục",
+      "icon": "URL biểu tượng hoặc Emoji",
+      "iconPlaceholder": "https://example.com/icon.png hoặc 🎭",
+      "iconHelper": "Nhập một URL hoặc emoji",
+      "descriptionPlaceholder": "Nhập mô tả danh mục"
+    },
+    "table": {
+      "id": "ID",
+      "icon": "Biểu tượng",
+      "name": "Tên",
+      "description": "Mô tả",
+      "actions": "Hành động"
+    }
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "email": {
+      "invalid": "Email không hợp lệ",
+      "required": "Email là bắt buộc",
+      "validFormat": "Vui lòng nhập email hợp lệ"
+    },
+    "password": {
+      "minLength": "Mật khẩu phải có ít nhất 6 ký tự",
+      "maxLength": "Mật khẩu không được vượt quá 100 ký tự",
+      "strength": "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt (@#$%^&+=)",
+      "noMatch": "Mật khẩu không khớp"
+    },
+    "phone": {
+      "invalid": "Số điện thoại không hợp lệ",
+      "format": "Số điện thoại phải có 10-15 chữ số và có thể bắt đầu bằng +",
+      "numbersOnly": "Số điện thoại chỉ được chứa số",
+      "minLength": "Số điện thoại phải có ít nhất 10 chữ số"
+    },
+    "name": {
+      "minLength": "Tên phải có ít nhất 2 ký tự",
+      "maxLength": "Tên không được vượt quá 100 ký tự"
+    },
+    "event": {
+      "titleRequired": "Tiêu đề sự kiện là bắt buộc",
+      "titleMinLength": "Tiêu đề phải có ít nhất 3 ký tự",
+      "descriptionRequired": "Mô tả là bắt buộc",
+      "descriptionMinLength": "Mô tả phải có ít nhất 10 ký tự",
+      "startDateRequired": "Ngày bắt đầu là bắt buộc",
+      "startDateFuture": "Ngày bắt đầu phải là trong tương lai",
+      "endDateRequired": "Ngày kết thúc là bắt buộc",
+      "endDateAfterStart": "Ngày kết thúc phải sau ngày bắt đầu",
+      "organizerRequired": "Vui lòng chọn đơn vị tổ chức",
+      "categoryRequired": "Vui lòng chọn danh mục",
+      "venueRequired": "Vui lòng chọn địa điểm",
+      "validUrl": "Vui lòng nhập URL hợp lệ",
+      "coverImageRequired": "URL ảnh bìa là bắt buộc"
+    },
+    "venue": {
+      "nameRequired": "Tên địa điểm là bắt buộc",
+      "addressRequired": "Địa chỉ là bắt buộc",
+      "cityRequired": "Thành phố là bắt buộc",
+      "latitudeRange": "Vĩ độ phải từ -90 đến 90",
+      "latitudeRequired": "Vĩ độ là bắt buộc",
+      "longitudeRange": "Kinh độ phải từ -180 đến 180",
+      "longitudeRequired": "Kinh độ là bắt buộc",
+      "capacityMin": "Sức chứa phải ít nhất là 1",
+      "capacityRequired": "Sức chứa là bắt buộc",
+      "descriptionRequired": "Mô tả là bắt buộc"
+    },
+    "category": {
+      "nameRequired": "Tên danh mục là bắt buộc",
+      "descriptionRequired": "Mô tả là bắt buộc",
+      "validUrl": "Phải là URL hợp lệ",
+      "iconRequired": "URL biểu tượng là bắt buộc"
+    },
+    "organization": {
+      "nameRequired": "Tên tổ chức là bắt buộc",
+      "descriptionRequired": "Mô tả là bắt buộc",
+      "validUrl": "Phải là URL hợp lệ",
+      "logoRequired": "URL logo là bắt buộc",
+      "websiteRequired": "Website là bắt buộc",
+      "emailRequired": "Email là bắt buộc",
+      "phoneRequired": "Số điện thoại là bắt buộc"
+    }
+  },
+  "messages": {
+    "success": {
+      "login": "Đăng nhập thành công!",
+      "register": "Đăng ký thành công! Vui lòng kiểm tra email của bạn.",
+      "eventCreated": "Tạo sự kiện thành công!",
+      "eventUpdated": "Cập nhật sự kiện thành công!",
+      "eventDeleted": "Xóa sự kiện thành công!",
+      "invitationAccepted": "Đã chấp nhận lời mời tham gia {{organizationName}}",
+      "invitationRejected": "Đã từ chối lời mời tham gia {{organizationName}}",
+      "created": "Tạo {{item}} thành công!",
+      "updated": "Cập nhật {{item}} thành công!",
+      "deleted": "Xóa {{item}} thành công!",
+      "verified": "Xác minh {{item}} thành công!",
+      "orderCancelled": "Hủy đơn hàng thành công",
+      "invitationSent": "Đã gửi lời mời đến {{email}}"
+    },
+    "error": {
+      "loginFailed": "Đăng nhập thất bại",
+      "registerFailed": "Đăng ký thất bại",
+      "eventCreateFailed": "Tạo sự kiện thất bại",
+      "eventUpdateFailed": "Cập nhật sự kiện thất bại",
+      "eventDeleteFailed": "Xóa sự kiện thất bại",
+      "memberRemoveFailed": "Xóa thành viên thất bại",
+      "memberRoleUpdateFailed": "Cập nhật vai trò thành viên thất bại",
+      "invitationSendFailed": "Gửi lời mời thất bại",
+      "invitationAcceptFailed": "Chấp nhận lời mời thất bại",
+      "invitationRejectFailed": "Từ chối lời mời thất bại",
+      "invitationsLoadFailed": "Tải lời mời thất bại. Vui lòng thử lại.",
+      "operationFailed": "Thao tác thất bại",
+      "deleteFailed": "Xóa thất bại",
+      "verificationFailed": "Xác minh thất bại",
+      "loadFailed": "Không thể tải {{item}}. Vui lòng thử lại sau.",
+      "notFound": "Không tìm thấy {{item}}",
+      "updateFailed": "Cập nhật {{item}} thất bại. Vui lòng thử lại.",
+      "cancelFailed": "Hủy {{item}} thất bại: {{reason}}",
+      "conflictUpdate": "{{item}} đã được ai đó khác chỉnh sửa. Vui lòng đóng form và thử lại.",
+      "cannotInviteSelf": "Bạn không thể tự mời chính mình. Vui lòng nhập email của người khác.",
+      "invitationFailed": "Không thể gửi lời mời"
+    },
+    "info": {
+      "featureComingSoon": "Tính năng chỉnh sửa {{item}} sẽ có sớm"
+    }
+  },
+  "dialog": {
+    "delete": {
+      "title": "Xóa {{item}}",
+      "message": "Bạn có chắc chắn muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác.",
+      "deleting": "Đang xóa...",
+      "confirm": "Xóa"
+    },
+    "confirmAction": "Bạn có chắc chắn?"
+  },
+  "admin": {
+    "subtitle": "Quản lý danh mục, địa điểm và tổ chức cho nền tảng",
+    "confirmDelete": "Bạn có chắc chắn muốn xóa {{item}} này? Hành động này không thể hoàn tác.",
+    "confirmDeleteWithWarning": "Bạn có chắc chắn muốn xóa {{item}} này? Hành động này không thể hoàn tác và sẽ ảnh hưởng đến tất cả các sự kiện liên quan.",
+    "stats": {
+      "total": "Tổng {{item}}"
+    },
+    "tabs": {
+      "categories": "Danh mục",
+      "venues": "Địa điểm",
+      "organizations": "Tổ chức",
+      "add": "Thêm {{item}}"
+    },
+    "table": {
+      "noItems": "Không có {{item}}",
+      "noItemsFound": "Không tìm thấy {{item}}"
+    },
+    "actions": {
+      "verifyOrganization": "Xác minh tổ chức",
+      "deleting": "Đang xóa..."
+    }
+  },
+  "customer": {
+    "discoverEvents": "Khám phá sự kiện",
+    "discoverEventsSubtitle": "Tìm và đặt vé cho các sự kiện hay nhất gần bạn",
+    "hotEvents": "Sự kiện nóng",
+    "noHotEvents": "Không có sự kiện nóng hiện tại. Quay lại sau nhé!",
+    "upcomingEvents": "Sự kiện sắp tới",
+    "eventsCount": "({{count}} sự kiện)",
+    "noEventsFound": "Không tìm thấy sự kiện phù hợp với bộ lọc của bạn. Thử điều chỉnh tìm kiếm.",
+    "myTickets": "Vé của tôi",
+    "myOrders": "Đơn hàng của tôi",
+    "noTicketsYet": "Chưa có vé nào",
+    "noOrdersYet": "Chưa có đơn hàng nào",
+    "browseEvents": "Xem các sự kiện",
+    "viewQRCode": "Xem mã QR",
+    "ticketQRCode": "Mã QR vé",
+    "presentQRCode": "Vui lòng xuất trình mã QR này tại cửa vào sự kiện",
+    "usedOn": "Đã sử dụng ngày {{date}}",
+    "backToOrders": "Quay lại đơn hàng",
+    "backToEvents": "Quay lại các sự kiện",
+    "selectTickets": "Chọn vé",
+    "noTicketsAvailable": "Không có vé cho sự kiện này",
+    "soldOut": "Đã bán hết",
+    "orderSummary": "Tổng đơn hàng",
+    "paymentMethod": "Phương pháp thanh toán:",
+    "processing": "Đang xử lý...",
+    "selectAtLeastOneTicket": "Vui lòng chọn ít nhất một vé",
+    "maxTicketsPerUser": "Tối đa {{count}} vé cho {{name}}",
+    "onlyTicketsAvailable": "Chỉ còn {{count}} vé cho {{name}}",
+    "earlyBird": "Vé mua sớm",
+    "maxPerUser": "Tối đa {{count}} cho mỗi người",
+    "available": "{{count}} còn trống",
+    "packages": "Các gói",
+    "aboutEvent": "Về sự kiện",
+    "eventDetails": "Chi tiết sự kiện",
+    "organizedBy": "Do tổ chức bởi",
+    "eventOrganizer": "Ban tổ chức",
+    "standardAdmission": "Vé vào cửa thông thường",
+    "bookNow": "Đặt ngay!",
+    "saleFrom": "BÁN TỪ",
+    "dateAndTime": "NGÀY & GIỜ",
+    "location": "ĐỊA ĐIỂM",
+    "startingFrom": "TỪ",
+    "theEvents": "SỲ KIỆN",
+    "percentOff": "{{percent}}% ĐỦ",
+    "orderItems": "Mặt hàng đơn hàng",
+    "totalTickets": "Tổng vé",
+    "orderDate": "Ngày đặt hàng",
+    "paymentSummary": "Tóm tắt thanh toán",
+    "paymentStatus": "Trạng thái thanh toán",
+    "viewMyTickets": "Xem vé của tôi",
+    "noItemsFound": "Không tìm thấy mặt hàng",
+    "viewDetails": "Xem chi tiết",
+    "cancelOrder": "Hủy đơn hàng",
+    "confirmCancelOrder": "Bạn có chắc chắn muốn hủy đơn hàng này?",
+    "orderPlacedSuccess": "Đặt đơn hàng thành công! Vé đã được gửi đến email của bạn."
+  },
+  "organizer": {
+    "allEvents": "Tất cả sự kiện",
+    "totalEvents": "{{count}} sự kiện tổng",
+    "viewAllEvents": "Xem tất cả sự kiện",
+    "noEventsYet": "Chưa có sự kiện",
+    "createFirstEvent": "Tạo sự kiện đầu tiên của bạn",
+    "goToEvents": "Đến sự kiện",
+    "eventDetails": "Chi tiết sự kiện",
+    "backToOrganizations": "Quay lại tổ chức",
+    "noDescriptionProvided": "Không có mô tả",
+    "organizationEvents": "Sự kiện của tổ chức ({{count}})",
+    "noEventsForOrganization": "Không tìm thấy sự kiện cho tổ chức này",
+    "statistics": "Thống kê",
+    "totalEventsLabel": "Tổng sự kiện",
+    "totalMembersLabel": "Tổng thành viên",
+    "members": "Thành viên",
+    "pendingInvitation": "Chờ",
+    "createOrganization": "Tạo tổ chức mới"
+  },
+  "searchBar": {
+    "searchEvents": "Tìm kiếm sự kiện...",
+    "searchOrganizations": "Tìm kiếm tổ chức...",
+    "location": "Địa điểm"
+  },
+  "filter": {
+    "timePeriod": "Giai đoạn thời gian:",
+    "categories": "Danh mục:",
+    "allTime": "Tất cả thời gian",
+    "today": "Hôm nay",
+    "thisWeek": "Tuần này",
+    "thisMonth": "Tháng này",
+    "all": "Tất cả"
+  },
+  "organizationFilter": {
+    "totalOrganizations": "Tổng tổ chức",
+    "verified": "Đã xác minh",
+    "pendingVerification": "Chờ xác minh",
+    "createOrganization": "Tạo tổ chức"
+  },
+  "verifyEmail": {
+    "title": "Xác Thực Email",
+    "verifying": "Đang xác thực email của bạn...",
+    "successMessage": "Email của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập vào tài khoản.",
+    "errorMessage": "Vui lòng thử lại hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn.",
+    "invalidLink": "Liên kết xác thực không hợp lệ",
+    "success": "Xác thực email thành công!",
+    "failed": "Xác thực email thất bại",
+    "networkError": "Có lỗi xảy ra khi xác thực email",
+    "registerAgain": "Đăng Ký Lại"
+  },
+  "checkEmail": {
+    "title": "Kiểm Tra Email",
+    "sentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
+    "yourEmail": "email của bạn",
+    "instructions": "Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác thực để kích hoạt tài khoản. Nếu không thấy email, hãy kiểm tra thư mục spam.",
+    "backToRegister": "Quay lại Đăng ký",
+    "goToLogin": "Đến trang Đăng nhập"
+  },
+  "language": {
+    "title": "Cài đặt ngôn ngữ",
+    "select": "Chọn ngôn ngữ",
+    "current": "Ngôn ngữ hiện tại",
+    "english": "English (Tiếng Anh)",
+    "vietnamese": "Tiếng Việt"
+  }
+}

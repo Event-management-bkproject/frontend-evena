@@ -13,10 +13,12 @@ import { EventListResponse } from '@/src/stores/types';
 import EventCard from '@/src/components/EventCard/EventCard';
 import EventCalendar from '@/src/components/EventCalendar/EventCalendar';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 
 export default function OrganizerDashboard() {
   const { auth } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Fetch events
   const {
@@ -53,8 +55,8 @@ export default function OrganizerDashboard() {
           {/* Header */}
           <Box sx={{ mb: '10px' }}>
             <DashboardHeader
-              title="Dashboard"
-              breadcrumbs={[{ label: 'Dashboard' }]}
+              title={t('common.navigation.dashboard')}
+              breadcrumbs={[{ label: t('common.navigation.dashboard') }]}
               userName={auth.user?.name || 'User'}
             />
           </Box>
@@ -68,10 +70,10 @@ export default function OrganizerDashboard() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Box>
                       <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363', mb: 0.5 }}>
-                        All Events
+                        {t('organizer.allEvents')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {totalEvents} total events
+                        {t('organizer.totalEvents', { count: totalEvents })}
                       </Typography>
                     </Box>
                     <Button
@@ -87,7 +89,7 @@ export default function OrganizerDashboard() {
                         '&:hover': { backgroundColor: '#dce0f5' },
                       }}
                     >
-                      View All Events
+                      {t('organizer.viewAllEvents')}
                     </Button>
                   </Box>
 
@@ -98,7 +100,7 @@ export default function OrganizerDashboard() {
                     </Box>
                   ) : eventsError ? (
                     <Box sx={{ p: 3, bgcolor: '#FEE', borderRadius: 2 }}>
-                      <Typography color="error">Failed to load events</Typography>
+                      <Typography color="error">{t('messages.error.loadFailed', { item: t('common.entities.event') })}</Typography>
                     </Box>
                   ) : events.length === 0 ? (
                     <Box
@@ -112,10 +114,10 @@ export default function OrganizerDashboard() {
                     >
                       <EventIcon sx={{ fontSize: 64, color: '#CCC', mb: 2 }} />
                       <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                        No events yet
+                        {t('organizer.noEventsYet')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Create your first event to get started
+                        {t('organizer.createFirstEvent')}
                       </Typography>
                       <Button
                         variant="contained"
@@ -129,7 +131,7 @@ export default function OrganizerDashboard() {
                           '&:hover': { backgroundColor: '#e55ae0' },
                         }}
                       >
-                        Go to Events
+                        {t('organizer.goToEvents')}
                       </Button>
                     </Box>
                   ) : (

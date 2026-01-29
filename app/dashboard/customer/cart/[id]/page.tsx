@@ -25,9 +25,11 @@ import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
 import { OrderStatus } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
+import { useTranslation } from 'react-i18next';
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const resolvedParams = use(params);
   const orderId = parseInt(resolvedParams.id);
@@ -70,7 +72,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
         <Header cartItemCount={0} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Alert severity="error">Order not found</Alert>
+          <Alert severity="error">{t('messages.error.notFound', { item: t('common.entities.order') })}</Alert>
         </Container>
         <Footer />
       </Box>
@@ -87,12 +89,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           onClick={() => router.push('/dashboard/customer/cart')}
           sx={{ mb: 3, color: '#2A3363' }}
         >
-          Back to Orders
+          {t('customer.backToOrders')}
         </Button>
 
         {isSuccess && (
           <Alert icon={<CheckCircle />} severity="success" sx={{ mb: 3 }}>
-            Order placed successfully! Your tickets have been sent to your email.
+            {t('customer.orderPlacedSuccess')}
           </Alert>
         )}
 
@@ -110,7 +112,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Event
+                  {t('common.labels.event')}
                 </Typography>
                 <Typography variant="body1" fontWeight={600}>
                   {order.eventTitle}
@@ -119,7 +121,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Total Tickets
+                  {t('customer.totalTickets')}
                 </Typography>
                 <Typography variant="body1" fontWeight={600}>
                   {order.ticketCount} tickets
@@ -128,7 +130,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Order Date
+                  {t('customer.orderDate')}
                 </Typography>
                 <Typography variant="body1" fontWeight={600}>
                   {new Date(order.createdAt).toLocaleString()}
@@ -139,17 +141,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             {order.items && order.items.length > 0 && (
               <Card sx={{ p: 3, borderRadius: '16px' }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
-                  Order Items
+                  {t('customer.orderItems')}
                 </Typography>
 
                 <TableContainer>
                   <Table>
                     <TableHead>
                       <TableRow sx={{ backgroundColor: '#F5F5F5' }}>
-                        <TableCell><Typography fontWeight={700}>Ticket Type</Typography></TableCell>
-                        <TableCell><Typography fontWeight={700}>Price</Typography></TableCell>
-                        <TableCell><Typography fontWeight={700}>Quantity</Typography></TableCell>
-                        <TableCell><Typography fontWeight={700}>Subtotal</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>{t('common.labels.ticketType')}</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>{t('common.labels.price')}</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>{t('common.labels.quantity')}</Typography></TableCell>
+                        <TableCell><Typography fontWeight={700}>{t('common.labels.subtotal')}</Typography></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -171,7 +173,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
-                Payment Summary
+                {t('customer.paymentSummary')}
               </Typography>
 
               {order.items && order.items.length > 0 && (
@@ -193,7 +195,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h6" fontWeight={700}>
-                  Total
+                  {t('common.labels.total')}
                 </Typography>
                 <Typography variant="h6" fontWeight={700} color="#F36BF9">
                   ${order.totalAmount.toLocaleString()}
@@ -204,10 +206,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Payment Status
+                  {t('customer.paymentStatus')}
                 </Typography>
                 <Chip
-                  label={order.status === OrderStatus.CONFIRMED ? 'PAID' : 'PENDING'}
+                  label={order.status === OrderStatus.CONFIRMED ? t('common.status.paid') : t('common.status.pendingPayment')}
                   color={order.status === OrderStatus.CONFIRMED ? 'success' : 'warning'}
                   size="small"
                 />
@@ -227,7 +229,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   '&:hover': { backgroundColor: '#e55ae0' },
                 }}
               >
-                View My Tickets
+                {t('customer.viewMyTickets')}
               </Button>
             )}
           </Grid>

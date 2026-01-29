@@ -16,11 +16,13 @@ import { useGetCategoriesQuery } from '@/src/stores/services/CategoryApi';
 import { useGetVenuesQuery } from '@/src/stores/services/VenueApi';
 import { useGetMyOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { UpdateEventRequest } from '@/src/stores/types';
+import { useTranslation } from 'react-i18next';
 
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const eventId = params.id as string;
+  const { t } = useTranslation();
 
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -54,9 +56,9 @@ export default function EventDetailsPage() {
   const venues = venuesResponse?.data?.content || [];
 
   const breadcrumbs = [
-    { label: 'Dashboard', href: '/dashboard/organizer' },
-    { label: 'Events', href: '/dashboard/organizer/events' },
-    { label: 'Event Details' },
+    { label: t('common.navigation.dashboard'), href: '/dashboard/organizer' },
+    { label: t('common.navigation.events'), href: '/dashboard/organizer/events' },
+    { label: t('organizer.eventDetails') },
   ];
 
   const handleEdit = () => {
@@ -83,7 +85,7 @@ export default function EventDetailsPage() {
       await updateEvent({ id: eventId, data: updateData }).unwrap();
       setSnackbar({
         open: true,
-        message: 'Event updated successfully!',
+        message: t('messages.success.updated', { item: t('common.entities.event') }),
         severity: 'success',
       });
       setUpdateModalOpen(false);
@@ -91,7 +93,7 @@ export default function EventDetailsPage() {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to update event. Please try again.',
+        message: t('messages.error.updateFailed', { item: t('common.entities.event') }),
         severity: 'error',
       });
     }
@@ -102,7 +104,7 @@ export default function EventDetailsPage() {
       await deleteEvent(eventId).unwrap();
       setSnackbar({
         open: true,
-        message: 'Event deleted successfully!',
+        message: t('messages.success.deleted', { item: t('common.entities.event') }),
         severity: 'success',
       });
       setDeleteDialogOpen(false);
@@ -110,7 +112,7 @@ export default function EventDetailsPage() {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: 'Failed to delete event. Please try again.',
+        message: t('messages.error.updateFailed', { item: t('common.entities.event') }),
         severity: 'error',
       });
     }
@@ -121,7 +123,7 @@ export default function EventDetailsPage() {
       <LayoutWithSidebar currentPage="events">
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)' }}>
           <Box sx={{ mb: '10px' }}>
-            <DashboardHeader title="Event Details" breadcrumbs={breadcrumbs} />
+            <DashboardHeader title={t('organizer.eventDetails')} breadcrumbs={breadcrumbs} />
           </Box>
           <Box
             sx={{
@@ -147,10 +149,10 @@ export default function EventDetailsPage() {
       <LayoutWithSidebar currentPage="events">
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)' }}>
           <Box sx={{ mb: '10px' }}>
-            <DashboardHeader title="Event Details" breadcrumbs={breadcrumbs} />
+            <DashboardHeader title={t('organizer.eventDetails')} breadcrumbs={breadcrumbs} />
           </Box>
           <Box sx={{ flex: 1, p: 3, overflow: 'auto', backgroundColor: '#F7F7F7', borderRadius: '20px' }}>
-            <Alert severity="error">{error ? 'Failed to load event details' : 'Event not found'}</Alert>
+            <Alert severity="error">{error ? t('messages.error.loadFailed', { item: t('common.entities.event') }) : t('messages.error.notFound', { item: t('common.entities.event') })}</Alert>
           </Box>
         </Box>
       </LayoutWithSidebar>
@@ -186,7 +188,7 @@ export default function EventDetailsPage() {
       </Box>
 
       {/* Update Event Modal */}
-      <BaseModal open={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title="Edit Event">
+      <BaseModal open={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title={t('event.edit')}>
         <UpdateEventForm
           event={event}
           onSubmit={handleUpdateSubmit}
@@ -203,8 +205,8 @@ export default function EventDetailsPage() {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Event"
-        message={`Are you sure you want to delete "${event?.title}"? This action cannot be undone.`}
+        title={t('event.delete')}
+        message={t('dialog.delete.message', { name: event?.title || '' })}
         loading={deletingEvent}
       />
 

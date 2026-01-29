@@ -33,12 +33,14 @@ import DashboardHeader from '@/src/components/DashboardHeader';
 import EventCard from '@/src/components/EventCard/EventCard';
 import { OrganizationRole } from '@/src/stores/types/enums';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 
 export default function OrganizationDetailPage() {
   const { auth } = useAuth();
   const router = useRouter();
   const params = useParams();
   const organizationId = parseInt(params.id as string, 10);
+  const { t } = useTranslation();
 
   // Fetch organization details
   const {
@@ -118,10 +120,10 @@ export default function OrganizationDetailPage() {
         <LayoutWithSidebar currentPage="organizations">
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="h5" color="error">
-              Failed to load organization details
+              {t('messages.error.loadFailed', { item: t('common.entities.organization') })}
             </Typography>
             <Button onClick={handleBack} sx={{ mt: 2 }}>
-              Go Back
+              {t('common.buttons.goBack')}
             </Button>
           </Box>
         </LayoutWithSidebar>
@@ -160,7 +162,7 @@ export default function OrganizationDetailPage() {
                 '&:hover': { backgroundColor: 'rgba(55, 67, 125, 0.08)' },
               }}
             >
-              Back to Organizations
+              {t('organizer.backToOrganizations')}
             </Button>
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
@@ -187,11 +189,11 @@ export default function OrganizationDetailPage() {
                             {organization.name}
                           </Typography>
                           {organization.verified && (
-                            <Verified sx={{ color: '#4CAF50', fontSize: 28 }} titleAccess="Verified Organization" />
+                            <Verified sx={{ color: '#4CAF50', fontSize: 28 }} titleAccess={t('common.status.verified')} />
                           )}
                         </Box>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          {organization.description || 'No description provided'}
+                          {organization.description || t('organizer.noDescriptionProvided')}
                         </Typography>
                       </Box>
                     </Box>
@@ -264,7 +266,7 @@ export default function OrganizationDetailPage() {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                     <EventIcon sx={{ color: '#F36BF9' }} />
                     <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363' }}>
-                      Organization Events ({organizationEvents.length})
+                      {t('organizer.organizationEvents', { count: organizationEvents.length })}
                     </Typography>
                   </Box>
 
@@ -276,7 +278,7 @@ export default function OrganizationDetailPage() {
                     <Box sx={{ textAlign: 'center', py: 4 }}>
                       <EventIcon sx={{ fontSize: 64, color: '#CCC', mb: 2 }} />
                       <Typography variant="body1" color="text.secondary">
-                        No events found for this organization
+                        {t('organizer.noEventsForOrganization')}
                       </Typography>
                     </Box>
                   ) : (
@@ -321,14 +323,14 @@ export default function OrganizationDetailPage() {
                 {/* Stats Card */}
                 <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
-                    Statistics
+                    {t('organizer.statistics')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <EventIcon sx={{ color: '#F36BF9', fontSize: 20 }} />
                         <Typography variant="body2" color="text.secondary">
-                          Total Events
+                          {t('organizer.totalEventsLabel')}
                         </Typography>
                       </Box>
                       <Typography variant="h5" sx={{ fontWeight: 700, color: '#F36BF9' }}>
@@ -339,7 +341,7 @@ export default function OrganizationDetailPage() {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <People sx={{ color: '#37437D', fontSize: 20 }} />
                         <Typography variant="body2" color="text.secondary">
-                          Total Members
+                          {t('organizer.totalMembersLabel')}
                         </Typography>
                       </Box>
                       <Typography variant="h5" sx={{ fontWeight: 700, color: '#37437D' }}>
@@ -355,7 +357,7 @@ export default function OrganizationDetailPage() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <People sx={{ color: '#F36BF9' }} />
                       <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363' }}>
-                        Members
+                        {t('organizer.members')}
                       </Typography>
                     </Box>
                     <Chip label={organization.members.length} size="small" sx={{ bgcolor: '#EEF0FF', color: '#37437D' }} />
@@ -383,7 +385,7 @@ export default function OrganizationDetailPage() {
                           </Typography>
                           {!member.invitationAccepted && (
                             <Chip
-                              label="Pending"
+                              label={t('organizer.pendingInvitation')}
                               size="small"
                               sx={{
                                 mt: 0.5,

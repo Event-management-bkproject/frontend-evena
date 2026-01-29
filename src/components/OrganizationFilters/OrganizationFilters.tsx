@@ -7,6 +7,7 @@ import { OrganizationResponse } from '@/src/stores/types';
 import { useGetPendingInvitationsQuery } from '@/src/stores/services/OrganizationMemberApi';
 import InvitationNotificationModal from '../InvitationNotificationModal';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { useTranslation } from 'react-i18next';
 
 interface OrganizationFiltersProps {
   onSearch: (keyword: string) => void;
@@ -21,6 +22,7 @@ export default function OrganizationFilters({
   organizations,
   loading = false,
 }: OrganizationFiltersProps) {
+  const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState('');
   const [invitationModalOpen, setInvitationModalOpen] = useState(false);
 
@@ -61,7 +63,7 @@ export default function OrganizationFilters({
       <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center' }}>
         {/* Search */}
         <TextField
-          placeholder="Search organizations..."
+          placeholder={t('searchBar.searchOrganizations')}
           value={searchValue}
           onChange={handleSearchChange}
           disabled={loading}
@@ -131,7 +133,7 @@ export default function OrganizationFilters({
             },
           }}
         >
-          Create Organization
+          {t('organizationFilter.createOrganization')}
         </Button>
       </Box>
 
@@ -151,7 +153,7 @@ export default function OrganizationFilters({
       >
         <Box sx={{ flex: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            Total Organizations
+            {t('organizationFilter.totalOrganizations')}
           </Typography>
           <Typography variant="h5" fontWeight={600} color="primary">
             {totalOrganizations}
@@ -159,7 +161,7 @@ export default function OrganizationFilters({
         </Box>
         <Box sx={{ flex: 1, borderLeft: '1px solid #E0E0E0', pl: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            Verified
+            {t('organizationFilter.verified')}
           </Typography>
           <Typography variant="h5" fontWeight={600} color="success.main">
             {verifiedOrganizations}
@@ -167,7 +169,7 @@ export default function OrganizationFilters({
         </Box>
         <Box sx={{ flex: 1, borderLeft: '1px solid #E0E0E0', pl: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            Pending Verification
+            {t('organizationFilter.pendingVerification')}
           </Typography>
           <Typography variant="h5" fontWeight={600} color="warning.main">
             {totalOrganizations - verifiedOrganizations}

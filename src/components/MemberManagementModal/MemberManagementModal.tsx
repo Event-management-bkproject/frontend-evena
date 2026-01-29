@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -25,6 +25,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Delete, PersonAdd, CheckCircle, Cancel, Warning } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import BaseModal from '../BaseModal';
 import { useGetOrganizationMembersQuery, useRemoveMemberMutation, useUpdateMemberRoleMutation } from '@/src/stores/services';
 import { OrganizationResponse } from '@/src/stores/types';
@@ -33,6 +34,8 @@ import { useAppSelector } from '@/src/stores/hooks';
 import SnackbarNotification from '../SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 import { useSSE } from '@/src/providers/SSEProvider';
+
+const MEMBERS_PER_PAGE = 50;
 
 interface MemberManagementModalProps {
   open: boolean;
@@ -51,6 +54,8 @@ export default function MemberManagementModal({
 }: MemberManagementModalProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [displayCount, setDisplayCount] = useState(MEMBERS_PER_PAGE);
+  const observerTarget = useRef<HTMLDivElement>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   // Get current user from Redux store
@@ -92,6 +97,47 @@ export default function MemberManagementModal({
 
   // Check if current user is the owner of the organization
   const isOwnerOfOrganization = currentUser?.id === organization.owner.id;
+
+  // Infinite scroll handler
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const [target] = entries;
+    if (target.isIntersecting && displayCount < members.length) {
+      setDisplayCount(prev => Math.min(prev + MEMBERS_PER_PAGE, members.length));
+    }
+  }, [displayCount, members.length]);
+
+  // Setup intersection observer
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1,
+    });
+
+    observer.observe(element);
+
+    return () => {
+      if (element) {
+        observer.unobserve(element);
+      }
+    };
+  }, [handleObserver]);
+
+  // Reset display count when modal opens or members change
+  useEffect(() => {
+    if (open) {
+      setDisplayCount(MEMBERS_PER_PAGE);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (members.length < displayCount) {
+      setDisplayCount(Math.min(MEMBERS_PER_PAGE, members.length));
+    }
+  }, [members.length]);
 
   const handleRoleChange = async (memberId: number, newRole: OrganizationRole) => {
     try {
@@ -238,7 +284,7 @@ export default function MemberManagementModal({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {members.map((member) => {
+                  {members.slice(0, displayCount).map((member) => {
                     const roleColors = getRoleColor(member.role);
                     const isOwner = member.role === OrganizationRole.OWNER;
                     const isCurrentUser = currentUser?.id === member.userId;
@@ -343,6 +389,16 @@ export default function MemberManagementModal({
                 </TableBody>
               </Table>
             </TableContainer>
+          )}
+
+          {/* Infinite scroll observer target and loading indicator */}
+          {members.length > 0 && displayCount < members.length && (
+            <>
+              <div ref={observerTarget} style={{ height: '20px', margin: '10px 0' }} />
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress size={24} sx={{ color: '#f36bf9' }} />
+              </Box>
+            </>
           )}
         </Box>
       </BaseModal>
