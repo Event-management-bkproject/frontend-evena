@@ -5,7 +5,7 @@ import { Box, Container, Typography, Button, Card, Alert, Grid, Chip, Divider, C
 import { ShoppingCart, Add, Remove, CalendarToday, Place, ArrowBack } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useGetEventByIdQuery } from '@/src/stores/services/EventApi';
-import { useGetTicketTypesQuery } from '@/src/stores/services/TicketTypeApi';
+import { useGetAvailableTicketTypesQuery } from '@/src/stores/services/TicketTypeApi';
 import { useCreateOrderMutation, useCheckoutOrderMutation } from '@/src/stores/services/OrderApi';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import Header from '@/src/components/Header';
@@ -29,7 +29,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const { data: eventResponse, isLoading: eventLoading } = useGetEventByIdQuery(eventId);
-  const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetTicketTypesQuery(eventId);
+  const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetAvailableTicketTypesQuery(eventId);
   const [createOrder] = useCreateOrderMutation();
   const [checkoutOrder] = useCheckoutOrderMutation();
 

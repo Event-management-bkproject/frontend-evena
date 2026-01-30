@@ -7,6 +7,8 @@ import { OrganizerAPI } from '../stores/services/OrganizerApi';
 import { CategoryAPI } from '../stores/services/CategoryApi';
 import { VenueAPI } from '../stores/services/VenueApi';
 import { OrganizationMemberAPI } from '../stores/services/OrganizationMemberApi';
+import { TicketTypeAPI } from '../stores/services/TicketTypeApi';
+import { OrderAPI } from '../stores/services/OrderApi';
 
 interface SSEContextType {
   isConnected: boolean;
@@ -61,6 +63,11 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
     // Determine which channels to subscribe to
     const channels: string[] = ['public']; // All users subscribe to public
+
+    // Add user-specific channel for order/ticket updates (private to this user)
+    if (userId) {
+      channels.push(`user:${userId}`);
+    }
 
     // Add organizer channel if user has ORGANIZER role
     if (isOrganizer) {
@@ -142,6 +149,24 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       eventSource.addEventListener('venue:update', handleEvent('📍 Venue updated', 'VENUE_UPDATED'));
       eventSource.addEventListener('venue:delete', handleEvent('📍 Venue deleted', 'VENUE_DELETED'));
 
+      // Ticket type events
+      eventSource.addEventListener('ticket_type:create', handleEvent('🎫 Ticket type created', 'TICKET_TYPE_CREATED'));
+      eventSource.addEventListener('ticket_type:update', handleEvent('🎫 Ticket type updated', 'TICKET_TYPE_UPDATED'));
+      eventSource.addEventListener('ticket_type:delete', handleEvent('🎫 Ticket type deleted', 'TICKET_TYPE_DELETED'));
+      eventSource.addEventListener('ticket_type:deactivate', handleEvent('🎫 Ticket type deactivated', 'TICKET_TYPE_DEACTIVATED'));
+
+      // Event lifecycle events
+      eventSource.addEventListener('event:cancel', handleEvent('❌ Event cancelled', 'EVENT_CANCELLED'));
+
+      // Order events (private user channel)
+      eventSource.addEventListener('order:create', handleEvent('🛒 Order created', 'ORDER_CREATED'));
+      eventSource.addEventListener('order:confirm', handleEvent('✅ Order confirmed', 'ORDER_CONFIRMED'));
+      eventSource.addEventListener('order:cancel', handleEvent('❌ Order cancelled', 'ORDER_CANCELLED'));
+
+      // Ticket events (private user channel)
+      eventSource.addEventListener('ticket:issue', handleEvent('🎫 Ticket issued', 'TICKET_ISSUED'));
+      eventSource.addEventListener('ticket:checkin', handleEvent('✅ Ticket checked in', 'TICKET_CHECKED_IN'));
+
       // Heartbeat event
       eventSource.addEventListener('heartbeat', () => {
         console.log(`[SSE][${channel}] 💓 Heartbeat`);
@@ -187,7 +212,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       }
       setIsConnected(false);
     };
-  }, [userId, isOrganizer, isAdmin]); // Reconnect when user, role, or admin status changes
+  }, [userId, token, isOrganizer, isAdmin]); // Reconnect when user, token, role, or admin status changes
 
   // Global SSE cache invalidation - handles all RTK Query cache updates
   const dispatch = useAppDispatch();
@@ -241,6 +266,45 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         console.log('[SSE] ✉️ Invalidating invitation/member cache');
         dispatch(OrganizationMemberAPI.util.invalidateTags(['Invitation', 'OrganizationMember']));
         dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
+        break;
+
+      // Ticket type events
+      case 'TICKET_TYPE_CREATED':
+      case 'TICKET_TYPE_UPDATED':
+      case 'TICKET_TYPE_DELETED':
+      case 'TICKET_TYPE_DEACTIVATED':
+        console.log('[SSE] 🎫 Invalidating ticket type cache');
+        dispatch(TicketTypeAPI.util.invalidateTags(['TicketType']));
+        // Also invalidate Event cache since minPrice/availableTickets may change
+        dispatch(EventAPI.util.invalidateTags(['Event']));
+        break;
+
+      // Event lifecycle events
+      case 'EVENT_CANCELLED':
+        console.log('[SSE] ❌ Invalidating event cache (cancelled)');
+        dispatch(EventAPI.util.invalidateTags(['Event']));
+        break;
+
+      // Order events (private user channel)
+      case 'ORDER_CREATED':
+      case 'ORDER_CONFIRMED':
+      case 'ORDER_CANCELLED':
+        console.log('[SSE] 🛒 Invalidating order cache');
+        dispatch(OrderAPI.util.invalidateTags(['Order']));
+        // Also invalidate related caches
+        dispatch(TicketTypeAPI.util.invalidateTags(['TicketType']));
+        dispatch(EventAPI.util.invalidateTags(['Event']));
+        if (type === 'ORDER_CONFIRMED') {
+          // Tickets are issued on order confirmation
+          dispatch(OrderAPI.util.invalidateTags(['Ticket']));
+        }
+        break;
+
+      // Ticket events (private user channel)
+      case 'TICKET_ISSUED':
+      case 'TICKET_CHECKED_IN':
+        console.log('[SSE] 🎫 Invalidating ticket cache');
+        dispatch(OrderAPI.util.invalidateTags(['Ticket']));
         break;
 
       default:

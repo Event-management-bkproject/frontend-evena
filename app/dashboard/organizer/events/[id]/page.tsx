@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
@@ -9,7 +9,7 @@ import EventContent from '@/src/components/EventContent';
 import TicketTypeManagement from '@/src/components/TicketTypeManagement';
 import BaseModal from '@/src/components/BaseModal';
 import UpdateEventForm from '@/src/components/UpdateEventForm';
-import DeleteConfirmDialog from '@/src/components/DeleteConfirmDialog';
+import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
 import Snackbar from '@/src/components/SnackBar';
 import { useGetEventByIdQuery, useUpdateEventMutation, useDeleteEventMutation } from '@/src/stores/services';
 import { useGetCategoriesQuery } from '@/src/stores/services/CategoryApi';
@@ -17,6 +17,7 @@ import { useGetVenuesQuery } from '@/src/stores/services/VenueApi';
 import { useGetMyOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { UpdateEventRequest } from '@/src/stores/types';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -42,6 +43,63 @@ export default function EventDetailsPage() {
     refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
     refetchOnFocus: true, // Refetch when window regains focus
   });
+
+  // Listen to SSE events for real-time updates
+  const { lastEvent } = useSSE();
+  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced refetch to prevent API spam from rapid SSE events
+  const debouncedRefetch = useCallback(() => {
+    if (refetchTimeoutRef.current) {
+      clearTimeout(refetchTimeoutRef.current);
+    }
+    refetchTimeoutRef.current = setTimeout(() => {
+      console.log('🔄 [EventDetailsPage] Refetching event (SSE triggered)...');
+      refetch();
+      refetchTimeoutRef.current = null;
+    }, 500);
+  }, [refetch]);
+
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const eventData = lastEvent.data;
+    const affectsThisEvent =
+      eventData?.eventId === eventId ||
+      eventData?.eventId?.toString() === eventId;
+
+    // Refetch on relevant SSE events
+    switch (lastEvent.type) {
+      case 'EVENT_UPDATED':
+      case 'EVENT_PUBLISHED':
+      case 'EVENT_CANCELLED':
+        if (affectsThisEvent) {
+          console.log('📨 [EventDetailsPage] SSE event affects this event:', lastEvent.type);
+          debouncedRefetch();
+        }
+        break;
+      case 'TICKET_TYPE_CREATED':
+      case 'TICKET_TYPE_UPDATED':
+      case 'TICKET_TYPE_DELETED':
+      case 'TICKET_TYPE_DEACTIVATED':
+        if (affectsThisEvent) {
+          console.log('📨 [EventDetailsPage] SSE ticket type event:', lastEvent.type);
+          debouncedRefetch();
+        }
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, eventId, debouncedRefetch]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refetchTimeoutRef.current) {
+        clearTimeout(refetchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const { data: organizersResponse } = useGetMyOrganizationsQuery();
   const { data: categoriesResponse } = useGetCategoriesQuery();
@@ -201,13 +259,17 @@ export default function EventDetailsPage() {
       </BaseModal>
 
       {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
+      <ConfirmationDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
         title={t('event.delete')}
         message={t('dialog.delete.message', { name: event?.title || '' })}
+        variant="error"
         loading={deletingEvent}
+        confirmText={t('common.buttons.delete')}
+        cancelText={t('common.buttons.cancel')}
+        disableBackdropClose
       />
 
       {/* Snackbar for notifications */}
