@@ -17,16 +17,13 @@ import {
   MenuItem,
   Select,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Tooltip,
   Alert,
 } from '@mui/material';
 import { Delete, PersonAdd, CheckCircle, Cancel, Warning } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import BaseModal from '../BaseModal';
+import { ConfirmationDialog } from '../ConfirmationDialog';
 import { useGetOrganizationMembersQuery, useRemoveMemberMutation, useUpdateMemberRoleMutation } from '@/src/stores/services';
 import { OrganizationResponse } from '@/src/stores/types';
 import { OrganizationRole } from '@/src/stores/types/enums';
@@ -404,20 +401,17 @@ export default function MemberManagementModal({
       </BaseModal>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Remove Team Member</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to remove this team member? They will lose access to this organization.</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={removing}>
-            Cancel
-          </Button>
-          <Button onClick={handleRemoveMember} color="error" variant="contained" disabled={removing}>
-            {removing ? 'Removing...' : 'Remove'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleRemoveMember}
+        title="Remove Team Member"
+        message="Are you sure you want to remove this team member? They will lose access to this organization."
+        variant="error"
+        confirmText="Remove"
+        loadingText="Removing..."
+        loading={removing}
+      />
 
       {/* Snackbar for notifications */}
       <SnackbarNotification

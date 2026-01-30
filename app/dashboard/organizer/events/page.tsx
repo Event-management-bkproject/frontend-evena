@@ -1,17 +1,4 @@
-// app/dashboard/organizer/events/page.tsx
 'use client';
-
-/**
- * NOTE: Page này vẫn là Client Component vì:
- * 1. ProtectedContent cần check auth (client-side)
- * 2. LayoutWithSidebar cần interactive state
- * 3. Auth token được lưu trong localStorage (client-only)
- *
- * ✅ OPTIMIZATION ĐÃ ÁP DỤNG:
- * - Server State (events, organizations, categories, venues) → RTK Query (unified caching, auto invalidation)
- * - Client State (modals, filters, sidebar) → Redux
- * - All CRUD operations properly invalidate related caches
- */
 
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import ProtectedContent from '@/src/components/ProtectedContent';

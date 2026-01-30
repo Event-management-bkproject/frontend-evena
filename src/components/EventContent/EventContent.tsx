@@ -15,7 +15,9 @@ import {
   IconButton,
   Grid,
   Divider,
+  Alert,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   CalendarMonth,
   LocationOn,
@@ -34,7 +36,7 @@ import {
 import { format } from 'date-fns';
 import { EventResponse, EventStatus } from '@/src/stores/types';
 import VenueMap from '../VenueMap';
-import CancelEventDialog from '../CancelEventDialog';
+import { ConfirmationDialog } from '../ConfirmationDialog';
 import SnackbarNotification from '../SnackbarNotification';
 import { usePublishEventMutation, useCancelEventMutation } from '@/src/stores/services';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
@@ -47,6 +49,7 @@ interface EventContentProps {
 }
 
 const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps) => {
+  const { t } = useTranslation();
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
@@ -453,13 +456,27 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
       </Dialog>
 
       {/* Cancel Event Dialog */}
-      <CancelEventDialog
+      <ConfirmationDialog
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
         onConfirm={handleCancelConfirm}
-        eventTitle={event.title}
+        title={t('event.confirmCancel.title')}
+        message={t('event.confirmCancel.message', { eventTitle: event.title })}
+        variant="warning"
         loading={cancelling}
-      />
+        confirmText={t('event.confirmCancel.confirm')}
+        cancelText={t('common.buttons.goBack')}
+        loadingText={t('event.cancelling')}
+        maxWidth="sm"
+        disableBackdropClose
+      >
+        <Alert severity="warning" sx={{ mb: 2, mt: 2, borderRadius: '12px' }}>
+          {t('event.confirmCancel.warning')}
+        </Alert>
+        <Typography variant="body2" color="text.secondary">
+          {t('event.confirmCancel.info')}
+        </Typography>
+      </ConfirmationDialog>
 
       {/* Snackbar for notifications */}
       <SnackbarNotification

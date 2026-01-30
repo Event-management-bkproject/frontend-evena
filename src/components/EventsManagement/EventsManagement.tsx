@@ -17,7 +17,7 @@ import { useGetMyOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import BaseModal from '../BaseModal';
 import CreateEventForm from '../CreateEventForm/CreateEventForm';
 import UpdateEventForm from '../UpdateEventForm';
-import DeleteConfirmDialog from '../DeleteConfirmDialog';
+import { ConfirmationDialog } from '../ConfirmationDialog';
 import DashboardHeader from '../DashboardHeader';
 import EventFilters from '../EventFilters';
 import Snackbar from '../SnackBar';
@@ -369,13 +369,17 @@ export default function EventsManagement({
       )}
 
       {/* Delete Confirmation */}
-      <DeleteConfirmDialog
+      <ConfirmationDialog
         open={modals.deleteConfirm}
         onClose={() => dispatch(closeModal('deleteConfirm'))}
         onConfirm={handleDeleteEvent}
         title={t('event.delete')}
         message={t('dialog.delete.message', { name: selectedEvent?.title || '' })}
+        variant="error"
         loading={deletingEvent}
+        confirmText={t('common.buttons.delete')}
+        cancelText={t('common.buttons.cancel')}
+        disableBackdropClose
       />
 
       {/* Snackbar */}

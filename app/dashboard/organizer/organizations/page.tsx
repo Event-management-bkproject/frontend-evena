@@ -20,7 +20,7 @@ import CreateOrganizationForm, {
 } from '@/src/components/CreateOrganisationForm/CreateOrganisationForm';
 import { UpdateOrganizationRequest } from '@/src/stores/types';
 import UpdateOrganizationForm from '@/src/components/UpdateOrganizationForm';
-import DeleteConfirmDialog from '@/src/components/DeleteConfirmDialog';
+import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
 import DashboardHeader from '@/src/components/DashboardHeader';
 import OrganizationFilters from '@/src/components/OrganizationFilters';
 import Snackbar from '@/src/components/SnackBar';
@@ -328,13 +328,17 @@ export default function OrganizationsPage() {
         )}
 
         {/* Delete Confirmation */}
-        <DeleteConfirmDialog
+        <ConfirmationDialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
           onConfirm={handleDeleteOrganization}
           title={`${t('common.buttons.delete')} ${t('common.entities.organization')}`}
           message={t('dialog.delete.message', { name: selectedOrganization?.name || '' })}
+          variant="error"
           loading={deletingOrganization}
+          confirmText={t('common.buttons.delete')}
+          cancelText={t('common.buttons.cancel')}
+          disableBackdropClose
         />
 
         {/* Member Management Modal */}

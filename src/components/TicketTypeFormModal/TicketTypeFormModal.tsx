@@ -13,12 +13,14 @@ import {
   IconButton,
   Switch,
   FormControlLabel,
+  Alert,
 } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Close, Info } from '@mui/icons-material';
 import FormTextField from '../FormTextField';
 import { ticketTypeSchema } from '@/src/utils/validationSchema/ticketTypeValidationSchema';
 import { useCreateTicketTypeMutation, useUpdateTicketTypeMutation } from '@/src/stores/services';
-import { TicketTypeResponse, CreateTicketTypeRequest } from '@/src/stores/types';
+import { TicketTypeResponse, CreateTicketTypeRequest, EventStatus } from '@/src/stores/types';
+import { isBusinessRuleViolation } from '@/src/stores/types/api';
 
 interface TicketTypeFormModalProps {
   open: boolean;
@@ -26,14 +28,31 @@ interface TicketTypeFormModalProps {
   eventId: string;
   ticketType?: TicketTypeResponse;
   onSuccess?: () => void;
+  eventStatus?: EventStatus;
+  hasSoldTickets?: boolean;
 }
 
-const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: TicketTypeFormModalProps) => {
+const TicketTypeFormModal = ({
+  open,
+  onClose,
+  eventId,
+  ticketType,
+  onSuccess,
+  eventStatus,
+  hasSoldTickets = false,
+}: TicketTypeFormModalProps) => {
   const [createTicketType, { isLoading: creating }] = useCreateTicketTypeMutation();
   const [updateTicketType, { isLoading: updating }] = useUpdateTicketTypeMutation();
 
   const isEditMode = !!ticketType;
   const loading = creating || updating;
+
+  // Business rule: Critical fields are immutable when event is published or has sold tickets
+  const isEventPublished =
+    eventStatus === EventStatus.PUBLISHED ||
+    eventStatus === EventStatus.ONGOING ||
+    eventStatus === EventStatus.COMPLETED;
+  const isCriticalFieldsLocked = isEditMode && (isEventPublished || hasSoldTickets);
 
   const initialValues: CreateTicketTypeRequest = ticketType
     ? {
@@ -66,10 +85,19 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
   const handleSubmit = async (values: CreateTicketTypeRequest) => {
     try {
       if (isEditMode) {
+        // When critical fields are locked, only send safe update fields
+        const updateData = isCriticalFieldsLocked
+          ? {
+              name: values.name,
+              description: values.description,
+              visible: values.visible,
+            }
+          : values;
+
         await updateTicketType({
           eventId,
           ticketTypeId: ticketType.id,
-          data: values,
+          data: updateData,
         }).unwrap();
       } else {
         await createTicketType({
@@ -80,7 +108,13 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
       onSuccess?.();
     } catch (error: any) {
       console.error('Error saving ticket type:', error);
-      alert(error?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} ticket type`);
+
+      // Handle business rule violation errors
+      if (isBusinessRuleViolation(error?.data)) {
+        alert(`Business Rule Violation: ${error.data.message}`);
+      } else {
+        alert(error?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} ticket type`);
+      }
     }
   };
 
@@ -120,6 +154,23 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
             <Form>
               <DialogContent dividers sx={{ py: 3 }}>
                 <Grid container spacing={3}>
+                  {/* Business Rule Warning */}
+                  {isCriticalFieldsLocked && (
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="info" icon={<Info />}>
+                        <Typography variant="body2" fontWeight={500}>
+                          Critical fields are locked
+                        </Typography>
+                        <Typography variant="body2">
+                          {hasSoldTickets
+                            ? 'This ticket type has sold tickets. Only name, description, and visibility can be edited.'
+                            : 'Event is published. Only name, description, and visibility can be edited.'}
+                          {' '}To change pricing or quantity, deactivate this ticket type and create a new one.
+                        </Typography>
+                      </Alert>
+                    </Grid>
+                  )}
+
                   {/* Basic Information */}
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="subtitle2" gutterBottom fontWeight={600}>
@@ -150,11 +201,24 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <FormTextField id="price" name="price" label="Price" type="number" required />
+                    <FormTextField
+                      id="price"
+                      name="price"
+                      label="Price"
+                      type="number"
+                      required
+                      disabled={isCriticalFieldsLocked}
+                    />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <FormTextField id="currency" name="currency" label="Currency" disabled value="VND" />
+                    <FormTextField
+                      id="currency"
+                      name="currency"
+                      label="Currency"
+                      disabled
+                      value="VND"
+                    />
                   </Grid>
 
                   {/* Early Bird Discount */}
@@ -164,6 +228,7 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
                         <Switch
                           checked={values.earlyBird}
                           onChange={(e) => setFieldValue('earlyBird', e.target.checked)}
+                          disabled={isCriticalFieldsLocked}
                         />
                       }
                       label="Enable Early Bird Discount"
@@ -178,6 +243,7 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
                         label="Early Bird Discount (%)"
                         type="number"
                         placeholder="e.g., 20"
+                        disabled={isCriticalFieldsLocked}
                       />
                     </Grid>
                   )}
@@ -190,7 +256,14 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <FormTextField id="total" name="total" label="Total Tickets" type="number" required />
+                    <FormTextField
+                      id="total"
+                      name="total"
+                      label="Total Tickets"
+                      type="number"
+                      required
+                      disabled={isCriticalFieldsLocked}
+                    />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
@@ -201,6 +274,7 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
                       type="number"
                       placeholder="Max tickets per user"
                       required
+                      disabled={isCriticalFieldsLocked}
                     />
                   </Grid>
 
@@ -212,11 +286,25 @@ const TicketTypeFormModal = ({ open, onClose, eventId, ticketType, onSuccess }: 
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <FormTextField id="salesStart" name="salesStart" label="Sales Start" type="datetime-local" required />
+                    <FormTextField
+                      id="salesStart"
+                      name="salesStart"
+                      label="Sales Start"
+                      type="datetime-local"
+                      required
+                      disabled={isCriticalFieldsLocked}
+                    />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <FormTextField id="salesEnd" name="salesEnd" label="Sales End" type="datetime-local" required />
+                    <FormTextField
+                      id="salesEnd"
+                      name="salesEnd"
+                      label="Sales End"
+                      type="datetime-local"
+                      required
+                      disabled={isCriticalFieldsLocked}
+                    />
                   </Grid>
 
                   {/* Visibility */}

@@ -2,6 +2,38 @@
 
 import { EventListResponse } from './event';
 
+// ============= SNAPSHOTS =============
+// Immutable data captured at order/booking time for booking integrity
+
+export interface EventSnapshot {
+  eventId: string;
+  eventVersion: number;
+  title: string;
+  description?: string;
+  startAt: string;
+  endAt: string;
+  coverUrl?: string;
+  venueName: string;
+  venueAddress: string;
+  venueCity: string;
+  organizationId: number;
+  organizationName: string;
+  categoryId: number;
+  categoryName: string;
+}
+
+export interface TicketTypeSnapshot {
+  ticketTypeId: number;
+  name: string;
+  description?: string;
+  originalPrice: number;
+  currency: string;
+  pricePaid: number;
+  wasEarlyBird: boolean;
+  earlyBirdDiscount?: number;
+  perUserLimit?: number;
+}
+
 // ============= ENUMS =============
 
 export enum OrderStatus {
@@ -46,6 +78,7 @@ export interface OrderItemResponse {
     price: number;
     currency: string;
   };
+  ticketTypeSnapshot?: TicketTypeSnapshot;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -119,6 +152,9 @@ export interface OrderResponse {
     name: string;
     email: string;
   };
+  eventId: string;
+  eventVersion: number;
+  eventSnapshot?: EventSnapshot;
   status: OrderStatus;
   totalAmount: number;
   currency: string;

@@ -21,7 +21,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en', // Default language if detection fails
-    lng: 'vi', // Default to Vietnamese
+    lng: 'en', // Default to Vietnamese
     debug: false,
     interpolation: {
       escapeValue: false, // React already escapes values

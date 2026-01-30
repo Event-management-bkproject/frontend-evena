@@ -33,9 +33,8 @@ import {
   AdminHeader,
   AdminStatsCards,
   AdminTabBar,
-  AdminDeleteDialog,
-  AdminFormDialog,
 } from '@/src/components/AdminDashboard';
+import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -337,58 +336,61 @@ export default function AdminPage() {
         )}
 
         {/* Delete Confirmation Dialogs */}
-        <AdminDeleteDialog
+        <ConfirmationDialog
           open={deleteCategoryDialogOpen}
           title={t('dialog.confirmAction')}
           message={t('admin.confirmDelete', { item: t('common.entities.category') })}
-          isDeleting={isDeletingCategory}
+          variant="error"
+          loading={isDeletingCategory}
           onClose={() => setDeleteCategoryDialogOpen(false)}
           onConfirm={handleDeleteCategoryConfirm}
+          confirmText={t('common.buttons.delete')}
+          cancelText={t('common.buttons.cancel')}
+          disableBackdropClose
         />
 
-        <AdminDeleteDialog
+        <ConfirmationDialog
           open={deleteVenueDialogOpen}
           title={t('dialog.confirmAction')}
           message={t('admin.confirmDelete', { item: t('common.entities.venue') })}
-          isDeleting={isDeletingVenue}
+          variant="error"
+          loading={isDeletingVenue}
           onClose={() => setDeleteVenueDialogOpen(false)}
           onConfirm={handleDeleteVenueConfirm}
+          confirmText={t('common.buttons.delete')}
+          cancelText={t('common.buttons.cancel')}
+          disableBackdropClose
         />
 
-        <AdminDeleteDialog
+        <ConfirmationDialog
           open={deleteOrganizationDialogOpen}
           title={t('dialog.confirmAction')}
           message={t('admin.confirmDeleteWithWarning', { item: t('common.entities.organization') })}
-          isDeleting={isDeletingOrganization}
+          variant="error"
+          loading={isDeletingOrganization}
           onClose={() => setDeleteOrganizationDialogOpen(false)}
           onConfirm={handleDeleteOrganizationConfirm}
+          confirmText={t('common.buttons.delete')}
+          cancelText={t('common.buttons.cancel')}
+          disableBackdropClose
         />
 
         {/* Category Modal */}
-        {categoryModalOpen && (
-          <AdminFormDialog
-            open={categoryModalOpen}
-            title={editingCategory ? t('category.edit') : t('category.createNew')}
-            onClose={closeCategoryModal}
-            maxWidth="sm"
-          >
-            <CreateCategoryForm
-              open={categoryModalOpen}
-              onClose={closeCategoryModal}
-              onSubmit={handleSubmitCategory}
-              loading={isCreatingCategory || isUpdatingCategory}
-              initialValues={
-                editingCategory
-                  ? {
-                      name: editingCategory.name,
-                      description: editingCategory.description || '',
-                      iconUrl: editingCategory.iconUrl || '',
-                    }
-                  : undefined
-              }
-            />
-          </AdminFormDialog>
-        )}
+        <CreateCategoryForm
+          open={categoryModalOpen}
+          onClose={closeCategoryModal}
+          onSubmit={handleSubmitCategory}
+          loading={isCreatingCategory || isUpdatingCategory}
+          initialValues={
+            editingCategory
+              ? {
+                  name: editingCategory.name,
+                  description: editingCategory.description || '',
+                  iconUrl: editingCategory.iconUrl || '',
+                }
+              : undefined
+          }
+        />
 
         {/* Venue Modal with Map */}
         <CreateVenueFormWithMap

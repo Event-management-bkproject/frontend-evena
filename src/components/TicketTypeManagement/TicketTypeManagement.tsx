@@ -18,10 +18,6 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Stack,
 } from '@mui/material';
 import {
@@ -35,6 +31,7 @@ import {
   Cancel,
   Block,
   SellOutlined,
+  PowerSettingsNew,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import {
@@ -46,6 +43,7 @@ import {
 import { EventResponse, TicketTypeResponse, TicketTypeStatus } from '@/src/stores/types';
 import TicketTypeFormModal from '../TicketTypeFormModal';
 import SnackbarNotification from '../SnackbarNotification';
+import ConfirmationDialog from '../ConfirmationDialog';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 interface TicketTypeManagementProps {
@@ -60,6 +58,8 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
   const [selectedTicketType, setSelectedTicketType] = useState<TicketTypeResponse | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ticketTypeToDelete, setTicketTypeToDelete] = useState<TicketTypeResponse | null>(null);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [ticketTypeToDeactivate, setTicketTypeToDeactivate] = useState<TicketTypeResponse | null>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const { data: ticketTypesResponse, isLoading, error, refetch } = useGetTicketTypesQuery(eventId, {
@@ -102,6 +102,36 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
     } catch (error: any) {
       console.error('Error deleting ticket type:', error);
       showSnackbar(error?.data?.message || 'Failed to delete ticket type', 'error');
+    }
+  };
+
+  const handleDeactivateClick = (ticketType: TicketTypeResponse) => {
+    setTicketTypeToDeactivate(ticketType);
+    setDeactivateDialogOpen(true);
+  };
+
+  const handleDeactivateConfirm = async () => {
+    if (!ticketTypeToDeactivate) return;
+
+    try {
+      await deactivateTicketType({
+        eventId,
+        ticketTypeId: ticketTypeToDeactivate.id,
+      }).unwrap();
+      setDeactivateDialogOpen(false);
+      setTicketTypeToDeactivate(null);
+      showSnackbar('Ticket type deactivated successfully', 'success');
+
+      // Refetch ticket types
+      await refetch();
+
+      // Trigger parent Event refetch to update availableTickets
+      if (onEventUpdate) {
+        onEventUpdate();
+      }
+    } catch (error: any) {
+      console.error('Error deactivating ticket type:', error);
+      showSnackbar(error?.data?.message || 'Failed to deactivate ticket type', 'error');
     }
   };
 
@@ -330,10 +360,31 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                             >
                               <Edit fontSize="small" />
                             </IconButton>
+                            {ticketType.status === TicketTypeStatus.ACTIVE && (
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeactivateClick(ticketType)}
+                                disabled={deactivating}
+                                title="Deactivate ticket type (stops sales, preserves existing bookings)"
+                                sx={{
+                                  color: '#ed6c02',
+                                  '&:hover': { backgroundColor: 'rgba(237, 108, 2, 0.08)' },
+                                }}
+                              >
+                                <PowerSettingsNew fontSize="small" />
+                              </IconButton>
+                            )}
                             <IconButton
                               size="small"
                               onClick={() => handleDeleteClick(ticketType)}
-                              disabled={deleting || ticketType.sold > 0}
+                              disabled={deleting || ticketType.sold > 0 || event?.status !== 'DRAFT'}
+                              title={
+                                ticketType.sold > 0
+                                  ? 'Cannot delete: has sold tickets'
+                                  : event?.status !== 'DRAFT'
+                                    ? 'Cannot delete: event is published'
+                                    : 'Delete ticket type'
+                              }
                               sx={{
                                 color: '#d32f2f',
                                 '&:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08)' },
@@ -358,6 +409,7 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         eventId={eventId}
+        eventStatus={event?.status}
         onSuccess={async () => {
           setCreateModalOpen(false);
           await refetch();
@@ -377,6 +429,8 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
           }}
           eventId={eventId}
           ticketType={selectedTicketType}
+          eventStatus={event?.status}
+          hasSoldTickets={selectedTicketType.sold > 0}
           onSuccess={async () => {
             setEditModalOpen(false);
             setSelectedTicketType(null);
@@ -389,40 +443,61 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmationDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: '16px' },
-        }}
-      >
-        <DialogTitle>Delete Ticket Type</DialogTitle>
-        <DialogContent>
-          <Typography>
+        onConfirm={handleDeleteConfirm}
+        title="Delete Ticket Type"
+        message={
+          <>
             Are you sure you want to delete <strong>{ticketTypeToDelete?.name}</strong>? This action cannot be undone.
+          </>
+        }
+        variant="error"
+        confirmText="Delete"
+        loadingText="Deleting..."
+        loading={deleting}
+      >
+        {ticketTypeToDelete && ticketTypeToDelete.sold > 0 && (
+          <Alert severity="warning" sx={{ mt: 2, borderRadius: '8px' }}>
+            This ticket type has {ticketTypeToDelete.sold} sold tickets and cannot be deleted.
+          </Alert>
+        )}
+      </ConfirmationDialog>
+
+      {/* Deactivate Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deactivateDialogOpen}
+        onClose={() => setDeactivateDialogOpen(false)}
+        onConfirm={handleDeactivateConfirm}
+        title="Deactivate Ticket Type"
+        message={
+          <>
+            Are you sure you want to deactivate <strong>{ticketTypeToDeactivate?.name}</strong>?
+          </>
+        }
+        variant="warning"
+        confirmText="Deactivate"
+        loadingText="Deactivating..."
+        loading={deactivating}
+      >
+        <Alert severity="info" sx={{ mt: 2, borderRadius: '8px' }}>
+          <Typography variant="body2">
+            <strong>What happens when you deactivate:</strong>
           </Typography>
-          {ticketTypeToDelete && ticketTypeToDelete.sold > 0 && (
-            <Alert severity="warning" sx={{ mt: 2, borderRadius: '8px' }}>
-              This ticket type has {ticketTypeToDelete.sold} sold tickets and cannot be deleted.
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            disabled={deleting || (ticketTypeToDelete?.sold || 0) > 0}
-          >
-            {deleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Typography variant="body2" component="ul" sx={{ mt: 1, pl: 2 }}>
+            <li>New sales will be stopped immediately</li>
+            <li>Existing bookings remain valid for check-in</li>
+            <li>Existing bookings can still be refunded</li>
+            <li>This action follows the immutability rules</li>
+          </Typography>
+        </Alert>
+        {ticketTypeToDeactivate && ticketTypeToDeactivate.sold > 0 && (
+          <Alert severity="warning" sx={{ mt: 2, borderRadius: '8px' }}>
+            This ticket type has {ticketTypeToDeactivate.sold} sold tickets that will remain valid.
+          </Alert>
+        )}
+      </ConfirmationDialog>
 
       {/* Snackbar for notifications */}
       <SnackbarNotification

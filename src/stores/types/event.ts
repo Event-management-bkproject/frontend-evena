@@ -181,6 +181,7 @@ export interface EventListResponse {
   minPrice: number;
   availableTickets: number;
   soldPercentage: number;
+  eventVersion: number;
   createdAt: string;
 }
 
@@ -198,6 +199,7 @@ export interface EventResponse {
   venue: VenueResponse;
   ticketTypes: TicketTypeSummary[];
   stats: EventStats;
+  eventVersion: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -226,6 +228,7 @@ export interface UpdateTicketTypeRequest {
   perUserLimit?: number;
   salesStart?: string;
   salesEnd?: string;
+  status?: TicketTypeStatus;
   earlyBird?: boolean;
   earlyBirdDiscount?: number;
   visible?: boolean;
