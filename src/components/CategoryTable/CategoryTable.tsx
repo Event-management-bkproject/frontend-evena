@@ -1,24 +1,28 @@
-// app/dashboard/admin/components/CategoryTable.tsx
+/**
+ * CategoryTable - Refactored to use GenericDataTable
+ *
+ * BUSINESS LOGIC PRESERVED:
+ * - Filter categories by name/description
+ * - Sort by ID
+ * - Edit/Delete actions
+ * - Icon rendering (emoji, URL, text)
+ *
+ * UI CHANGES:
+ * - Uses GenericDataTable for consistent table structure
+ * - Centralized column definitions
+ */
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  Stack,
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { GenericDataTable, TableColumn, TableAction } from '@/src/components/common/GenericDataTable';
 
-// Helper function to check if iconUrl is an emoji or a URL
+// ==========================================
+// ICON RENDERING HELPERS (PRESERVED LOGIC)
+// ==========================================
+
 const isEmoji = (text: string): boolean => {
   if (!text) return false;
   const emojiRegex = /^(\p{Emoji}|\p{Emoji_Presentation}|\p{Extended_Pictographic})+$/u;
@@ -92,14 +96,29 @@ const renderIcon = (iconUrl?: string | null) => {
   }
 };
 
+// ==========================================
+// TYPES
+// ==========================================
+
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  iconUrl?: string | null;
+}
+
 interface CategoryTableProps {
-  categories: any[];
+  categories: Category[];
   isLoading: boolean;
   searchTerm: string;
   isDeletingCategory: boolean;
-  onEditCategory: (category: any) => void;
+  onEditCategory: (category: Category) => void;
   onDeleteCategory: (id: number) => void;
 }
+
+// ==========================================
+// COMPONENT
+// ==========================================
 
 const CategoryTable: React.FC<CategoryTableProps> = ({
   categories,
@@ -111,87 +130,63 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Filter categories
-  const filteredCategories = categories
-    .filter(
-      (category) =>
-        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        category.description?.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    .slice()
-    .sort((a: any, b: any) => (Number(a.id) || 0) - (Number(b.id) || 0));
+  // Column definitions
+  const columns: TableColumn<Category>[] = [
+    {
+      key: 'id',
+      headerKey: 'common.labels.id',
+      render: (category) => category.id,
+    },
+    {
+      key: 'iconUrl',
+      headerKey: 'common.labels.icon',
+      render: (category) => renderIcon(category.iconUrl),
+    },
+    {
+      key: 'name',
+      headerKey: 'common.labels.name',
+      render: (category) => (
+        <Typography fontWeight="medium">{category.name}</Typography>
+      ),
+    },
+    {
+      key: 'description',
+      headerKey: 'common.labels.description',
+      render: (category) => (
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
+          {category.description || ''}
+        </Typography>
+      ),
+    },
+  ];
+
+  // Action definitions
+  const actions: TableAction<Category>[] = [
+    {
+      type: 'edit',
+      icon: <EditIcon />,
+      tooltip: t('common.buttons.edit'),
+      onClick: onEditCategory,
+    },
+    {
+      type: 'delete',
+      icon: <DeleteIcon />,
+      tooltip: t('common.buttons.delete'),
+      onClick: (category) => onDeleteCategory(category.id),
+      disabled: isDeletingCategory,
+    },
+  ];
 
   return (
-    <Box>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: '#f8f9fa' }}>
-              <TableCell>
-                <strong>{t('common.labels.id')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.icon')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.name')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.description')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.actions')}</strong>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  {t('common.labels.loading')}
-                </TableCell>
-              </TableRow>
-            ) : filteredCategories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  {searchTerm ? t('admin.table.noItemsFound', { item: t('common.entities.category') }) : t('admin.table.noItems', { item: t('common.entities.category') })}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredCategories.map((category: any) => (
-                <TableRow key={category.id} hover>
-                  <TableCell>{category.id}</TableCell>
-                  <TableCell>{renderIcon(category.iconUrl)}</TableCell>
-                  <TableCell>
-                    <Typography fontWeight="medium">{category.name}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }}>
-                      {category.description || ''}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <IconButton size="small" onClick={() => onEditCategory(category)} sx={{ color: '#36437C' }}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => onDeleteCategory(category.id)}
-                        sx={{ color: '#f44336' }}
-                        disabled={isDeletingCategory}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+    <GenericDataTable<Category>
+      data={categories}
+      columns={columns}
+      actions={actions}
+      isLoading={isLoading}
+      searchTerm={searchTerm}
+      searchFields={['name', 'description']}
+      entityName="common.entities.category"
+    />
   );
 };
 

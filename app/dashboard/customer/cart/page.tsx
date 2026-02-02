@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -31,6 +31,7 @@ import { orderLogger } from '@/src/utils/logger/flowLogger';
 import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 interface OrderRowProps {
   order: any;
@@ -171,14 +172,38 @@ function OrderRow({
 export default function MyOrdersPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
   const [page, setPage] = useState(0);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
-  const { data, isLoading, error } = useGetMyOrdersQuery({ page, size: 10 });
+  const { data, isLoading, error, refetch: refetchOrders } = useGetMyOrdersQuery({ page, size: 10 });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
   const orders = data?.data?.content || [];
   const totalPages = data?.data?.totalPages || 0;
+
+  // Listen to SSE events for real-time order updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [MyOrders] Received SSE event:', lastEvent.type);
+
+    // Refetch orders when order-related events occur
+    switch (lastEvent.type) {
+      case 'ORDER_CREATED':
+      case 'ORDER_CONFIRMED':
+      case 'ORDER_CANCELLED':
+      case 'ORDER_EXPIRED':
+      case 'ORDER_REFUNDED':
+      case 'PAYMENT_COMPLETED':
+      case 'PAYMENT_FAILED':
+        console.log('🔄 [MyOrders] Refetching orders...');
+        refetchOrders();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchOrders]);
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {

@@ -1,32 +1,50 @@
-// app/dashboard/admin/components/VenueTable.tsx
+/**
+ * VenueTable - Refactored to use GenericDataTable
+ *
+ * BUSINESS LOGIC PRESERVED:
+ * - Filter venues by name/address/city
+ * - Sort by ID
+ * - Edit/Delete actions
+ *
+ * UI CHANGES:
+ * - Uses GenericDataTable for consistent table structure
+ * - Centralized column definitions
+ */
 'use client';
 
 import React from 'react';
-import {
-  Box,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-  Chip,
-  Stack,
-} from '@mui/material';
+import { Typography, Chip } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { GenericDataTable, TableColumn, TableAction } from '@/src/components/common/GenericDataTable';
+
+// ==========================================
+// TYPES
+// ==========================================
+
+interface Venue {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  capacity: number;
+  lat?: number;
+  lng?: number;
+  description?: string;
+}
 
 interface VenueTableProps {
-  venues: any[];
+  venues: Venue[];
   isLoading: boolean;
   searchTerm: string;
   isDeletingVenue: boolean;
-  onEditVenue: (venue: any) => void;
+  onEditVenue: (venue: Venue) => void;
   onDeleteVenue: (id: number) => void;
 }
+
+// ==========================================
+// COMPONENT
+// ==========================================
 
 const VenueTable: React.FC<VenueTableProps> = ({
   venues,
@@ -38,96 +56,72 @@ const VenueTable: React.FC<VenueTableProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Filter venues
-  const filteredVenues = venues
-    .filter(
-      (venue) =>
-        venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        venue.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        venue.city.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    .slice()
-    .sort((a: any, b: any) => (Number(a.id) || 0) - (Number(b.id) || 0));
+  // Column definitions
+  const columns: TableColumn<Venue>[] = [
+    {
+      key: 'id',
+      headerKey: 'common.labels.id',
+      render: (venue) => venue.id,
+    },
+    {
+      key: 'name',
+      headerKey: 'common.labels.name',
+      render: (venue) => (
+        <Typography fontWeight="medium">{venue.name}</Typography>
+      ),
+    },
+    {
+      key: 'address',
+      headerKey: 'common.labels.address',
+      render: (venue) => (
+        <Typography variant="body2" sx={{ maxWidth: 250 }}>
+          {venue.address}
+        </Typography>
+      ),
+    },
+    {
+      key: 'city',
+      headerKey: 'common.labels.city',
+      render: (venue) => (
+        <Chip label={venue.city} variant="outlined" size="small" />
+      ),
+    },
+    {
+      key: 'capacity',
+      headerKey: 'common.labels.capacity',
+      render: (venue) => (
+        <Chip label={venue.capacity} color="secondary" size="small" />
+      ),
+    },
+  ];
+
+  // Action definitions
+  const actions: TableAction<Venue>[] = [
+    {
+      type: 'edit',
+      icon: <EditIcon />,
+      tooltip: t('common.buttons.edit'),
+      onClick: onEditVenue,
+    },
+    {
+      type: 'delete',
+      icon: <DeleteIcon />,
+      tooltip: t('common.buttons.delete'),
+      onClick: (venue) => onDeleteVenue(venue.id),
+      disabled: isDeletingVenue,
+    },
+  ];
 
   return (
-    <Box>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: '#f8f9fa' }}>
-              <TableCell>
-                <strong>{t('common.labels.id')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.name')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.address')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.city')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.capacity')}</strong>
-              </TableCell>
-              <TableCell>
-                <strong>{t('common.labels.actions')}</strong>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  {t('common.labels.loading')}
-                </TableCell>
-              </TableRow>
-            ) : filteredVenues.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  {searchTerm ? t('admin.table.noItemsFound', { item: t('common.entities.venue') }) : t('admin.table.noItems', { item: t('common.entities.venue') })}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredVenues.map((venue: any) => (
-                <TableRow key={venue.id} hover>
-                  <TableCell>{venue.id}</TableCell>
-                  <TableCell>
-                    <Typography fontWeight="medium">{venue.name}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ maxWidth: 250 }}>
-                      {venue.address}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={venue.city} variant="outlined" size="small" />
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={venue.capacity} color="secondary" size="small" />
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <IconButton size="small" onClick={() => onEditVenue(venue)} sx={{ color: '#36437C' }}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => onDeleteVenue(venue.id)}
-                        sx={{ color: '#f44336' }}
-                        disabled={isDeletingVenue}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
+    <GenericDataTable<Venue>
+      data={venues}
+      columns={columns}
+      actions={actions}
+      isLoading={isLoading}
+      searchTerm={searchTerm}
+      searchFields={['name', 'address', 'city']}
+      entityName="common.entities.venue"
+    />
   );
 };
 

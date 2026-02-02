@@ -4,7 +4,7 @@ import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetOrganizationDetailsQuery } from '@/src/stores/services/OrganizerApi';
 import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import {
   Box,
@@ -34,6 +34,7 @@ import EventCard from '@/src/components/EventCard/EventCard';
 import { OrganizationRole } from '@/src/stores/types/enums';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function OrganizationDetailPage() {
   const { auth } = useAuth();
@@ -41,12 +42,14 @@ export default function OrganizationDetailPage() {
   const params = useParams();
   const organizationId = parseInt(params.id as string, 10);
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
 
   // Fetch organization details
   const {
     data: orgResponse,
     isLoading: loadingOrg,
     error: orgError,
+    refetch: refetchOrganization,
   } = useGetOrganizationDetailsQuery(organizationId, {
     skip: !auth.accessToken || isNaN(organizationId),
   });
@@ -56,6 +59,7 @@ export default function OrganizationDetailPage() {
     data: eventsResponse,
     isLoading: loadingEvents,
     error: eventsError,
+    refetch: refetchEvents,
   } = useGetMyEventsQuery(
     { page: 0, size: 100 },
     {
@@ -71,6 +75,48 @@ export default function OrganizationDetailPage() {
     if (!organization || !allEvents.length) return [];
     return allEvents.filter((event) => event.organizerName === organization.name);
   }, [allEvents, organization]);
+
+  // Listen to SSE events for real-time updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const eventData = lastEvent.data;
+    const affectsThisOrg =
+      eventData?.organizationId === organizationId ||
+      eventData?.organizationId?.toString() === organizationId.toString();
+
+    console.log('📨 [OrganizationDetail] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'ORGANIZATION_UPDATED':
+      case 'ORGANIZATION_VERIFIED':
+      case 'ORGANIZATION_UNVERIFIED':
+        if (affectsThisOrg) {
+          console.log('🔄 [OrganizationDetail] Refetching organization...');
+          refetchOrganization();
+        }
+        break;
+      case 'MEMBER_ADDED':
+      case 'MEMBER_REMOVED':
+      case 'MEMBER_ROLE_CHANGED':
+      case 'INVITATION_ACCEPTED':
+      case 'INVITATION_REJECTED':
+        if (affectsThisOrg) {
+          console.log('🔄 [OrganizationDetail] Refetching organization (member change)...');
+          refetchOrganization();
+        }
+        break;
+      case 'EVENT_CREATED':
+      case 'EVENT_UPDATED':
+      case 'EVENT_DELETED':
+      case 'EVENT_PUBLISHED':
+        console.log('🔄 [OrganizationDetail] Refetching events...');
+        refetchEvents();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, organizationId, refetchOrganization, refetchEvents]);
 
   const handleBack = () => {
     router.push('/dashboard/organizer/organizations');

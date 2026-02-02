@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import { Box, Container, Typography, Button, Card, Alert, Grid, Chip, Divider, CircularProgress } from '@mui/material';
 import { ShoppingCart, Add, Remove, CalendarToday, Place, ArrowBack } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -15,10 +15,12 @@ import { PaymentProvider } from '@/src/stores/types/order';
 import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function EventTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
   const resolvedParams = use(params);
   const eventId = resolvedParams.id;
   const { isAuthenticated } = useAuth();
@@ -28,13 +30,49 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentProvider>(PaymentProvider.CASH);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
-  const { data: eventResponse, isLoading: eventLoading } = useGetEventByIdQuery(eventId);
-  const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetAvailableTicketTypesQuery(eventId);
+  const { data: eventResponse, isLoading: eventLoading, refetch: refetchEvent } = useGetEventByIdQuery(eventId);
+  const { data: ticketTypesResponse, isLoading: ticketsLoading, refetch: refetchTickets } = useGetAvailableTicketTypesQuery(eventId);
   const [createOrder] = useCreateOrderMutation();
   const [checkoutOrder] = useCheckoutOrderMutation();
 
   const event = eventResponse?.data;
   const ticketTypes = ticketTypesResponse?.data || [];
+
+  // Listen to SSE events for real-time ticket availability updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const eventData = lastEvent.data;
+    const affectsThisEvent =
+      eventData?.eventId === eventId ||
+      eventData?.eventId?.toString() === eventId;
+
+    console.log('📨 [TicketsPage] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'EVENT_UPDATED':
+      case 'EVENT_CANCELLED':
+        if (affectsThisEvent) {
+          console.log('🔄 [TicketsPage] Refetching event...');
+          refetchEvent();
+        }
+        break;
+      case 'TICKET_TYPE_CREATED':
+      case 'TICKET_TYPE_UPDATED':
+      case 'TICKET_TYPE_DELETED':
+      case 'TICKET_TYPE_DEACTIVATED':
+      case 'BOOKING_CREATED':
+      case 'ORDER_CONFIRMED':
+        // Refetch tickets when availability changes
+        if (affectsThisEvent) {
+          console.log('🔄 [TicketsPage] Refetching tickets (availability changed)...');
+          refetchTickets();
+        }
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, eventId, refetchEvent, refetchTickets]);
 
   const handleQuantityChange = (ticketTypeId: number, change: number) => {
     const ticket = ticketTypes.find((t) => t.id === ticketTypeId);

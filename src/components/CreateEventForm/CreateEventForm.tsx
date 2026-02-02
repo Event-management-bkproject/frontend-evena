@@ -1,4 +1,14 @@
-// CreateEventForm.tsx
+/**
+ * CreateEventForm - Updated to use shared button styles
+ *
+ * BUSINESS LOGIC PRESERVED:
+ * - All form fields and validation
+ * - Image URL management
+ * - Submit handling
+ *
+ * UI CHANGES:
+ * - Uses shared button styles
+ */
 'use client';
 
 import { useState } from 'react';
@@ -10,6 +20,7 @@ import { eventSchema } from '@/src/utils/validationSchema/eventValidationSchema'
 import Forms from '../Forms';
 import FormTextareaField from '../FormTextAreaField';
 import { EventFormData } from '@/src/stores/types';
+import { PRIMARY_BUTTON_SX, SECONDARY_BUTTON_SX } from '@/src/theme/buttonStyles';
 
 interface CreateEventFormProps {
   onSubmit: (data: EventFormData) => void;
@@ -36,12 +47,11 @@ const CreateEventForm = ({
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>(initialValues?.imageUrls || []);
 
-  // SỬA LẠI defaultValues để khớp với EventFormData mới
   const defaultValues: EventFormData = {
     title: '',
     description: '',
-    startAt: '', // Chuỗi timestamp
-    endAt: '', // Chuỗi timestamp
+    startAt: '',
+    endAt: '',
     organizerId: 0,
     categoryId: 0,
     venueId: 0,
@@ -100,7 +110,7 @@ const CreateEventForm = ({
           placeholder={t('event.form.titlePlaceholder')}
         />
 
-        {/* Date Fields - THAY ĐỔI: Sử dụng datetime-local thay vì DateRangePicker */}
+        {/* Date Fields */}
         <Box display="flex" gap={2}>
           <FormTextField
             id="event-startAt"
@@ -223,21 +233,12 @@ const CreateEventForm = ({
               variant="contained"
               disabled={!imageUrlInput.trim()}
               sx={{
+                ...PRIMARY_BUTTON_SX,
                 minWidth: 'auto',
                 px: 3,
                 whiteSpace: 'nowrap',
-                backgroundColor: '#f36bf9',
-                borderRadius: '10px',
-                textTransform: 'none',
-                fontWeight: 600,
                 fontSize: '14px',
                 height: '56px',
-                '&:hover': {
-                  backgroundColor: '#e55ae0',
-                },
-                '&:disabled': {
-                  backgroundColor: '#cccccc',
-                },
               }}
             >
               {t('common.buttons.add')}
@@ -301,12 +302,7 @@ const CreateEventForm = ({
               onClick={onCancel}
               variant="outlined"
               disabled={loading}
-              sx={{
-                borderRadius: '10px',
-                padding: '10px 24px',
-                textTransform: 'none',
-                fontSize: '16px',
-              }}
+              sx={SECONDARY_BUTTON_SX}
             >
               {t('common.buttons.cancel')}
             </Button>
@@ -315,20 +311,7 @@ const CreateEventForm = ({
             type="submit"
             variant="contained"
             disabled={loading}
-            sx={{
-              backgroundColor: '#f36bf9',
-              borderRadius: '10px',
-              padding: '10px 24px',
-              textTransform: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              '&:hover': {
-                backgroundColor: '#e55ae0',
-              },
-              '&:disabled': {
-                backgroundColor: '#cccccc',
-              },
-            }}
+            sx={PRIMARY_BUTTON_SX}
           >
             {loading ? (isEdit ? t('event.updating') : t('event.creating')) : (isEdit ? t('event.update') : t('event.create'))}
           </Button>

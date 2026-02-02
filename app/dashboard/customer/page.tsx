@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, Container, CircularProgress, Alert, Grid } from '@mui/material';
 import { LocalFireDepartment, Event } from '@mui/icons-material';
 import { useGetEventsQuery, useGetPublicEventsQuery } from '@/src/stores/services/EventApi';
@@ -12,9 +12,11 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { calculateHotEvents, filterUpcomingEvents } from '@/src/utils/hotEventsAlgorithm';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function CustomerDashboard() {
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
 
   // Search filters state
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -24,11 +26,30 @@ export default function CustomerDashboard() {
   const [timePeriod, setTimePeriod] = useState<'today' | 'week' | 'month' | 'all'>('all');
 
   // Fetch data
-  const { data: eventsResponse, isLoading: eventsLoading, error: eventsError } = useGetEventsQuery({});
+  const { data: eventsResponse, isLoading: eventsLoading, error: eventsError, refetch: refetchEvents } = useGetEventsQuery({});
   const { data: categoriesResponse, isLoading: categoriesLoading } = useGetCategoriesQuery();
 
   const events = eventsResponse?.data?.content || [];
   const categories = categoriesResponse?.data || [];
+
+  // Listen to SSE events for real-time updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [CustomerDashboard] Received SSE event:', lastEvent.type);
+
+    // Refetch events when event data changes (only PUBLISHED events visible to customers)
+    switch (lastEvent.type) {
+      case 'EVENT_PUBLISHED':
+      case 'EVENT_UPDATED':
+      case 'EVENT_CANCELLED':
+        console.log('🔄 [CustomerDashboard] Refetching events...');
+        refetchEvents();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchEvents]);
 
   // Calculate hot events using algorithm
   const hotEvents = useMemo(() => {

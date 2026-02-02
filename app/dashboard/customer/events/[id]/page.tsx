@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useEffect } from 'react';
 import { Box, Container, Typography, Button, Card, Chip, Alert, CircularProgress } from '@mui/material';
 import { CalendarToday, Place, AccessTime, AttachMoney } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -10,18 +10,54 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function CustomerEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
   const resolvedParams = use(params);
   const eventId = resolvedParams.id;
 
-  const { data: eventResponse, isLoading: eventLoading, error: eventError } = useGetEventByIdQuery(eventId);
-  const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetAvailableTicketTypesQuery(eventId);
+  const { data: eventResponse, isLoading: eventLoading, error: eventError, refetch: refetchEvent } = useGetEventByIdQuery(eventId);
+  const { data: ticketTypesResponse, isLoading: ticketsLoading, refetch: refetchTickets } = useGetAvailableTicketTypesQuery(eventId);
 
   const event = eventResponse?.data;
   const ticketTypes = ticketTypesResponse?.data || [];
+
+  // Listen to SSE events for real-time updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const eventData = lastEvent.data;
+    const affectsThisEvent =
+      eventData?.eventId === eventId ||
+      eventData?.eventId?.toString() === eventId;
+
+    console.log('📨 [CustomerEventDetail] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'EVENT_UPDATED':
+      case 'EVENT_CANCELLED':
+        if (affectsThisEvent) {
+          console.log('🔄 [CustomerEventDetail] Refetching event...');
+          refetchEvent();
+        }
+        break;
+      case 'TICKET_TYPE_CREATED':
+      case 'TICKET_TYPE_UPDATED':
+      case 'TICKET_TYPE_DELETED':
+      case 'TICKET_TYPE_DEACTIVATED':
+        // Refetch tickets when ticket types change (availability updates)
+        if (affectsThisEvent) {
+          console.log('🔄 [CustomerEventDetail] Refetching tickets...');
+          refetchTickets();
+        }
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, eventId, refetchEvent, refetchTickets]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

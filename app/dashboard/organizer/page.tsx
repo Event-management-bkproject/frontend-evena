@@ -3,7 +3,7 @@
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
 import { useRouter } from 'next/navigation';
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import { Box, Button, Typography, CircularProgress, Grid } from '@mui/material';
 import { Event as EventIcon, ArrowForward } from '@mui/icons-material';
@@ -14,17 +14,20 @@ import EventCard from '@/src/components/EventCard/EventCard';
 import EventCalendar from '@/src/components/EventCalendar/EventCalendar';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function OrganizerDashboard() {
   const { auth } = useAuth();
   const router = useRouter();
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
 
   // Fetch events
   const {
     data: eventsResponse,
     isLoading: loadingEvents,
     error: eventsError,
+    refetch: refetchEvents,
   } = useGetMyEventsQuery(
     { page: 0, size: 20 },
     {
@@ -34,6 +37,26 @@ export default function OrganizerDashboard() {
 
   const events: EventListResponse[] = eventsResponse?.data?.content || [];
   const totalEvents = eventsResponse?.data?.totalElements || 0;
+
+  // Listen to SSE events for real-time updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [OrganizerDashboard] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'EVENT_CREATED':
+      case 'EVENT_UPDATED':
+      case 'EVENT_DELETED':
+      case 'EVENT_PUBLISHED':
+      case 'EVENT_CANCELLED':
+        console.log('🔄 [OrganizerDashboard] Refetching events...');
+        refetchEvents();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchEvents]);
 
   // Get event dates for calendar highlighting
   const eventDates = useMemo(() => {

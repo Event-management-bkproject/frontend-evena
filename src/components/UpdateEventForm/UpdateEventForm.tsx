@@ -1,7 +1,22 @@
+/**
+ * UpdateEventForm - Updated with optimistic locking support
+ *
+ * BUSINESS LOGIC PRESERVED:
+ * - All form fields and validation via CreateEventForm
+ * - Event data conversion
+ * - Submit handling
+ *
+ * ADDED:
+ * - SSE conflict detection via useOptimisticLocking hook
+ * - Version tracking for optimistic locking
+ */
 'use client';
 
+import { Alert, Box } from '@mui/material';
 import CreateEventForm from '../CreateEventForm/CreateEventForm';
 import { UpdateEventFormProps } from './types';
+import { useOptimisticLocking, ENTITY_EVENT_TYPES } from '@/src/hooks/useOptimisticLocking';
+import { EventFormData } from '@/src/stores/types';
 
 export function UpdateEventForm({
   event,
@@ -12,6 +27,14 @@ export function UpdateEventForm({
   categories,
   venues,
 }: UpdateEventFormProps) {
+  // Use optimistic locking hook for conflict detection
+  const { hasConflict, conflictMessage, version } = useOptimisticLocking({
+    entityId: Number(event.id),
+    entityVersion: event.eventVersion,
+    entityType: 'EVENT',
+    eventTypes: ENTITY_EVENT_TYPES.EVENT,
+  });
+
   // Helper function to get organizer ID
   const getOrganizerId = () => {
     if ('organizer' in event && event.organizer) {
@@ -64,17 +87,36 @@ export function UpdateEventForm({
     imageUrls: 'imageUrls' in event ? event.imageUrls : [],
   };
 
+  // Wrap onSubmit to include version for optimistic locking
+  const handleSubmit = async (formData: EventFormData) => {
+    // Include version in the form data for optimistic locking
+    const dataWithVersion = {
+      ...formData,
+      eventVersion: version,
+    };
+    await onSubmit(dataWithVersion);
+  };
+
   return (
-    <CreateEventForm
-      onSubmit={onSubmit}
-      onCancel={onCancel}
-      loading={loading}
-      organizers={organizers}
-      categories={categories}
-      venues={venues}
-      initialValues={initialValues}
-      isEdit={true}
-    />
+    <Box>
+      {/* Conflict Warning */}
+      {hasConflict && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {conflictMessage}
+        </Alert>
+      )}
+
+      <CreateEventForm
+        onSubmit={handleSubmit}
+        onCancel={onCancel}
+        loading={loading || hasConflict}
+        organizers={organizers}
+        categories={categories}
+        venues={venues}
+        initialValues={initialValues}
+        isEdit={true}
+      />
+    </Box>
   );
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useMemo } from 'react';
+import React, { use, useMemo, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -26,22 +26,52 @@ import { OrderStatus } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { lastEvent } = useSSE();
   const searchParams = useSearchParams();
   const resolvedParams = use(params);
   const orderId = parseInt(resolvedParams.id);
   const isSuccess = searchParams.get('success') === 'true';
 
   // Fetch all orders and find the specific one
-  const { data, isLoading, error } = useGetMyOrdersQuery({ page: 0, size: 100 });
+  const { data, isLoading, error, refetch: refetchOrders } = useGetMyOrdersQuery({ page: 0, size: 100 });
 
   const order = useMemo(() => {
     if (!data?.data?.content) return null;
     return data.data.content.find((o: any) => o.id === orderId);
   }, [data, orderId]);
+
+  // Listen to SSE events for real-time order updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    const eventData = lastEvent.data;
+    const affectsThisOrder =
+      eventData?.orderId === orderId ||
+      eventData?.orderId?.toString() === orderId.toString();
+
+    console.log('📨 [OrderDetail] Received SSE event:', lastEvent.type);
+
+    switch (lastEvent.type) {
+      case 'ORDER_CONFIRMED':
+      case 'ORDER_CANCELLED':
+      case 'ORDER_EXPIRED':
+      case 'ORDER_REFUNDED':
+      case 'PAYMENT_COMPLETED':
+      case 'PAYMENT_FAILED':
+        if (affectsThisOrder) {
+          console.log('🔄 [OrderDetail] Refetching order...');
+          refetchOrders();
+        }
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, orderId, refetchOrders]);
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {

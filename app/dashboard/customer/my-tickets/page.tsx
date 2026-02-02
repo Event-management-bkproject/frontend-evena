@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -25,14 +25,38 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function MyTicketsPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { data, isLoading, error } = useGetMyTicketsQuery();
+  const { lastEvent } = useSSE();
+  const { data, isLoading, error, refetch: refetchTickets } = useGetMyTicketsQuery();
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
 
   const tickets = data?.data || [];
+
+  // Listen to SSE events for real-time ticket updates
+  useEffect(() => {
+    if (!lastEvent) return;
+
+    console.log('📨 [MyTickets] Received SSE event:', lastEvent.type);
+
+    // Refetch tickets when ticket-related events occur
+    switch (lastEvent.type) {
+      case 'TICKET_ISSUED':
+      case 'TICKET_USED':
+      case 'TICKET_CANCELLED':
+      case 'ORDER_CONFIRMED':
+      case 'ORDER_CANCELLED':
+      case 'ORDER_REFUNDED':
+        console.log('🔄 [MyTickets] Refetching tickets...');
+        refetchTickets();
+        break;
+      default:
+        break;
+    }
+  }, [lastEvent, refetchTickets]);
 
   const getStatusColor = (status: TicketStatus) => {
     return status === TicketStatus.ACTIVE ? 'success' : 'default';
