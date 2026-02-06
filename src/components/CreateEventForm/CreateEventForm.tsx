@@ -12,7 +12,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, MenuItem, Chip, Typography } from '@mui/material';
+import { Box, Button, MenuItem, Chip, Typography, Alert } from '@mui/material';
 import { FormikHelpers } from 'formik';
 import { useTranslation } from 'react-i18next';
 import FormTextField from '../FormTextField';
@@ -26,6 +26,8 @@ interface CreateEventFormProps {
   onSubmit: (data: EventFormData) => void;
   onCancel?: () => void;
   loading?: boolean;
+  hasConflict?: boolean; // For optimistic locking conflict detection
+  conflictMessage?: string; // Conflict message from useOptimisticLocking
   initialValues?: Partial<EventFormData>;
   organizers: Array<{ id: number; name: string }>;
   categories: Array<{ id: number; name: string }>;
@@ -37,6 +39,8 @@ const CreateEventForm = ({
   onSubmit,
   onCancel,
   loading = false,
+  hasConflict = false,
+  conflictMessage = '',
   initialValues,
   organizers,
   categories,
@@ -100,6 +104,12 @@ const CreateEventForm = ({
       isRegister={false}
     >
       <Box display="flex" flexDirection="column" gap={3}>
+      {/* Conflict Warning */}
+      {hasConflict && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {conflictMessage}
+        </Alert>
+      )}
         {/* Title Field */}
         <FormTextField
           id="event-title"
@@ -310,10 +320,14 @@ const CreateEventForm = ({
           <Button
             type="submit"
             variant="contained"
-            disabled={loading}
+            disabled={loading || hasConflict}
             sx={PRIMARY_BUTTON_SX}
           >
-            {loading ? (isEdit ? t('event.updating') : t('event.creating')) : (isEdit ? t('event.update') : t('event.create'))}
+            {loading
+              ? (isEdit ? t('event.updating') : t('event.creating'))
+              : hasConflict
+                ? t('messages.error.dataChangedCloseReopen', { defaultValue: 'Data Changed - Close & Reopen' })
+                : (isEdit ? t('event.update') : t('event.create'))}
           </Button>
         </Box>
       </Box>

@@ -61,6 +61,7 @@ export default function EventsManagement({
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year' | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<import('@/src/stores/types/enums').EventStatus | null>(null);
+  const [editingEvent, setEditingEvent] = useState<EventResponse | null>(null); // Snapshot for edit modal
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -143,6 +144,13 @@ export default function EventsManagement({
   // ========== DATA PROCESSING ==========
   const events: EventListResponse[] = eventsResponse?.data?.content || [];
   const fullEvent = fullEventResponse?.data;
+
+  // Store snapshot of fullEvent when it loads (for edit modal - not affected by SSE refetch)
+  useEffect(() => {
+    if (fullEvent && modals.updateEvent && !editingEvent) {
+      setEditingEvent(fullEvent);
+    }
+  }, [fullEvent, modals.updateEvent, editingEvent]);
 
   // Filter events locally (client-side filtering on /events/my-events results)
   const filteredEvents = useMemo(() => {
@@ -243,18 +251,10 @@ export default function EventsManagement({
 
       await updateEvent({ id: selectedItemId as string, data: updateData }).unwrap();
       showSuccessMessage(t('messages.success.eventUpdated'));
-      dispatch(closeModal('updateEvent'));
+      handleCloseUpdateEvent();
     } catch (error: any) {
       const errorMessage = error?.data?.message || error?.message || t('messages.error.eventUpdateFailed');
-
-      // Check for version conflict error (optimistic locking)
-      if (errorMessage.includes('has been modified by another user')) {
-        showErrorMessage(t('messages.error.conflictUpdate', { item: t('common.entities.event') }));
-        dispatch(closeModal('updateEvent'));
-        refetchEvents();
-      } else {
-        showErrorMessage(errorMessage);
-      }
+      showErrorMessage(errorMessage);
     }
   };
 
@@ -271,7 +271,15 @@ export default function EventsManagement({
   };
 
   const handleEventEdit = (event: EventListResponse | EventResponse) => {
+    setEditingEvent(null); // Clear old snapshot so new one will be set from fullEvent
     dispatch(openModal({ modal: 'updateEvent', itemId: event.id }));
+  };
+
+  // Close update modal and refetch (follows Organization pattern)
+  const handleCloseUpdateEvent = () => {
+    dispatch(closeModal('updateEvent'));
+    setEditingEvent(null); // Clear snapshot → unmount form → reset hooks
+    refetchEvents(); // Refetch to get latest data when modal closes
   };
 
   const handleEventDelete = (event: EventListResponse | EventResponse) => {
@@ -358,18 +366,18 @@ export default function EventsManagement({
         />
       </BaseModal>
 
-      {/* Update Event Modal */}
-      {fullEvent && (
+      {/* Update Event Modal (conditional rendering - unmounts on close, resets hooks) */}
+      {editingEvent && (
         <BaseModal
           open={modals.updateEvent}
-          onClose={() => dispatch(closeModal('updateEvent'))}
+          onClose={handleCloseUpdateEvent}
           title={t('event.edit')}
           maxWidth="lg"
         >
           <UpdateEventForm
-            event={fullEvent}
+            event={editingEvent}
             onSubmit={handleUpdateEvent}
-            onCancel={() => dispatch(closeModal('updateEvent'))}
+            onCancel={handleCloseUpdateEvent}
             loading={updatingEvent}
             organizers={organizerOptions}
             categories={categoryOptions}

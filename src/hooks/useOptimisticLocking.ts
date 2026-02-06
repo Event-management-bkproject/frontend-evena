@@ -35,8 +35,8 @@ const ENTITY_ID_FIELDS: Record<EntityType, string> = {
 };
 
 interface UseOptimisticLockingProps {
-  /** The ID of the entity being edited */
-  entityId: number;
+  /** The ID of the entity being edited (number for Long IDs, string for UUID IDs) */
+  entityId: number | string;
   /** The version of the entity when the form was opened */
   entityVersion: number;
   /** The type of entity for SSE event matching */

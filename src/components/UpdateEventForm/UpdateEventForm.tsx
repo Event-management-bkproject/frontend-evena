@@ -12,7 +12,7 @@
  */
 'use client';
 
-import { Alert, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import CreateEventForm from '../CreateEventForm/CreateEventForm';
 import { UpdateEventFormProps } from './types';
 import { useOptimisticLocking, ENTITY_EVENT_TYPES } from '@/src/hooks/useOptimisticLocking';
@@ -28,9 +28,10 @@ export function UpdateEventForm({
   venues,
 }: UpdateEventFormProps) {
   // Use optimistic locking hook for conflict detection
+  // Uses event.version (JPA @Version) for optimistic locking, NOT event.eventVersion (business version)
   const { hasConflict, conflictMessage, version } = useOptimisticLocking({
-    entityId: Number(event.id),
-    entityVersion: event.eventVersion,
+    entityId: event.id,
+    entityVersion: event.version,
     entityType: 'EVENT',
     eventTypes: ENTITY_EVENT_TYPES.EVENT,
   });
@@ -89,27 +90,24 @@ export function UpdateEventForm({
 
   // Wrap onSubmit to include version for optimistic locking
   const handleSubmit = async (formData: EventFormData) => {
-    // Include version in the form data for optimistic locking
+    // Include JPA version in the form data for optimistic locking
     const dataWithVersion = {
       ...formData,
-      eventVersion: version,
+      version,
     };
     await onSubmit(dataWithVersion);
   };
 
   return (
     <Box>
-      {/* Conflict Warning */}
-      {hasConflict && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          {conflictMessage}
-        </Alert>
-      )}
+
 
       <CreateEventForm
         onSubmit={handleSubmit}
         onCancel={onCancel}
-        loading={loading || hasConflict}
+        loading={loading}
+        hasConflict={hasConflict}
+        conflictMessage={conflictMessage}
         organizers={organizers}
         categories={categories}
         venues={venues}

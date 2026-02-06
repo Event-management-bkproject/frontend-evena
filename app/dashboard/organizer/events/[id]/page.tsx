@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { EventResponse } from '@/src/stores/types';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
@@ -26,6 +27,7 @@ export default function EventDetailsPage() {
   const { t } = useTranslation();
 
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventResponse | null>(null); // Snapshot for edit modal
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -120,11 +122,23 @@ export default function EventDetailsPage() {
   ];
 
   const handleEdit = () => {
+    setEditingEvent(event || null); // Snapshot current event data (not live query)
     setUpdateModalOpen(true);
+  };
+
+  // Close update modal and refetch (follows Organization pattern)
+  const handleCloseUpdateModal = () => {
+    setUpdateModalOpen(false);
+    setEditingEvent(null); // Clear snapshot → unmount form → reset hooks
+    refetch(); // Refetch to get latest data when modal closes
   };
 
   const handleDelete = () => {
     setDeleteDialogOpen(true);
+  };
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+    setSnackbar({ open: true, message, severity });
   };
 
   const handleUpdateSubmit = async (formData: any) => {
@@ -138,22 +152,15 @@ export default function EventDetailsPage() {
         venueId: formData.venueId,
         coverUrl: formData.coverUrl,
         imageUrls: formData.imageUrls,
+        version: formData.version || 0, // Include version for optimistic locking
       };
 
       await updateEvent({ id: eventId, data: updateData }).unwrap();
-      setSnackbar({
-        open: true,
-        message: t('messages.success.updated', { item: t('common.entities.event') }),
-        severity: 'success',
-      });
-      setUpdateModalOpen(false);
-      refetch();
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: t('messages.error.updateFailed', { item: t('common.entities.event') }),
-        severity: 'error',
-      });
+      showSnackbar(t('messages.success.updated', { item: t('common.entities.event') }));
+      handleCloseUpdateModal();
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || t('messages.error.operationFailed');
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -245,18 +252,20 @@ export default function EventDetailsPage() {
         </Box>
       </Box>
 
-      {/* Update Event Modal */}
-      <BaseModal open={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title={t('event.edit')}>
-        <UpdateEventForm
-          event={event}
-          onSubmit={handleUpdateSubmit}
-          onCancel={() => setUpdateModalOpen(false)}
-          loading={updatingEvent}
-          organizers={organizations}
-          categories={categories}
-          venues={venues}
-        />
-      </BaseModal>
+      {/* Update Event Modal (conditional rendering - unmounts on close, resets hooks) */}
+      {editingEvent && (
+        <BaseModal open={updateModalOpen} onClose={handleCloseUpdateModal} title={t('event.edit')}>
+          <UpdateEventForm
+            event={editingEvent}
+            onSubmit={handleUpdateSubmit}
+            onCancel={handleCloseUpdateModal}
+            loading={updatingEvent}
+            organizers={organizations}
+            categories={categories}
+            venues={venues}
+          />
+        </BaseModal>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
