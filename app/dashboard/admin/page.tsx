@@ -98,7 +98,7 @@ export default function AdminPage() {
     router.push('/');
   };
 
-  // Category Handlers
+  // Category Handlers (follows Organization pattern: conditional rendering + clear state on close)
   const openCreateCategory = () => {
     setEditingCategory(undefined);
     setCategoryModalOpen(true);
@@ -110,8 +110,9 @@ export default function AdminPage() {
   };
 
   const closeCategoryModal = () => {
-    setEditingCategory(undefined);
     setCategoryModalOpen(false);
+    setEditingCategory(undefined);
+    refetchCategories(); // Refetch to get latest data when modal closes
   };
 
   const handleSubmitCategory = async (values: CreateCategoryRequest) => {
@@ -151,7 +152,7 @@ export default function AdminPage() {
     }
   };
 
-  // Venue Handlers
+  // Venue Handlers (follows Organization pattern: conditional rendering + clear state on close)
   const openCreateVenue = () => {
     setEditingVenue(undefined);
     setVenueModalOpen(true);
@@ -163,8 +164,9 @@ export default function AdminPage() {
   };
 
   const closeVenueModal = () => {
-    setEditingVenue(undefined);
     setVenueModalOpen(false);
+    setEditingVenue(undefined);
+    refetchVenues(); // Refetch to get latest data when modal closes
   };
 
   const handleSubmitVenue = async (values: CreateVenueRequest) => {
@@ -377,47 +379,59 @@ export default function AdminPage() {
           disableBackdropClose
         />
 
-        {/* Category Modal */}
+        {/* Category Create Modal */}
         <CreateCategoryForm
-          open={categoryModalOpen}
+          open={categoryModalOpen && !editingCategory}
           onClose={closeCategoryModal}
           onSubmit={handleSubmitCategory}
-          loading={isCreatingCategory || isUpdatingCategory}
-          category={editingCategory} // Pass full category object for optimistic locking
-          initialValues={
-            editingCategory
-              ? {
-                  name: editingCategory.name,
-                  description: editingCategory.description || '',
-                  iconUrl: editingCategory.iconUrl || '',
-                  version: editingCategory.version,
-                }
-              : undefined
-          }
+          loading={isCreatingCategory}
         />
 
-        {/* Venue Modal with Map */}
+        {/* Category Edit Modal (conditional rendering - unmounts on close, resets hooks) */}
+        {editingCategory && (
+          <CreateCategoryForm
+            open={categoryModalOpen}
+            onClose={closeCategoryModal}
+            onSubmit={handleSubmitCategory}
+            loading={isUpdatingCategory}
+            category={editingCategory}
+            initialValues={{
+              name: editingCategory.name,
+              description: editingCategory.description || '',
+              iconUrl: editingCategory.iconUrl || '',
+              version: editingCategory.version,
+            }}
+          />
+        )}
+
+        {/* Venue Create Modal */}
         <CreateVenueFormWithMap
-          open={venueModalOpen}
+          open={venueModalOpen && !editingVenue}
           onClose={closeVenueModal}
           onSubmit={handleSubmitVenue}
-          loading={isCreatingVenue || isUpdatingVenue}
-          venue={editingVenue} // Pass full venue object for optimistic locking
-          initialValues={
-            editingVenue
-              ? {
-                  name: editingVenue.name,
-                  address: editingVenue.address,
-                  city: editingVenue.city,
-                  capacity: editingVenue.capacity,
-                  description: editingVenue.description || '',
-                  lat: editingVenue.lat,
-                  lng: editingVenue.lng,
-                  version: editingVenue.version,
-                }
-              : undefined
-          }
+          loading={isCreatingVenue}
         />
+
+        {/* Venue Edit Modal (conditional rendering - unmounts on close, resets hooks) */}
+        {editingVenue && (
+          <CreateVenueFormWithMap
+            open={venueModalOpen}
+            onClose={closeVenueModal}
+            onSubmit={handleSubmitVenue}
+            loading={isUpdatingVenue}
+            venue={editingVenue}
+            initialValues={{
+              name: editingVenue.name,
+              address: editingVenue.address,
+              city: editingVenue.city,
+              capacity: editingVenue.capacity,
+              description: editingVenue.description || '',
+              lat: editingVenue.lat,
+              lng: editingVenue.lng,
+              version: editingVenue.version,
+            }}
+          />
+        )}
 
         {/* Snackbar */}
         <Snackbar
