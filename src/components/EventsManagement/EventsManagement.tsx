@@ -225,7 +225,7 @@ export default function EventsManagement({
     }
   };
 
-  const handleUpdateEvent = async (formData: EventFormData) => {
+  const handleUpdateEvent = async (formData: EventFormData & { version?: number }) => {
     if (!selectedItemId) return;
 
     try {
@@ -238,13 +238,23 @@ export default function EventsManagement({
         venueId: formData.venueId,
         coverUrl: formData.coverUrl,
         imageUrls: formData.imageUrls,
+        version: formData.version || 0, // Include version for optimistic locking
       };
 
       await updateEvent({ id: selectedItemId as string, data: updateData }).unwrap();
       showSuccessMessage(t('messages.success.eventUpdated'));
       dispatch(closeModal('updateEvent'));
     } catch (error: any) {
-      showErrorMessage(error?.data?.message || error?.message || t('messages.error.eventUpdateFailed'));
+      const errorMessage = error?.data?.message || error?.message || t('messages.error.eventUpdateFailed');
+
+      // Check for version conflict error (optimistic locking)
+      if (errorMessage.includes('has been modified by another user')) {
+        showErrorMessage(t('messages.error.conflictUpdate', { item: t('common.entities.event') }));
+        dispatch(closeModal('updateEvent'));
+        refetchEvents();
+      } else {
+        showErrorMessage(errorMessage);
+      }
     }
   };
 

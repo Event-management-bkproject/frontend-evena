@@ -1,13 +1,30 @@
+/**
+ * CreateVenueFormWithMap - With Optimistic Locking
+ *
+ * BUSINESS LOGIC PRESERVED:
+ * - All form fields and validation
+ * - Map integration for location selection
+ * - Submit handling
+ * - Edit mode detection
+ * - Optimistic locking with SSE conflict detection
+ *
+ * UI CHANGES:
+ * - Shows inline Alert when conflict detected
+ * - Disables submit button when conflict exists
+ * - Uses shared button styles
+ */
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Tab, Tabs } from '@mui/material';
+import { Alert, Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Tab, Tabs } from '@mui/material';
 import Forms from '../Forms';
 import FormTextField from '../FormTextField';
 import FormTextareaField from '../FormTextAreaField';
 import LeafletMapPicker from '../LeafletMapPicker';
 import { venueSchema } from '@/src/utils/validationSchema/venueValidationSchema';
 import { CreateVenueFormProps, VenueFormData } from './types';
+import { useOptimisticLocking, ENTITY_EVENT_TYPES } from '@/src/hooks/useOptimisticLocking';
+import { PRIMARY_BUTTON_SX, SECONDARY_BUTTON_SX } from '@/src/theme/buttonStyles';
 
 const CreateVenueFormWithMap = ({
   open,
@@ -16,6 +33,7 @@ const CreateVenueFormWithMap = ({
   loading = false,
   initialValues,
   title,
+  venue,
 }: CreateVenueFormProps) => {
   const [tabValue, setTabValue] = useState(0);
 
@@ -30,8 +48,22 @@ const CreateVenueFormWithMap = ({
     ...initialValues,
   };
 
+  // Determine edit mode
+  const isEditMode = !!(venue?.id);
+
+  // Always call useOptimisticLocking (Rules of Hooks - must call hooks unconditionally)
+  // Pass dummy values when not in edit mode
+  const { hasConflict, conflictMessage, version } = useOptimisticLocking({
+    entityId: venue?.id || 0,
+    entityVersion: venue?.version || 0,
+    entityType: 'VENUE',
+    eventTypes: ENTITY_EVENT_TYPES.VENUE,
+  });
+
   const handleSubmit = (values: VenueFormData, actions: any) => {
-    onSubmit(values);
+    // Include version for edit mode
+    const submitData = isEditMode ? { ...values, version } : values;
+    onSubmit(submitData);
     actions.setSubmitting(false);
   };
 
@@ -60,6 +92,13 @@ const CreateVenueFormWithMap = ({
 
               return (
                 <>
+                  {/* Conflict Warning */}
+                  {hasConflict && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      {conflictMessage}
+                    </Alert>
+                  )}
+
                   {/* Tabs */}
                   <Tabs
                     value={tabValue}
@@ -152,41 +191,25 @@ const CreateVenueFormWithMap = ({
                       onClick={onClose}
                       variant="outlined"
                       disabled={loading}
-                      sx={{
-                        borderRadius: '10px',
-                        padding: '10px 24px',
-                        textTransform: 'none',
-                        fontSize: '16px',
-                      }}
+                      sx={SECONDARY_BUTTON_SX}
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
                       variant="contained"
-                      disabled={loading}
-                      sx={{
-                        backgroundColor: '#f36bf9',
-                        borderRadius: '10px',
-                        padding: '10px 24px',
-                        textTransform: 'none',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        '&:hover': {
-                          backgroundColor: '#e55ae0',
-                        },
-                        '&:disabled': {
-                          backgroundColor: '#cccccc',
-                        },
-                      }}
+                      disabled={loading || hasConflict}
+                      sx={PRIMARY_BUTTON_SX}
                     >
                       {loading
                         ? initialValues?.name
                           ? 'Updating...'
                           : 'Creating...'
-                        : initialValues?.name
-                          ? 'Update Venue'
-                          : 'Create Venue'}
+                        : hasConflict
+                          ? 'Data Changed - Close & Reopen'
+                          : initialValues?.name
+                            ? 'Update Venue'
+                            : 'Create Venue'}
                     </Button>
                   </DialogActions>
                 </>

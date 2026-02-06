@@ -126,7 +126,8 @@ export default function AdminPage() {
       refetchCategories();
       closeCategoryModal();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || t('messages.error.operationFailed'), 'error');
+      const errorMessage = error?.data?.message || t('messages.error.operationFailed');
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -178,7 +179,8 @@ export default function AdminPage() {
       refetchVenues();
       closeVenueModal();
     } catch (error: any) {
-      showSnackbar(error?.data?.message || t('messages.error.operationFailed'), 'error');
+      const errorMessage = error?.data?.message || t('messages.error.operationFailed');
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -381,12 +383,14 @@ export default function AdminPage() {
           onClose={closeCategoryModal}
           onSubmit={handleSubmitCategory}
           loading={isCreatingCategory || isUpdatingCategory}
+          category={editingCategory} // Pass full category object for optimistic locking
           initialValues={
             editingCategory
               ? {
                   name: editingCategory.name,
                   description: editingCategory.description || '',
                   iconUrl: editingCategory.iconUrl || '',
+                  version: editingCategory.version,
                 }
               : undefined
           }
@@ -398,6 +402,7 @@ export default function AdminPage() {
           onClose={closeVenueModal}
           onSubmit={handleSubmitVenue}
           loading={isCreatingVenue || isUpdatingVenue}
+          venue={editingVenue} // Pass full venue object for optimistic locking
           initialValues={
             editingVenue
               ? {
@@ -408,6 +413,7 @@ export default function AdminPage() {
                   description: editingVenue.description || '',
                   lat: editingVenue.lat,
                   lng: editingVenue.lng,
+                  version: editingVenue.version,
                 }
               : undefined
           }

@@ -53,6 +53,25 @@ export interface UpdateEventRequest {
   categoryId?: number;
   venueId?: number;
   imageUrls?: string[];
+  version: number; // Required for optimistic locking
+}
+
+export interface UpdateVenueRequest {
+  name: string;
+  address: string;
+  city: string;
+  lat?: number;
+  lng?: number;
+  capacity: number;
+  description?: string;
+  version: number; // Required for optimistic locking
+}
+
+export interface UpdateCategoryRequest {
+  name: string;
+  description?: string;
+  iconUrl?: string;
+  version: number; // Required for optimistic locking
 }
 
 export interface EventSearchRequest {
@@ -75,6 +94,7 @@ export interface CategoryResponse {
   description?: string;
   iconUrl?: string;
   eventCount: number;
+  version: number; // For optimistic locking
 }
 
 export interface VenueResponse {
@@ -86,6 +106,7 @@ export interface VenueResponse {
   lng?: number;
   capacity: number;
   description?: string;
+  version: number; // For optimistic locking
 }
 
 export interface OrganizationResponse {
@@ -199,7 +220,8 @@ export interface EventResponse {
   venue: VenueResponse;
   ticketTypes: TicketTypeSummary[];
   stats: EventStats;
-  eventVersion: number;
+  eventVersion: number; // Business version for major changes
+  version: number; // JPA @Version for optimistic locking
   createdAt: string;
   updatedAt: string;
 }
