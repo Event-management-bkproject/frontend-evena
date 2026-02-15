@@ -30,7 +30,7 @@ import { OrganizationRole } from '@/src/stores/types/enums';
 import { useAppSelector } from '@/src/stores/hooks';
 import SnackbarNotification from '../SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
-import { useSSE } from '@/src/providers/SSEProvider';
+
 
 const MEMBERS_PER_PAGE = 50;
 
@@ -62,33 +62,12 @@ export default function MemberManagementModal({
   const {
     data: membersResponse,
     isLoading,
-    refetch,
   } = useGetOrganizationMembersQuery(organization.id, {
     skip: !open,
   });
 
   const [removeMember, { isLoading: removing }] = useRemoveMemberMutation();
   const [updateMemberRole, { isLoading: updatingRole }] = useUpdateMemberRoleMutation();
-
-  // Listen to SSE events for real-time member updates
-  const { lastEvent } = useSSE();
-
-  useEffect(() => {
-    if (!lastEvent || !open) return;
-
-    console.log('📨 [MemberManagementModal] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case 'INVITATION_CREATED':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
-        console.log('🔄 [MemberManagementModal] Refetching members...');
-        refetch();
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, refetch, open]);
 
   const members = membersResponse?.data || [];
 
@@ -143,7 +122,6 @@ export default function MemberManagementModal({
         memberId,
         data: { role: newRole },
       }).unwrap();
-      refetch();
       onSuccess?.();
     } catch (error: any) {
       console.error('Error updating member role:', error);
@@ -161,7 +139,6 @@ export default function MemberManagementModal({
       }).unwrap();
       setDeleteDialogOpen(false);
       setSelectedMemberId(null);
-      refetch();
       onSuccess?.();
     } catch (error: any) {
       console.error('Error removing member:', error);

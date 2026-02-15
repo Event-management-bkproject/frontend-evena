@@ -12,6 +12,7 @@ export const OrganizationMemberAPI = createApi({
   reducerPath: 'OrganizationMemberAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['OrganizationMember', 'Invitation', 'Organizer'],
+  keepUnusedDataFor: 300,
   endpoints: (builder) => ({
     // Get pending invitations for current user
     getPendingInvitations: builder.query<ApiResponse<OrganizationMemberResponse[]>, void>({
@@ -34,7 +35,6 @@ export const OrganizationMemberAPI = createApi({
       }),
       invalidatesTags: (result, error, { organizationId }) => [
         { type: 'OrganizationMember', id: organizationId },
-        'OrganizationMember',
       ],
     }),
 
@@ -68,7 +68,6 @@ export const OrganizationMemberAPI = createApi({
       }),
       invalidatesTags: (result, error, { organizationId }) => [
         { type: 'OrganizationMember', id: organizationId },
-        'OrganizationMember',
       ],
     }),
 
@@ -80,7 +79,6 @@ export const OrganizationMemberAPI = createApi({
       }),
       invalidatesTags: (result, error, { organizationId }) => [
         { type: 'OrganizationMember', id: organizationId },
-        'OrganizationMember',
       ],
     }),
 

@@ -13,6 +13,7 @@ export const EventAPI = createApi({
   reducerPath: 'EventAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Event'],
+  keepUnusedDataFor: 300,
   // refetchOnMountOrArgChange: 1, // Refetch if data is older than 30 seconds
   // refetchOnReconnect: true, // Refetch when connection is restored
   // refetchOnFocus: true, // Refetch when window regains focus

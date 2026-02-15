@@ -16,6 +16,7 @@ export const AuthAPI = createApi({
   reducerPath: 'AuthAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Auth', 'User'],
+  keepUnusedDataFor: 1800,
   endpoints: (builder) => ({
     // Login mutation
     login: builder.mutation<ApiResponse<LoginResponse>, LoginRequest>({

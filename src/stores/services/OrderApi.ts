@@ -13,6 +13,7 @@ export const OrderAPI = createApi({
   reducerPath: 'OrderAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Order', 'Ticket', 'TicketType', 'Event'],
+  keepUnusedDataFor: 300,
   endpoints: (builder) => ({
     // Create a new order
     createOrder: builder.mutation<ApiResponse<OrderResponse>, CreateOrderRequest>({
@@ -23,12 +24,8 @@ export const OrderAPI = createApi({
       }),
       invalidatesTags: (result, error, { eventId }) => [
         'Order',
-        // Invalidate TicketType to update sold/available counts
         { type: 'TicketType', id: eventId },
-        'TicketType',
-        // Invalidate Event to update availableTickets
         { type: 'Event', id: eventId },
-        'Event',
       ],
     }),
 
@@ -43,9 +40,6 @@ export const OrderAPI = createApi({
         { type: 'Order', id: orderId },
         'Order',
         'Ticket',
-        // Also invalidate TicketType and Event as ticket counts may change
-        'TicketType',
-        'Event',
       ],
     }),
 
@@ -83,9 +77,6 @@ export const OrderAPI = createApi({
       invalidatesTags: (result, error, orderId) => [
         { type: 'Order', id: orderId },
         'Order',
-        // Invalidate TicketType and Event to restore available tickets
-        'TicketType',
-        'Event',
       ],
     }),
 

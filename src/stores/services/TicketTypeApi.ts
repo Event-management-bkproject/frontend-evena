@@ -13,6 +13,7 @@ export const TicketTypeAPI = createApi({
   reducerPath: 'TicketTypeAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['TicketType', 'Event'],
+  keepUnusedDataFor: 300,
   endpoints: (builder) => ({
     // Create ticket type for an event
     createTicketType: builder.mutation<
@@ -26,10 +27,7 @@ export const TicketTypeAPI = createApi({
       }),
       invalidatesTags: (result, error, { eventId }) => [
         { type: 'TicketType', id: eventId },
-        'TicketType',
-        // Invalidate Event to update minPrice and availableTickets
         { type: 'Event', id: eventId },
-        'Event',
       ],
     }),
 
@@ -107,10 +105,7 @@ export const TicketTypeAPI = createApi({
       invalidatesTags: (result, error, { eventId, ticketTypeId }) => [
         { type: 'TicketType', id: eventId },
         { type: 'TicketType', id: ticketTypeId },
-        'TicketType',
-        // Invalidate Event to update minPrice and availableTickets
         { type: 'Event', id: eventId },
-        'Event',
       ],
     }),
 
@@ -126,10 +121,7 @@ export const TicketTypeAPI = createApi({
       invalidatesTags: (result, error, { eventId, ticketTypeId }) => [
         { type: 'TicketType', id: eventId },
         { type: 'TicketType', id: ticketTypeId },
-        'TicketType',
-        // Invalidate Event to update availableTickets
         { type: 'Event', id: eventId },
-        'Event',
       ],
     }),
 
@@ -141,10 +133,7 @@ export const TicketTypeAPI = createApi({
       }),
       invalidatesTags: (result, error, { eventId }) => [
         { type: 'TicketType', id: eventId },
-        'TicketType',
-        // Invalidate Event to update minPrice and availableTickets
         { type: 'Event', id: eventId },
-        'Event',
       ],
     }),
   }),

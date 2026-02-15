@@ -6,6 +6,7 @@ export const VenueAPI = createApi({
   reducerPath: 'VenueAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Venue'],
+  keepUnusedDataFor: 3600,
   endpoints: (builder) => ({
     getVenues: builder.query<ApiResponse<PaginatedResponse<VenueResponse>>, { page?: number; size?: number }>({
       query: (params = {}) => ({
@@ -54,7 +55,7 @@ export const VenueAPI = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Venue', id }, 'Venue'],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Venue', id }],
     }),
 
     deleteVenue: builder.mutation<ApiResponse<string>, number>({

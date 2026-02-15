@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { EventResponse } from '@/src/stores/types';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, CircularProgress, Alert } from '@mui/material';
@@ -18,8 +18,6 @@ import { useGetVenuesQuery } from '@/src/stores/services/VenueApi';
 import { useGetMyOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { UpdateEventRequest } from '@/src/stores/types';
 import { useTranslation } from 'react-i18next';
-import { useSSE } from '@/src/providers/SSEProvider';
-
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -42,66 +40,9 @@ export default function EventDetailsPage() {
     refetch,
   } = useGetEventByIdQuery(eventId, {
     skip: !eventId,
-    refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
+    refetchOnMountOrArgChange: 120, // Refetch if data is older than 120 seconds
     refetchOnFocus: true, // Refetch when window regains focus
   });
-
-  // Listen to SSE events for real-time updates
-  const { lastEvent } = useSSE();
-  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Debounced refetch to prevent API spam from rapid SSE events
-  const debouncedRefetch = useCallback(() => {
-    if (refetchTimeoutRef.current) {
-      clearTimeout(refetchTimeoutRef.current);
-    }
-    refetchTimeoutRef.current = setTimeout(() => {
-      console.log('🔄 [EventDetailsPage] Refetching event (SSE triggered)...');
-      refetch();
-      refetchTimeoutRef.current = null;
-    }, 500);
-  }, [refetch]);
-
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    const eventData = lastEvent.data;
-    const affectsThisEvent =
-      eventData?.eventId === eventId ||
-      eventData?.eventId?.toString() === eventId;
-
-    // Refetch on relevant SSE events
-    switch (lastEvent.type) {
-      case 'EVENT_UPDATED':
-      case 'EVENT_PUBLISHED':
-      case 'EVENT_CANCELLED':
-        if (affectsThisEvent) {
-          console.log('📨 [EventDetailsPage] SSE event affects this event:', lastEvent.type);
-          debouncedRefetch();
-        }
-        break;
-      case 'TICKET_TYPE_CREATED':
-      case 'TICKET_TYPE_UPDATED':
-      case 'TICKET_TYPE_DELETED':
-      case 'TICKET_TYPE_DEACTIVATED':
-        if (affectsThisEvent) {
-          console.log('📨 [EventDetailsPage] SSE ticket type event:', lastEvent.type);
-          debouncedRefetch();
-        }
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, eventId, debouncedRefetch]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (refetchTimeoutRef.current) {
-        clearTimeout(refetchTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const { data: organizersResponse } = useGetMyOrganizationsQuery();
   const { data: categoriesResponse } = useGetCategoriesQuery();
@@ -126,11 +67,9 @@ export default function EventDetailsPage() {
     setUpdateModalOpen(true);
   };
 
-  // Close update modal and refetch (follows Organization pattern)
   const handleCloseUpdateModal = () => {
     setUpdateModalOpen(false);
     setEditingEvent(null); // Clear snapshot → unmount form → reset hooks
-    refetch(); // Refetch to get latest data when modal closes
   };
 
   const handleDelete = () => {
@@ -246,7 +185,7 @@ export default function EventDetailsPage() {
 
             {/* Right Side - Ticket Type Management - Fixed Width */}
             <Box sx={{ width: { xs: '100%', lg: '550px' }, flexShrink: 0 }}>
-              <TicketTypeManagement eventId={eventId} event={event} onEventUpdate={refetch} />
+              <TicketTypeManagement eventId={eventId} event={event} />
             </Box>
           </Box>
         </Box>

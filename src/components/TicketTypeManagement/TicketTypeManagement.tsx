@@ -62,8 +62,8 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
   const [ticketTypeToDeactivate, setTicketTypeToDeactivate] = useState<TicketTypeResponse | null>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
-  const { data: ticketTypesResponse, isLoading, error, refetch } = useGetTicketTypesQuery(eventId, {
-    refetchOnMountOrArgChange: 10, // Refetch if data is older than 10 seconds
+  const { data: ticketTypesResponse, isLoading, error } = useGetTicketTypesQuery(eventId, {
+    refetchOnMountOrArgChange: 120,
   });
 
   const [deleteTicketType, { isLoading: deleting }] = useDeleteTicketTypeMutation();
@@ -91,14 +91,6 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
       }).unwrap();
       setDeleteDialogOpen(false);
       setTicketTypeToDelete(null);
-
-      // Refetch ticket types
-      await refetch();
-
-      // Trigger parent Event refetch to update minPrice and availableTickets
-      if (onEventUpdate) {
-        onEventUpdate();
-      }
     } catch (error: any) {
       console.error('Error deleting ticket type:', error);
       showSnackbar(error?.data?.message || 'Failed to delete ticket type', 'error');
@@ -121,14 +113,6 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
       setDeactivateDialogOpen(false);
       setTicketTypeToDeactivate(null);
       showSnackbar('Ticket type deactivated successfully', 'success');
-
-      // Refetch ticket types
-      await refetch();
-
-      // Trigger parent Event refetch to update availableTickets
-      if (onEventUpdate) {
-        onEventUpdate();
-      }
     } catch (error: any) {
       console.error('Error deactivating ticket type:', error);
       showSnackbar(error?.data?.message || 'Failed to deactivate ticket type', 'error');
@@ -410,12 +394,8 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
         onClose={() => setCreateModalOpen(false)}
         eventId={eventId}
         eventStatus={event?.status}
-        onSuccess={async () => {
+        onSuccess={() => {
           setCreateModalOpen(false);
-          await refetch();
-          if (onEventUpdate) {
-            onEventUpdate();
-          }
         }}
       />
 
@@ -431,13 +411,9 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
           ticketType={selectedTicketType}
           eventStatus={event?.status}
           hasSoldTickets={selectedTicketType.sold > 0}
-          onSuccess={async () => {
+          onSuccess={() => {
             setEditModalOpen(false);
             setSelectedTicketType(null);
-            await refetch();
-            if (onEventUpdate) {
-              onEventUpdate();
-            }
           }}
         />
       )}

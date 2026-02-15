@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -31,8 +31,6 @@ import {
   UpdateEventRequest,
 } from '@/src/stores/types';
 import { EventFormData } from '../CreateEventForm/types';
-import { useSSE } from '@/src/providers/SSEProvider';
-
 interface EventsManagementProps {
   initialCategories: CategoryResponse[];
   initialVenues: VenueResponse[];
@@ -74,62 +72,15 @@ export default function EventsManagement({
   const {
     data: eventsResponse,
     isLoading: loadingEvents,
-    refetch: refetchEvents,
   } = useGetMyEventsQuery(
     {
       page: 0,
       size: 50,
     },
     {
-      refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
-      refetchOnFocus: true, // Refetch when window regains focus
+      // SSEProvider handles real-time cache invalidation via tag system
     }
   );
-
-  // Listen to SSE events for real-time updates with debouncing
-  const { lastEvent } = useSSE();
-  const refetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Debounced refetch to prevent API spam from rapid SSE events
-  const debouncedRefetch = useCallback(() => {
-    // Clear any pending refetch
-    if (refetchTimeoutRef.current) {
-      clearTimeout(refetchTimeoutRef.current);
-    }
-
-    // Schedule new refetch after 500ms
-    refetchTimeoutRef.current = setTimeout(() => {
-      console.log('🔄 [EventsManagement] Refetching events (debounced)...');
-      refetchEvents();
-      refetchTimeoutRef.current = null;
-    }, 500);
-  }, [refetchEvents]);
-
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    console.log('📨 [EventsManagement] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case 'EVENT_CREATED':
-      case 'EVENT_UPDATED':
-      case 'EVENT_DELETED':
-      case 'EVENT_PUBLISHED':
-        debouncedRefetch();
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, debouncedRefetch]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (refetchTimeoutRef.current) {
-        clearTimeout(refetchTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Fetch full event details khi editing
   const { data: fullEventResponse } = useGetEventByIdQuery(selectedItemId as string, {
@@ -275,11 +226,9 @@ export default function EventsManagement({
     dispatch(openModal({ modal: 'updateEvent', itemId: event.id }));
   };
 
-  // Close update modal and refetch (follows Organization pattern)
   const handleCloseUpdateEvent = () => {
     dispatch(closeModal('updateEvent'));
     setEditingEvent(null); // Clear snapshot → unmount form → reset hooks
-    refetchEvents(); // Refetch to get latest data when modal closes
   };
 
   const handleEventDelete = (event: EventListResponse | EventResponse) => {

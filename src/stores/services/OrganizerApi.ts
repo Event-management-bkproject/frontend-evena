@@ -13,6 +13,7 @@ export const OrganizerAPI = createApi({
   reducerPath: 'OrganizerAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Organizer'],
+  keepUnusedDataFor: 600,
   // refetchOnMountOrArgChange: 30, // Refetch if data is older than 30 seconds
   // refetchOnReconnect: true, // Refetch when connection is restored
   // refetchOnFocus: true, // Refetch when window regains focus
@@ -82,7 +83,7 @@ export const OrganizerAPI = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Organizer', id }, 'Organizer'],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Organizer', id }],
     }),
 
     verifyOrganization: builder.mutation<ApiResponse<OrganizationResponse>, number>({

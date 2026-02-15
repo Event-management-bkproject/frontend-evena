@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
@@ -14,7 +14,6 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { useSSE } from '@/src/providers/SSEProvider';
 import { Business, Check, Close } from '@mui/icons-material';
 import BaseModal from './BaseModal';
 import {
@@ -33,30 +32,12 @@ export default function InvitationNotificationModal({ open, onClose }: Invitatio
   const { showSnackbar } = useSnackbar();
 
   // Fetch pending invitations
-  const { data, isLoading, error, refetch } = useGetPendingInvitationsQuery(undefined, {
+  const { data, isLoading, error } = useGetPendingInvitationsQuery(undefined, {
     skip: !open,
   });
 
   const [acceptInvitation, { isLoading: accepting }] = useAcceptInvitationMutation();
   const [rejectInvitation, { isLoading: rejecting }] = useRejectInvitationMutation();
-
-  // Listen to SSE events for real-time updates
-  const { lastEvent } = useSSE();
-
-  useEffect(() => {
-    if (!lastEvent || !open) return;
-
-    console.log('📨 [InvitationModal] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case 'INVITATION_CREATED':
-        console.log('🔄 [InvitationModal] Refetching invitations...');
-        refetch();
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, refetch, open]);
 
   const invitations = data?.data || [];
 

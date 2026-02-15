@@ -6,6 +6,7 @@ export const CategoryAPI = createApi({
   reducerPath: 'CategoryAPI',
   baseQuery: baseQueryWithReAuth,
   tagTypes: ['Category'],
+  keepUnusedDataFor: 3600,
   endpoints: (builder) => ({
     getCategories: builder.query<ApiResponse<CategoryResponse[]>, void>({
       query: () => ({
@@ -35,7 +36,7 @@ export const CategoryAPI = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Category', id }, 'Category'],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Category', id }],
     }),
     deleteCategory: builder.mutation<ApiResponse<string>, number>({
       query: (id: number) => ({

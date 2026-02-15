@@ -3,10 +3,10 @@
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
 import { useRouter } from 'next/navigation';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import { Box, Button, Typography, CircularProgress, Grid } from '@mui/material';
-import { Event as EventIcon, ArrowForward } from '@mui/icons-material';
+import { Event as EventIcon } from '@mui/icons-material';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
 import DashboardHeader from '@/src/components/DashboardHeader';
 import { EventListResponse } from '@/src/stores/types';
@@ -14,20 +14,17 @@ import EventCard from '@/src/components/EventCard/EventCard';
 import EventCalendar from '@/src/components/EventCalendar/EventCalendar';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useSSE } from '@/src/providers/SSEProvider';
 
 export default function OrganizerDashboard() {
   const { auth } = useAuth();
   const router = useRouter();
   const { t } = useTranslation();
-  const { lastEvent } = useSSE();
 
-  // Fetch events
+  // Fetch events (SSEProvider handles real-time invalidation centrally)
   const {
     data: eventsResponse,
     isLoading: loadingEvents,
     error: eventsError,
-    refetch: refetchEvents,
   } = useGetMyEventsQuery(
     { page: 0, size: 20 },
     {
@@ -37,26 +34,6 @@ export default function OrganizerDashboard() {
 
   const events: EventListResponse[] = eventsResponse?.data?.content || [];
   const totalEvents = eventsResponse?.data?.totalElements || 0;
-
-  // Listen to SSE events for real-time updates
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    console.log('📨 [OrganizerDashboard] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case 'EVENT_CREATED':
-      case 'EVENT_UPDATED':
-      case 'EVENT_DELETED':
-      case 'EVENT_PUBLISHED':
-      case 'EVENT_CANCELLED':
-        console.log('🔄 [OrganizerDashboard] Refetching events...');
-        refetchEvents();
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, refetchEvents]);
 
   // Get event dates for calendar highlighting
   const eventDates = useMemo(() => {
@@ -88,8 +65,8 @@ export default function OrganizerDashboard() {
           <Box sx={{ flex: 1, p: '20px', overflow: 'auto', backgroundColor: '#F7F7F7', borderRadius: '20px' }}>
             <Grid container spacing={'20px'}>
               {/* Events Section - 3/4 width */}
-              <Grid size={{ xs: 12, lg: 9 }}>
-                <Box>
+              <Grid size={{ xs: 12, lg: 9 }} sx={{ minWidth: 0 }}>
+                <Box sx={{ minWidth: 0 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Box>
                       <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363', mb: 0.5 }}>

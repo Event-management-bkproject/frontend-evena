@@ -223,27 +223,48 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     const { type } = lastEvent;
     console.log('[SSE] 🔄 Cache invalidation for event:', type);
 
+    const data = lastEvent.data;
+
     switch (type) {
-      // Organization events
-      case 'ORGANIZATION_CREATED':
+      // Organization events - targeted when ID available
       case 'ORGANIZATION_UPDATED':
-      case 'ORGANIZATION_DELETED':
       case 'ORGANIZATION_VERIFIED':
-      case 'ORGANIZATION_UNVERIFIED':
-        console.log('[SSE] 🏢 Invalidating organization cache');
+      case 'ORGANIZATION_UNVERIFIED': {
+        const orgId = data?.organizationId;
+        console.log('[SSE] 🏢 Invalidating organization cache', orgId ? `(id: ${orgId})` : '');
+        if (orgId) {
+          dispatch(OrganizerAPI.util.invalidateTags([{ type: 'Organizer', id: orgId }, 'Organizer']));
+        } else {
+          dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
+        }
+        break;
+      }
+      case 'ORGANIZATION_CREATED':
+      case 'ORGANIZATION_DELETED':
+        console.log('[SSE] 🏢 Invalidating organization cache (list)');
         dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
         break;
 
-      // Event events
-      case 'EVENT_CREATED':
+      // Event events - targeted when ID available
       case 'EVENT_UPDATED':
-      case 'EVENT_DELETED':
       case 'EVENT_PUBLISHED':
-        console.log('[SSE] 🎉 Invalidating event cache');
+      case 'EVENT_CANCELLED': {
+        const eventId = data?.eventId;
+        console.log('[SSE] 🎉 Invalidating event cache', eventId ? `(id: ${eventId})` : '');
+        if (eventId) {
+          dispatch(EventAPI.util.invalidateTags([{ type: 'Event', id: eventId }, 'Event']));
+        } else {
+          dispatch(EventAPI.util.invalidateTags(['Event']));
+        }
+        break;
+      }
+      case 'EVENT_CREATED':
+      case 'EVENT_DELETED':
+        console.log('[SSE] 🎉 Invalidating event cache (list)');
         dispatch(EventAPI.util.invalidateTags(['Event']));
         break;
 
-      // Category events
+      // Category events - always broad (small dataset)
       case 'CATEGORY_CREATED':
       case 'CATEGORY_UPDATED':
       case 'CATEGORY_DELETED':
@@ -251,7 +272,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         dispatch(CategoryAPI.util.invalidateTags(['Category']));
         break;
 
-      // Venue events
+      // Venue events - always broad (small dataset)
       case 'VENUE_CREATED':
       case 'VENUE_UPDATED':
       case 'VENUE_DELETED':
@@ -268,37 +289,39 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
         break;
 
-      // Ticket type events
+      // Ticket type events - targeted by eventId
       case 'TICKET_TYPE_CREATED':
       case 'TICKET_TYPE_UPDATED':
       case 'TICKET_TYPE_DELETED':
-      case 'TICKET_TYPE_DEACTIVATED':
-        console.log('[SSE] 🎫 Invalidating ticket type cache');
-        dispatch(TicketTypeAPI.util.invalidateTags(['TicketType']));
-        // Also invalidate Event cache since minPrice/availableTickets may change
-        dispatch(EventAPI.util.invalidateTags(['Event']));
+      case 'TICKET_TYPE_DEACTIVATED': {
+        const ttEventId = data?.eventId;
+        console.log('[SSE] 🎫 Invalidating ticket type cache', ttEventId ? `(eventId: ${ttEventId})` : '');
+        if (ttEventId) {
+          dispatch(TicketTypeAPI.util.invalidateTags([{ type: 'TicketType', id: ttEventId }]));
+          dispatch(EventAPI.util.invalidateTags([{ type: 'Event', id: ttEventId }, 'Event']));
+        } else {
+          dispatch(TicketTypeAPI.util.invalidateTags(['TicketType']));
+          dispatch(EventAPI.util.invalidateTags(['Event']));
+        }
         break;
+      }
 
-      // Event lifecycle events
-      case 'EVENT_CANCELLED':
-        console.log('[SSE] ❌ Invalidating event cache (cancelled)');
-        dispatch(EventAPI.util.invalidateTags(['Event']));
-        break;
-
-      // Order events (private user channel)
+      // Order events (private user channel) - targeted by eventId
       case 'ORDER_CREATED':
       case 'ORDER_CONFIRMED':
-      case 'ORDER_CANCELLED':
+      case 'ORDER_CANCELLED': {
+        const orderEventId = data?.eventId;
         console.log('[SSE] 🛒 Invalidating order cache');
         dispatch(OrderAPI.util.invalidateTags(['Order']));
-        // Also invalidate related caches
-        dispatch(TicketTypeAPI.util.invalidateTags(['TicketType']));
-        dispatch(EventAPI.util.invalidateTags(['Event']));
+        if (orderEventId) {
+          dispatch(TicketTypeAPI.util.invalidateTags([{ type: 'TicketType', id: orderEventId }]));
+          dispatch(EventAPI.util.invalidateTags([{ type: 'Event', id: orderEventId }]));
+        }
         if (type === 'ORDER_CONFIRMED') {
-          // Tickets are issued on order confirmation
           dispatch(OrderAPI.util.invalidateTags(['Ticket']));
         }
         break;
+      }
 
       // Ticket events (private user channel)
       case 'TICKET_ISSUED':
