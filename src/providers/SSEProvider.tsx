@@ -9,17 +9,8 @@ import { VenueAPI } from '../stores/services/VenueApi';
 import { OrganizationMemberAPI } from '../stores/services/OrganizationMemberApi';
 import { TicketTypeAPI } from '../stores/services/TicketTypeApi';
 import { OrderAPI } from '../stores/services/OrderApi';
-
-interface SSEContextType {
-  isConnected: boolean;
-  lastEvent: SSEEvent | null;
-}
-
-interface SSEEvent {
-  type: string;
-  data: any;
-  timestamp: string;
-}
+import { SSEAction, SSENormalizedType } from '../stores/types/sse';
+import type { SSEContextType, SSEEvent } from '../stores/types/sse';
 
 const SSEContext = createContext<SSEContextType>({
   isConnected: false,
@@ -111,61 +102,64 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       });
 
       // Define event handler
-      const handleEvent = (eventType: string, normalizedType: string) => (e: MessageEvent) => {
+      const handleEvent = (label: string, normalized: SSENormalizedType) => (e: MessageEvent) => {
         const parsedData = JSON.parse(e.data);
-        console.log(`[SSE][${channel}] ${eventType}:`, parsedData);
+        console.log(`[SSE][${channel}] ${label}:`, parsedData);
         setLastEvent({
-          type: normalizedType,
+          type: normalized,
           data: parsedData.data || parsedData,
           timestamp: new Date().toISOString(),
         });
       };
 
+      const on = (action: SSEAction, label: string, normalized: SSENormalizedType) => {
+        eventSource.addEventListener(action, handleEvent(label, normalized));
+      };
+
       // Organization events
-      eventSource.addEventListener('organization:create', handleEvent('🏢 Organization created', 'ORGANIZATION_CREATED'));
-      eventSource.addEventListener('organization:update', handleEvent('🏢 Organization updated', 'ORGANIZATION_UPDATED'));
-      eventSource.addEventListener('organization:delete', handleEvent('🏢 Organization deleted', 'ORGANIZATION_DELETED'));
-      eventSource.addEventListener('organization:verify', handleEvent('🏢 Organization verified', 'ORGANIZATION_VERIFIED'));
-      eventSource.addEventListener('organization:unverify', handleEvent('🏢 Organization needs re-verification', 'ORGANIZATION_UNVERIFIED'));
+      on(SSEAction.ORG_CREATE,   'Organization created',            SSENormalizedType.ORGANIZATION_CREATED);
+      on(SSEAction.ORG_UPDATE,   'Organization updated',            SSENormalizedType.ORGANIZATION_UPDATED);
+      on(SSEAction.ORG_DELETE,   'Organization deleted',            SSENormalizedType.ORGANIZATION_DELETED);
+      on(SSEAction.ORG_VERIFY,   'Organization verified',           SSENormalizedType.ORGANIZATION_VERIFIED);
+      on(SSEAction.ORG_UNVERIFY, 'Organization needs re-verification', SSENormalizedType.ORGANIZATION_UNVERIFIED);
 
       // Invitation events
-      eventSource.addEventListener('invitation:create', handleEvent('✉️ Invitation sent', 'INVITATION_CREATED'));
-      eventSource.addEventListener('invitation:accept', handleEvent('✅ Invitation accepted', 'INVITATION_ACCEPTED'));
-      eventSource.addEventListener('invitation:reject', handleEvent('❌ Invitation rejected', 'INVITATION_REJECTED'));
+      on(SSEAction.INVITATION_CREATE, 'Invitation sent',     SSENormalizedType.INVITATION_CREATED);
+      on(SSEAction.INVITATION_ACCEPT, 'Invitation accepted', SSENormalizedType.INVITATION_ACCEPTED);
+      on(SSEAction.INVITATION_REJECT, 'Invitation rejected', SSENormalizedType.INVITATION_REJECTED);
 
       // Event events
-      eventSource.addEventListener('event:create', handleEvent('🎉 Event created', 'EVENT_CREATED'));
-      eventSource.addEventListener('event:update', handleEvent('🎉 Event updated', 'EVENT_UPDATED'));
-      eventSource.addEventListener('event:delete', handleEvent('🎉 Event deleted', 'EVENT_DELETED'));
-      eventSource.addEventListener('event:publish', handleEvent('🎉 Event published', 'EVENT_PUBLISHED'));
+      on(SSEAction.EVENT_CREATE,  'Event created',    SSENormalizedType.EVENT_CREATED);
+      on(SSEAction.EVENT_UPDATE,  'Event updated',    SSENormalizedType.EVENT_UPDATED);
+      on(SSEAction.EVENT_DELETE,  'Event deleted',    SSENormalizedType.EVENT_DELETED);
+      on(SSEAction.EVENT_PUBLISH, 'Event published',  SSENormalizedType.EVENT_PUBLISHED);
+      on(SSEAction.EVENT_CANCEL,  'Event cancelled',  SSENormalizedType.EVENT_CANCELLED);
 
       // Category events
-      eventSource.addEventListener('category:create', handleEvent('📁 Category created', 'CATEGORY_CREATED'));
-      eventSource.addEventListener('category:update', handleEvent('📁 Category updated', 'CATEGORY_UPDATED'));
-      eventSource.addEventListener('category:delete', handleEvent('📁 Category deleted', 'CATEGORY_DELETED'));
+      on(SSEAction.CATEGORY_CREATE, 'Category created', SSENormalizedType.CATEGORY_CREATED);
+      on(SSEAction.CATEGORY_UPDATE, 'Category updated', SSENormalizedType.CATEGORY_UPDATED);
+      on(SSEAction.CATEGORY_DELETE, 'Category deleted', SSENormalizedType.CATEGORY_DELETED);
 
       // Venue events
-      eventSource.addEventListener('venue:create', handleEvent('📍 Venue created', 'VENUE_CREATED'));
-      eventSource.addEventListener('venue:update', handleEvent('📍 Venue updated', 'VENUE_UPDATED'));
-      eventSource.addEventListener('venue:delete', handleEvent('📍 Venue deleted', 'VENUE_DELETED'));
+      on(SSEAction.VENUE_CREATE, 'Venue created', SSENormalizedType.VENUE_CREATED);
+      on(SSEAction.VENUE_UPDATE, 'Venue updated', SSENormalizedType.VENUE_UPDATED);
+      on(SSEAction.VENUE_DELETE, 'Venue deleted', SSENormalizedType.VENUE_DELETED);
 
-      // Ticket type events
-      eventSource.addEventListener('ticket_type:create', handleEvent('🎫 Ticket type created', 'TICKET_TYPE_CREATED'));
-      eventSource.addEventListener('ticket_type:update', handleEvent('🎫 Ticket type updated', 'TICKET_TYPE_UPDATED'));
-      eventSource.addEventListener('ticket_type:delete', handleEvent('🎫 Ticket type deleted', 'TICKET_TYPE_DELETED'));
-      eventSource.addEventListener('ticket_type:deactivate', handleEvent('🎫 Ticket type deactivated', 'TICKET_TYPE_DEACTIVATED'));
-
-      // Event lifecycle events
-      eventSource.addEventListener('event:cancel', handleEvent('❌ Event cancelled', 'EVENT_CANCELLED'));
+      // TicketType events
+      on(SSEAction.TICKET_TYPE_CREATE,     'Ticket type created',     SSENormalizedType.TICKET_TYPE_CREATED);
+      on(SSEAction.TICKET_TYPE_UPDATE,     'Ticket type updated',     SSENormalizedType.TICKET_TYPE_UPDATED);
+      on(SSEAction.TICKET_TYPE_DELETE,     'Ticket type deleted',     SSENormalizedType.TICKET_TYPE_DELETED);
+      on(SSEAction.TICKET_TYPE_DEACTIVATE, 'Ticket type deactivated', SSENormalizedType.TICKET_TYPE_DEACTIVATED);
 
       // Order events (private user channel)
-      eventSource.addEventListener('order:create', handleEvent('🛒 Order created', 'ORDER_CREATED'));
-      eventSource.addEventListener('order:confirm', handleEvent('✅ Order confirmed', 'ORDER_CONFIRMED'));
-      eventSource.addEventListener('order:cancel', handleEvent('❌ Order cancelled', 'ORDER_CANCELLED'));
+      on(SSEAction.ORDER_CREATE,  'Order created',   SSENormalizedType.ORDER_CREATED);
+      on(SSEAction.ORDER_CONFIRM, 'Order confirmed', SSENormalizedType.ORDER_CONFIRMED);
+      on(SSEAction.ORDER_CANCEL,  'Order cancelled', SSENormalizedType.ORDER_CANCELLED);
+      on(SSEAction.ORDER_EXPIRE,  'Order expired',   SSENormalizedType.ORDER_EXPIRED);
 
       // Ticket events (private user channel)
-      eventSource.addEventListener('ticket:issue', handleEvent('🎫 Ticket issued', 'TICKET_ISSUED'));
-      eventSource.addEventListener('ticket:checkin', handleEvent('✅ Ticket checked in', 'TICKET_CHECKED_IN'));
+      on(SSEAction.TICKET_ISSUE,   'Ticket issued',      SSENormalizedType.TICKET_ISSUED);
+      on(SSEAction.TICKET_CHECKIN, 'Ticket checked in',  SSENormalizedType.TICKET_CHECKED_IN);
 
       // Heartbeat event
       eventSource.addEventListener('heartbeat', () => {
@@ -173,7 +167,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       });
 
       eventSource.onerror = (error) => {
-        if (error){
+        if (error) {
           console.error(`[SSE][${channel}] ❌ Error:`, error);
         }
         eventSourcesRef.current.delete(channel);
@@ -227,9 +221,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
     switch (type) {
       // Organization events - targeted when ID available
-      case 'ORGANIZATION_UPDATED':
-      case 'ORGANIZATION_VERIFIED':
-      case 'ORGANIZATION_UNVERIFIED': {
+      case SSENormalizedType.ORGANIZATION_UPDATED:
+      case SSENormalizedType.ORGANIZATION_VERIFIED:
+      case SSENormalizedType.ORGANIZATION_UNVERIFIED: {
         const orgId = data?.organizationId;
         console.log('[SSE] 🏢 Invalidating organization cache', orgId ? `(id: ${orgId})` : '');
         if (orgId) {
@@ -239,16 +233,16 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         }
         break;
       }
-      case 'ORGANIZATION_CREATED':
-      case 'ORGANIZATION_DELETED':
+      case SSENormalizedType.ORGANIZATION_CREATED:
+      case SSENormalizedType.ORGANIZATION_DELETED:
         console.log('[SSE] 🏢 Invalidating organization cache (list)');
         dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
         break;
 
       // Event events - targeted when ID available
-      case 'EVENT_UPDATED':
-      case 'EVENT_PUBLISHED':
-      case 'EVENT_CANCELLED': {
+      case SSENormalizedType.EVENT_UPDATED:
+      case SSENormalizedType.EVENT_PUBLISHED:
+      case SSENormalizedType.EVENT_CANCELLED: {
         const eventId = data?.eventId;
         console.log('[SSE] 🎉 Invalidating event cache', eventId ? `(id: ${eventId})` : '');
         if (eventId) {
@@ -258,42 +252,42 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         }
         break;
       }
-      case 'EVENT_CREATED':
-      case 'EVENT_DELETED':
+      case SSENormalizedType.EVENT_CREATED:
+      case SSENormalizedType.EVENT_DELETED:
         console.log('[SSE] 🎉 Invalidating event cache (list)');
         dispatch(EventAPI.util.invalidateTags(['Event']));
         break;
 
       // Category events - always broad (small dataset)
-      case 'CATEGORY_CREATED':
-      case 'CATEGORY_UPDATED':
-      case 'CATEGORY_DELETED':
+      case SSENormalizedType.CATEGORY_CREATED:
+      case SSENormalizedType.CATEGORY_UPDATED:
+      case SSENormalizedType.CATEGORY_DELETED:
         console.log('[SSE] 📁 Invalidating category cache');
         dispatch(CategoryAPI.util.invalidateTags(['Category']));
         break;
 
       // Venue events - always broad (small dataset)
-      case 'VENUE_CREATED':
-      case 'VENUE_UPDATED':
-      case 'VENUE_DELETED':
+      case SSENormalizedType.VENUE_CREATED:
+      case SSENormalizedType.VENUE_UPDATED:
+      case SSENormalizedType.VENUE_DELETED:
         console.log('[SSE] 📍 Invalidating venue cache');
         dispatch(VenueAPI.util.invalidateTags(['Venue']));
         break;
 
       // Invitation events
-      case 'INVITATION_CREATED':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
+      case SSENormalizedType.INVITATION_CREATED:
+      case SSENormalizedType.INVITATION_ACCEPTED:
+      case SSENormalizedType.INVITATION_REJECTED:
         console.log('[SSE] ✉️ Invalidating invitation/member cache');
         dispatch(OrganizationMemberAPI.util.invalidateTags(['Invitation', 'OrganizationMember']));
         dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
         break;
 
-      // Ticket type events - targeted by eventId
-      case 'TICKET_TYPE_CREATED':
-      case 'TICKET_TYPE_UPDATED':
-      case 'TICKET_TYPE_DELETED':
-      case 'TICKET_TYPE_DEACTIVATED': {
+      // TicketType events - targeted by eventId
+      case SSENormalizedType.TICKET_TYPE_CREATED:
+      case SSENormalizedType.TICKET_TYPE_UPDATED:
+      case SSENormalizedType.TICKET_TYPE_DELETED:
+      case SSENormalizedType.TICKET_TYPE_DEACTIVATED: {
         const ttEventId = data?.eventId;
         console.log('[SSE] 🎫 Invalidating ticket type cache', ttEventId ? `(eventId: ${ttEventId})` : '');
         if (ttEventId) {
@@ -307,9 +301,10 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       }
 
       // Order events (private user channel) - targeted by eventId
-      case 'ORDER_CREATED':
-      case 'ORDER_CONFIRMED':
-      case 'ORDER_CANCELLED': {
+      case SSENormalizedType.ORDER_CREATED:
+      case SSENormalizedType.ORDER_CONFIRMED:
+      case SSENormalizedType.ORDER_CANCELLED:
+      case SSENormalizedType.ORDER_EXPIRED: {
         const orderEventId = data?.eventId;
         console.log('[SSE] 🛒 Invalidating order cache');
         dispatch(OrderAPI.util.invalidateTags(['Order']));
@@ -317,15 +312,15 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           dispatch(TicketTypeAPI.util.invalidateTags([{ type: 'TicketType', id: orderEventId }]));
           dispatch(EventAPI.util.invalidateTags([{ type: 'Event', id: orderEventId }]));
         }
-        if (type === 'ORDER_CONFIRMED') {
+        if (type === SSENormalizedType.ORDER_CONFIRMED) {
           dispatch(OrderAPI.util.invalidateTags(['Ticket']));
         }
         break;
       }
 
       // Ticket events (private user channel)
-      case 'TICKET_ISSUED':
-      case 'TICKET_CHECKED_IN':
+      case SSENormalizedType.TICKET_ISSUED:
+      case SSENormalizedType.TICKET_CHECKED_IN:
         console.log('[SSE] 🎫 Invalidating ticket cache');
         dispatch(OrderAPI.util.invalidateTags(['Ticket']));
         break;

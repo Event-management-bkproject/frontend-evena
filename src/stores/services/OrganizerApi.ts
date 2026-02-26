@@ -101,6 +101,15 @@ export const OrganizerAPI = createApi({
       }),
       invalidatesTags: ['Organizer'],
     }),
+
+    /** GET /api/organizations/user/{userId}/organizations - All orgs a user belongs to */
+    getUserOrganizations: builder.query<ApiResponse<OrganizationDetailResponse[]>, string>({
+      query: (userId: string) => ({
+        url: `/organizations/user/${userId}/organizations`,
+        method: 'GET',
+      }),
+      providesTags: ['Organizer'],
+    }),
   }),
 });
 
@@ -115,4 +124,5 @@ export const {
   useUpdateOrganizationMutation,
   useVerifyOrganizationMutation,
   useDeleteOrganizationMutation,
+  useGetUserOrganizationsQuery,
 } = OrganizerAPI;

@@ -3,6 +3,7 @@
 
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 import {
   useCreateOrganizationMutation,
   useGetMyOrganizationsQuery,
@@ -79,13 +80,13 @@ export default function OrganizationsPage() {
 
     // Handle organization events
     switch (lastEvent.type) {
-      case 'ORGANIZATION_CREATED':
-      case 'ORGANIZATION_UPDATED':
-      case 'ORGANIZATION_VERIFIED':
-      case 'ORGANIZATION_UNVERIFIED':
-      case 'ORGANIZATION_DELETED':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
+      case SSENormalizedType.ORGANIZATION_CREATED:
+      case SSENormalizedType.ORGANIZATION_UPDATED:
+      case SSENormalizedType.ORGANIZATION_VERIFIED:
+      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
+      case SSENormalizedType.ORGANIZATION_DELETED:
+      case SSENormalizedType.INVITATION_ACCEPTED:
+      case SSENormalizedType.INVITATION_REJECTED:
         console.log('🔄 [Organizer] Refetching organizations...');
         refetchOrganizers().then((result) => {
           console.log('✅ [Organizer] Refetch completed:', result);

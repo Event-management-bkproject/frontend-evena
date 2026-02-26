@@ -27,6 +27,7 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -57,12 +58,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     console.log('📨 [OrderDetail] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
-      case 'ORDER_CONFIRMED':
-      case 'ORDER_CANCELLED':
-      case 'ORDER_EXPIRED':
-      case 'ORDER_REFUNDED':
-      case 'PAYMENT_COMPLETED':
-      case 'PAYMENT_FAILED':
+      case SSENormalizedType.ORDER_CONFIRMED:
+      case SSENormalizedType.ORDER_CANCELLED:
+      case SSENormalizedType.ORDER_EXPIRED:
         if (affectsThisOrder) {
           console.log('🔄 [OrderDetail] Refetching order...');
           refetchOrders();

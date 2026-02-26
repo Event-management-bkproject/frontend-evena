@@ -50,11 +50,15 @@ export interface UserResponse {
   updatedAt: string;
 }
 
+export interface ValidationErrors {
+  [field: string]: string[];
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data?: T;
-  errors?: any;
+  errors?: ValidationErrors;
 }
 
 export interface MeApiResponse extends ApiResponse<UserResponse> {

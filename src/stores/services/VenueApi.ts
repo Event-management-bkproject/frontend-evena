@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReAuth } from './baseQuery';
-import { ApiResponse, CreateVenueRequest, PaginatedResponse, VenueResponse } from '../types';
+import { ApiResponse, CreateVenueRequest, UpdateVenueRequest, PaginatedResponse, VenueResponse } from '../types';
 
 export const VenueAPI = createApi({
   reducerPath: 'VenueAPI',
@@ -49,7 +49,7 @@ export const VenueAPI = createApi({
       invalidatesTags: ['Venue'],
     }),
 
-    updateVenue: builder.mutation<ApiResponse<VenueResponse>, { id: number; data: CreateVenueRequest }>({
+    updateVenue: builder.mutation<ApiResponse<VenueResponse>, { id: number; data: UpdateVenueRequest }>({
       query: ({ id, data }) => ({
         url: `/venues/${id}`,
         method: 'PUT',

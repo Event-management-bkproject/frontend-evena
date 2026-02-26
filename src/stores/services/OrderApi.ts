@@ -4,6 +4,7 @@ import {
   CreateOrderRequest,
   OrderResponse,
   CheckoutRequest,
+  CheckoutResponse,
   TicketResponse,
   OrderListResponse,
 } from '../types/order';
@@ -29,8 +30,8 @@ export const OrderAPI = createApi({
       ],
     }),
 
-    // Process payment for order (checkout)
-    checkoutOrder: builder.mutation<ApiResponse<OrderResponse>, CheckoutRequest>({
+    // Process payment for order (checkout) - returns order + generated tickets
+    checkoutOrder: builder.mutation<ApiResponse<CheckoutResponse>, CheckoutRequest>({
       query: (checkoutData) => ({
         url: '/orders/checkout',
         method: 'POST',

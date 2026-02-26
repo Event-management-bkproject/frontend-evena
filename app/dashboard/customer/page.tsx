@@ -13,6 +13,7 @@ import Footer from '@/src/components/Footer';
 import { calculateHotEvents, filterUpcomingEvents } from '@/src/utils/hotEventsAlgorithm';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 export default function CustomerDashboard() {
   const { t } = useTranslation();
@@ -40,9 +41,9 @@ export default function CustomerDashboard() {
 
     // Refetch events when event data changes (only PUBLISHED events visible to customers)
     switch (lastEvent.type) {
-      case 'EVENT_PUBLISHED':
-      case 'EVENT_UPDATED':
-      case 'EVENT_CANCELLED':
+      case SSENormalizedType.EVENT_PUBLISHED:
+      case SSENormalizedType.EVENT_UPDATED:
+      case SSENormalizedType.EVENT_CANCELLED:
         console.log('🔄 [CustomerDashboard] Refetching events...');
         refetchEvents();
         break;

@@ -26,6 +26,7 @@ import Footer from '@/src/components/Footer';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 export default function MyTicketsPage() {
   const router = useRouter();
@@ -44,12 +45,11 @@ export default function MyTicketsPage() {
 
     // Refetch tickets when ticket-related events occur
     switch (lastEvent.type) {
-      case 'TICKET_ISSUED':
-      case 'TICKET_USED':
-      case 'TICKET_CANCELLED':
-      case 'ORDER_CONFIRMED':
-      case 'ORDER_CANCELLED':
-      case 'ORDER_REFUNDED':
+      case SSENormalizedType.TICKET_ISSUED:
+      case SSENormalizedType.TICKET_CHECKED_IN:
+      case SSENormalizedType.ORDER_CONFIRMED:
+      case SSENormalizedType.ORDER_CANCELLED:
+      case SSENormalizedType.ORDER_EXPIRED:
         console.log('🔄 [MyTickets] Refetching tickets...');
         refetchTickets();
         break;
@@ -120,10 +120,10 @@ export default function MyTicketsPage() {
                     }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                      {ticket.event?.title || 'Event'}
+                      {ticket.eventTitle || 'Event'}
                     </Typography>
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      {ticket.orderItem?.ticketType?.name}
+                      {ticket.ticketTypeName}
                     </Typography>
                   </Box>
 

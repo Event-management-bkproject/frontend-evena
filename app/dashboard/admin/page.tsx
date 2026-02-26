@@ -26,6 +26,7 @@ import CreateCategoryForm from '@/src/components/CreateCategoryForm/CreateCatego
 import CreateVenueFormWithMap from '@/src/components/CreateVenueForm/CreateVenueFormWithMap';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 import CategoryTable from '@/src/components/CategoryTable';
 import VenueTable from '@/src/components/VenueTable';
 import { AdminOrganizationTable } from '@/src/components/AdminOrganizationTable';
@@ -260,11 +261,11 @@ export default function AdminPage() {
 
     // Handle organization events
     switch (lastEvent.type) {
-      case 'ORGANIZATION_CREATED':
-      case 'ORGANIZATION_UPDATED':
-      case 'ORGANIZATION_VERIFIED':
-      case 'ORGANIZATION_UNVERIFIED':
-      case 'ORGANIZATION_DELETED':
+      case SSENormalizedType.ORGANIZATION_CREATED:
+      case SSENormalizedType.ORGANIZATION_UPDATED:
+      case SSENormalizedType.ORGANIZATION_VERIFIED:
+      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
+      case SSENormalizedType.ORGANIZATION_DELETED:
         console.log('🔄 [Admin] Refetching organizations...');
         refetchOrganizations().then((result) => {
           console.log('✅ [Admin] Refetch completed:', result);

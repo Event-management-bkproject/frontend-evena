@@ -85,6 +85,15 @@ export const AuthAPI = createApi({
       }),
       providesTags: ['User'],
     }),
+
+    // Logout - clears httpOnly refresh token cookie
+    logout: builder.mutation<ApiResponse<string>, void>({
+      query: () => ({
+        url: '/auth/logout',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Auth', 'User'],
+    }),
   }),
 });
 
@@ -98,4 +107,5 @@ export const {
   useResetPasswordMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
+  useLogoutMutation,
 } = AuthAPI;

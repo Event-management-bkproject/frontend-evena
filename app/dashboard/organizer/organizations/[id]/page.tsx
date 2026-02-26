@@ -35,6 +35,7 @@ import { OrganizationRole } from '@/src/stores/types/enums';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 export default function OrganizationDetailPage() {
   const { auth } = useAuth();
@@ -88,28 +89,25 @@ export default function OrganizationDetailPage() {
     console.log('📨 [OrganizationDetail] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
-      case 'ORGANIZATION_UPDATED':
-      case 'ORGANIZATION_VERIFIED':
-      case 'ORGANIZATION_UNVERIFIED':
+      case SSENormalizedType.ORGANIZATION_UPDATED:
+      case SSENormalizedType.ORGANIZATION_VERIFIED:
+      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
         if (affectsThisOrg) {
           console.log('🔄 [OrganizationDetail] Refetching organization...');
           refetchOrganization();
         }
         break;
-      case 'MEMBER_ADDED':
-      case 'MEMBER_REMOVED':
-      case 'MEMBER_ROLE_CHANGED':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
+      case SSENormalizedType.INVITATION_ACCEPTED:
+      case SSENormalizedType.INVITATION_REJECTED:
         if (affectsThisOrg) {
           console.log('🔄 [OrganizationDetail] Refetching organization (member change)...');
           refetchOrganization();
         }
         break;
-      case 'EVENT_CREATED':
-      case 'EVENT_UPDATED':
-      case 'EVENT_DELETED':
-      case 'EVENT_PUBLISHED':
+      case SSENormalizedType.EVENT_CREATED:
+      case SSENormalizedType.EVENT_UPDATED:
+      case SSENormalizedType.EVENT_DELETED:
+      case SSENormalizedType.EVENT_PUBLISHED:
         console.log('🔄 [OrganizationDetail] Refetching events...');
         refetchEvents();
         break;

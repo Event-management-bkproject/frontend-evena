@@ -7,6 +7,7 @@ import { OrganizationResponse } from '@/src/stores/types';
 import { useGetPendingInvitationsQuery } from '@/src/stores/services/OrganizationMemberApi';
 import InvitationNotificationModal from '../InvitationNotificationModal';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 import { useTranslation } from 'react-i18next';
 
 interface OrganizationFiltersProps {
@@ -39,9 +40,9 @@ export default function OrganizationFilters({
     console.log('📨 [OrganizationFilters] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
-      case 'INVITATION_CREATED':
-      case 'INVITATION_ACCEPTED':
-      case 'INVITATION_REJECTED':
+      case SSENormalizedType.INVITATION_CREATED:
+      case SSENormalizedType.INVITATION_ACCEPTED:
+      case SSENormalizedType.INVITATION_REJECTED:
         console.log('🔄 [OrganizationFilters] Refetching pending invitations...');
         refetchInvitations();
         break;

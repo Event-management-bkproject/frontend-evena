@@ -4,6 +4,15 @@ import { RootState } from '../store';
 import { clearCredentials, setCredentials } from '../slices/authSlice';
 import { apiLogger } from '@/src/utils/logger/flowLogger';
 import { Mutex } from 'async-mutex';
+import type { UserResponse } from '../types/auth';
+
+interface RefreshTokenResponse {
+  success: boolean;
+  data?: {
+    accessToken: string;
+    user: UserResponse;
+  };
+}
 
 // Create a mutex to prevent multiple refresh requests
 const mutex = new Mutex();
@@ -91,7 +100,7 @@ export const baseQueryWithReAuth: BaseQueryFn<string | FetchArgs, unknown, Fetch
         );
 
         if (refreshResult.data) {
-          const refreshData = refreshResult.data as any;
+          const refreshData = refreshResult.data as RefreshTokenResponse;
 
           if (refreshData.success && refreshData.data) {
             // Store new access token and user data

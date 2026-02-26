@@ -64,7 +64,7 @@ export interface UpdateVenueRequest {
   lng?: number;
   capacity: number;
   description?: string;
-  version: number; // Required for optimistic locking
+  version?: number; // Optional for optimistic locking
 }
 
 export interface UpdateCategoryRequest {

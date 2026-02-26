@@ -1,7 +1,5 @@
 // Order, Payment, and Ticket types for the Event Ticket System
 
-import { EventListResponse } from './event';
-
 // ============= SNAPSHOTS =============
 // Immutable data captured at order/booking time for booking integrity
 
@@ -72,64 +70,79 @@ export interface OrderItemRequest {
 
 export interface OrderItemResponse {
   id: number;
-  ticketType: {
-    id: number;
-    name: string;
-    price: number;
-    currency: string;
-  };
-  ticketTypeSnapshot?: TicketTypeSnapshot;
+  ticketTypeId: number;
+  ticketTypeName: string;
+  eventTitle: string;
   quantity: number;
   unitPrice: number;
-  totalPrice: number;
-  createdAt: string;
-  updatedAt: string;
+  subtotal: number;
+  ticketTypeSnapshot?: TicketTypeSnapshot;
 }
+
+// ============= PAYMENT PAYLOADS =============
+
+export interface CashPaymentPayload {
+  receivedAmount?: number;
+}
+
+export interface MomoPaymentPayload {
+  phoneNumber?: string;
+  redirectUrl?: string;
+}
+
+export interface VNPayPaymentPayload {
+  bankCode?: string;
+  redirectUrl?: string;
+}
+
+export interface CardPaymentPayload {
+  last4?: string;
+  brand?: string;
+}
+
+export type PaymentPayload =
+  | CashPaymentPayload
+  | MomoPaymentPayload
+  | VNPayPaymentPayload
+  | CardPaymentPayload;
 
 // ============= PAYMENT =============
 
 export interface PaymentRequest {
   provider: PaymentProvider;
-  payload?: Record<string, any>;
+  payload?: PaymentPayload;
 }
 
+/** Payment record embedded in OrderResponse.payments - matches backend PaymentResponse DTO */
 export interface PaymentResponse {
-  id: number;
+  paymentId: number;
   orderId: number;
   provider: PaymentProvider;
   status: PaymentStatus;
   amount: number;
-  transactionId: string;
-  payload?: Record<string, any>;
+  /** Redirect URL for external providers (MoMo, VNPay) */
+  paymentUrl?: string;
+  transactionId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 // ============= TICKET =============
 
+/** Matches backend TicketResponse DTO - includes denormalized display fields */
 export interface TicketResponse {
   id: number;
-  orderItem: {
-    id: number;
-    ticketType: {
-      id: number;
-      name: string;
-      eventId: string;
-    };
-  };
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
+  /** Base64-encoded QR code image for display */
+  qrCode: string;
   qrPayload: string;
   status: TicketStatus;
+  eventTitle: string;
+  ticketTypeName: string;
+  eventStartAt: string;
+  venueName: string;
+  venueAddress: string;
   issuedAt: string;
   usedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  // Additional data for display
-  event?: EventListResponse;
 }
 
 // ============= ORDER =============
@@ -141,17 +154,21 @@ export interface CreateOrderRequest {
 
 export interface CheckoutRequest {
   orderId: number;
-  paymentProvider: PaymentProvider;
-  paymentPayload?: Record<string, any>;
+  /** Maps to backend ProcessPaymentRequest.provider */
+  provider: PaymentProvider;
+  cardNumber?: string;
+  cardHolder?: string;
+  expiryDate?: string;
+  cvv?: string;
+  phoneNumber?: string;
+  returnUrl?: string;
+  callbackUrl?: string;
 }
 
 export interface OrderResponse {
   id: number;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
+  userId: string;
+  userEmail: string;
   eventId: string;
   eventVersion: number;
   eventSnapshot?: EventSnapshot;
@@ -162,6 +179,13 @@ export interface OrderResponse {
   payments: PaymentResponse[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** Response from POST /api/orders/checkout - includes generated tickets */
+export interface CheckoutResponse {
+  order: OrderResponse;
+  tickets: TicketResponse[];
+  message: string;
 }
 
 export interface OrderListResponse {

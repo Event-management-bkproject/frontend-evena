@@ -11,6 +11,7 @@ import Footer from '@/src/components/Footer';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 export default function CustomerEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -37,17 +38,17 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     console.log('📨 [CustomerEventDetail] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
-      case 'EVENT_UPDATED':
-      case 'EVENT_CANCELLED':
+      case SSENormalizedType.EVENT_UPDATED:
+      case SSENormalizedType.EVENT_CANCELLED:
         if (affectsThisEvent) {
           console.log('🔄 [CustomerEventDetail] Refetching event...');
           refetchEvent();
         }
         break;
-      case 'TICKET_TYPE_CREATED':
-      case 'TICKET_TYPE_UPDATED':
-      case 'TICKET_TYPE_DELETED':
-      case 'TICKET_TYPE_DEACTIVATED':
+      case SSENormalizedType.TICKET_TYPE_CREATED:
+      case SSENormalizedType.TICKET_TYPE_UPDATED:
+      case SSENormalizedType.TICKET_TYPE_DELETED:
+      case SSENormalizedType.TICKET_TYPE_DEACTIVATED:
         // Refetch tickets when ticket types change (availability updates)
         if (affectsThisEvent) {
           console.log('🔄 [CustomerEventDetail] Refetching tickets...');

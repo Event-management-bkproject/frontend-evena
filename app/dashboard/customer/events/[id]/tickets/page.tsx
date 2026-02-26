@@ -16,6 +16,7 @@ import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 export default function EventTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -50,19 +51,18 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
     console.log('📨 [TicketsPage] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
-      case 'EVENT_UPDATED':
-      case 'EVENT_CANCELLED':
+      case SSENormalizedType.EVENT_UPDATED:
+      case SSENormalizedType.EVENT_CANCELLED:
         if (affectsThisEvent) {
           console.log('🔄 [TicketsPage] Refetching event...');
           refetchEvent();
         }
         break;
-      case 'TICKET_TYPE_CREATED':
-      case 'TICKET_TYPE_UPDATED':
-      case 'TICKET_TYPE_DELETED':
-      case 'TICKET_TYPE_DEACTIVATED':
-      case 'BOOKING_CREATED':
-      case 'ORDER_CONFIRMED':
+      case SSENormalizedType.TICKET_TYPE_CREATED:
+      case SSENormalizedType.TICKET_TYPE_UPDATED:
+      case SSENormalizedType.TICKET_TYPE_DELETED:
+      case SSENormalizedType.TICKET_TYPE_DEACTIVATED:
+      case SSENormalizedType.ORDER_CONFIRMED:
         // Refetch tickets when availability changes
         if (affectsThisEvent) {
           console.log('🔄 [TicketsPage] Refetching tickets (availability changed)...');

@@ -39,6 +39,7 @@ import {
   EntityType,
   ENTITY_EVENT_TYPES,
 } from '@/src/hooks/useOptimisticLocking';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 // Field configuration type
 export interface FormFieldConfig {
@@ -51,7 +52,7 @@ export interface OptimisticLockingConfig {
   entityId: number;
   entityVersion: number;
   entityType: EntityType;
-  eventTypes?: string[];
+  eventTypes?: SSENormalizedType[];
 }
 
 // Generic props for BaseFormDialog

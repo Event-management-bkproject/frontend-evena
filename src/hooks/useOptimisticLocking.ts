@@ -15,12 +15,13 @@
  *   entityId: organization.id,
  *   entityVersion: organization.version,
  *   entityType: 'ORGANIZATION',
- *   eventTypes: ['ORGANIZATION_UPDATED', 'ORGANIZATION_VERIFIED', 'ORGANIZATION_UNVERIFIED'],
+ *   eventTypes: ENTITY_EVENT_TYPES.ORGANIZATION,
  * });
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 // Entity types for SSE event matching
 export type EntityType = 'ORGANIZATION' | 'EVENT' | 'VENUE' | 'CATEGORY' | 'TICKET_TYPE';
@@ -28,10 +29,10 @@ export type EntityType = 'ORGANIZATION' | 'EVENT' | 'VENUE' | 'CATEGORY' | 'TICK
 // Map entity types to their ID field in SSE events
 const ENTITY_ID_FIELDS: Record<EntityType, string> = {
   ORGANIZATION: 'organizationId',
-  EVENT: 'eventId',
-  VENUE: 'venueId',
-  CATEGORY: 'categoryId',
-  TICKET_TYPE: 'ticketTypeId',
+  EVENT:        'eventId',
+  VENUE:        'venueId',
+  CATEGORY:     'categoryId',
+  TICKET_TYPE:  'ticketTypeId',
 };
 
 interface UseOptimisticLockingProps {
@@ -42,7 +43,7 @@ interface UseOptimisticLockingProps {
   /** The type of entity for SSE event matching */
   entityType: EntityType;
   /** SSE event types that indicate this entity was modified */
-  eventTypes: readonly string[];
+  eventTypes: readonly SSENormalizedType[];
   /** Optional callback when conflict is detected */
   onConflict?: () => void;
 }
@@ -141,28 +142,29 @@ export function useOptimisticLocking({
 }
 
 /**
- * Predefined event type configurations for common entities
+ * Predefined event type configurations for common entities.
+ * Import this alongside useOptimisticLocking to avoid repeating event type lists.
  */
 export const ENTITY_EVENT_TYPES = {
   ORGANIZATION: [
-    'ORGANIZATION_UPDATED',
-    'ORGANIZATION_VERIFIED',
-    'ORGANIZATION_UNVERIFIED',
+    SSENormalizedType.ORGANIZATION_UPDATED,
+    SSENormalizedType.ORGANIZATION_VERIFIED,
+    SSENormalizedType.ORGANIZATION_UNVERIFIED,
   ],
   EVENT: [
-    'EVENT_UPDATED',
-    'EVENT_PUBLISHED',
-    'EVENT_CANCELLED',
+    SSENormalizedType.EVENT_UPDATED,
+    SSENormalizedType.EVENT_PUBLISHED,
+    SSENormalizedType.EVENT_CANCELLED,
   ],
   VENUE: [
-    'VENUE_UPDATED',
+    SSENormalizedType.VENUE_UPDATED,
   ],
   CATEGORY: [
-    'CATEGORY_UPDATED',
+    SSENormalizedType.CATEGORY_UPDATED,
   ],
   TICKET_TYPE: [
-    'TICKET_TYPE_UPDATED',
-    'TICKET_TYPE_DEACTIVATED',
+    SSENormalizedType.TICKET_TYPE_UPDATED,
+    SSENormalizedType.TICKET_TYPE_DEACTIVATED,
   ],
 } as const;
 

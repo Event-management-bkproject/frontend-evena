@@ -32,6 +32,7 @@ import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '@/src/providers/SSEProvider';
+import { SSENormalizedType } from '@/src/stores/types/sse';
 
 interface OrderRowProps {
   order: any;
@@ -190,13 +191,10 @@ export default function MyOrdersPage() {
 
     // Refetch orders when order-related events occur
     switch (lastEvent.type) {
-      case 'ORDER_CREATED':
-      case 'ORDER_CONFIRMED':
-      case 'ORDER_CANCELLED':
-      case 'ORDER_EXPIRED':
-      case 'ORDER_REFUNDED':
-      case 'PAYMENT_COMPLETED':
-      case 'PAYMENT_FAILED':
+      case SSENormalizedType.ORDER_CREATED:
+      case SSENormalizedType.ORDER_CONFIRMED:
+      case SSENormalizedType.ORDER_CANCELLED:
+      case SSENormalizedType.ORDER_EXPIRED:
         console.log('🔄 [MyOrders] Refetching orders...');
         refetchOrders();
         break;
