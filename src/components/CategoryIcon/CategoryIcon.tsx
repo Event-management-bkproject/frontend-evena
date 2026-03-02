@@ -37,8 +37,8 @@ interface CategoryIconProps extends SvgIconProps {
   iconName?: string;
 }
 
-// Map of icon names to components
-const ICON_MAP: Record<string, React.ComponentType<SvgIconProps>> = {
+// Map of icon names to components — exported so other components can check membership
+export const ICON_MAP: Record<string, React.ComponentType<SvgIconProps>> = {
   Event,
   MusicNote,
   Sports,

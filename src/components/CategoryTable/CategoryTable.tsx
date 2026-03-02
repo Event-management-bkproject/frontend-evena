@@ -18,6 +18,7 @@ import { Box, Typography } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { GenericDataTable, TableColumn, TableAction } from '@/src/components/common/GenericDataTable';
+import { CategoryIcon, ICON_MAP } from '@/src/components/CategoryIcon/CategoryIcon';
 
 // ==========================================
 // ICON RENDERING HELPERS (PRESERVED LOGIC)
@@ -39,8 +40,34 @@ const isUrl = (text: string): boolean => {
   }
 };
 
+const ICON_PREFIX = 'IconPicker/';
+
 const renderIcon = (iconUrl?: string | null) => {
   if (!iconUrl) return null;
+
+  // New format: "IconPicker/School" — saved by IconPicker
+  const pickerName = iconUrl.startsWith(ICON_PREFIX)
+    ? iconUrl.slice(ICON_PREFIX.length)
+    : null;
+  const resolvedName = pickerName ?? (ICON_MAP[iconUrl] ? iconUrl : null);
+
+  if (resolvedName && ICON_MAP[resolvedName]) {
+    return (
+      <Box
+        sx={{
+          width: 32,
+          height: 32,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'rgba(243, 107, 249, 0.08)',
+          borderRadius: '8px',
+        }}
+      >
+        <CategoryIcon iconName={resolvedName} sx={{ fontSize: 22, color: '#F36BF9' }} />
+      </Box>
+    );
+  }
 
   if (isEmoji(iconUrl)) {
     return (

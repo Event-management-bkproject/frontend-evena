@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Box, Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import FormTextField from '../FormTextField';
 import FormTextareaField from '../FormTextAreaField';
+import { IconPicker } from '../IconPicker';
 import Forms from '../Forms';
 import { categorySchema } from '@/src/utils/validationSchema/categoryValidationSchema';
 import { CategoryFormData, CreateCategoryFormProps } from './types';
@@ -92,15 +93,12 @@ const CreateCategoryForm = ({
                 placeholder={t('category.form.namePlaceholder')}
               />
 
-              {/* Icon URL Field */}
-              <FormTextField
-                id="category-iconUrl"
+              {/* Icon Picker Field */}
+              <IconPicker
                 name="iconUrl"
                 label={t('category.form.icon')}
-                type="text"
-                required
-                placeholder={t('category.form.iconPlaceholder')}
                 helperText={t('category.form.iconHelper')}
+                required
               />
 
               {/* Description Field */}

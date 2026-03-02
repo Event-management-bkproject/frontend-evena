@@ -4,5 +4,5 @@ import * as Yup from 'yup';
 export const categorySchema = Yup.object({
   name: Yup.string().required('Category name is required'),
   description: Yup.string().required('Description is required'),
-  iconUrl: Yup.string().url('Must be a valid URL').required('Icon URL is required'),
+  iconUrl: Yup.string().required('Icon is required'),
 });
