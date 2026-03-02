@@ -1,0 +1,226 @@
+{
+  "data": {
+    "content": [
+      {
+        "id": 1000123,
+        "createdAt": "2026-02-28T09:12:34.000Z",
+        "totalAmount": 450000,
+        "status": "CONFIRMED",
+        "userEmail": "minh.nguyen@example.com",
+        "eventSnapshot": {
+          "title": "Saigon Indie Night",
+          "categoryName": "Music"
+        },
+        "items": [
+          {
+            "ticketTypeName": "General Admission",
+            "quantity": 1,
+            "unitPrice": 450000
+          }
+        ]
+      },
+      {
+        "id": 1000124,
+        "createdAt": "2026-02-28T10:05:11.000Z",
+        "totalAmount": 900000,
+        "status": "PENDING",
+        "userEmail": "thao.le@example.com",
+        "eventSnapshot": {
+          "title": "Tech Meetup HCMC",
+          "categoryName": "Conference"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Standard",
+            "quantity": 2,
+            "unitPrice": 450000
+          }
+        ]
+      },
+      {
+        "id": 1000125,
+        "createdAt": "2026-02-27T15:41:02.000Z",
+        "totalAmount": 1200000,
+        "status": "CONFIRMED",
+        "userEmail": "quang.tran@example.com",
+        "eventSnapshot": {
+          "title": "Food & Wine Expo",
+          "categoryName": "Exhibition"
+        },
+        "items": [
+          {
+            "ticketTypeName": "VIP",
+            "quantity": 1,
+            "unitPrice": 1200000
+          }
+        ]
+      },
+      {
+        "id": 1000126,
+        "createdAt": "2026-02-27T18:22:49.000Z",
+        "totalAmount": 0,
+        "status": "CANCELLED",
+        "userEmail": "linh.pham@example.com",
+        "eventSnapshot": {
+          "title": "Yoga Weekend",
+          "categoryName": "Wellness"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Early Bird",
+            "quantity": 1,
+            "unitPrice": 350000
+          }
+        ]
+      },
+      {
+        "id": 1000127,
+        "createdAt": "2026-02-26T07:55:10.000Z",
+        "totalAmount": 650000,
+        "status": "EXPIRED",
+        "userEmail": "anh.vo@example.com",
+        "eventSnapshot": {
+          "title": "Stand-up Comedy Night",
+          "categoryName": "Comedy"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Balcony",
+            "quantity": 1,
+            "unitPrice": 650000
+          }
+        ]
+      },
+      {
+        "id": 1000128,
+        "createdAt": "2026-02-25T13:09:27.000Z",
+        "totalAmount": 1800000,
+        "status": "REFUNDED",
+        "userEmail": "huy.do@example.com",
+        "eventSnapshot": {
+          "title": "Marathon 10K",
+          "categoryName": "Sports"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Runner Kit",
+            "quantity": 1,
+            "unitPrice": 1800000
+          }
+        ]
+      },
+      {
+        "id": 1000129,
+        "createdAt": "2026-02-24T11:33:45.000Z",
+        "totalAmount": 1500000,
+        "status": "CONFIRMED",
+        "userEmail": "mai.dang@example.com",
+        "eventSnapshot": {
+          "title": "Art Workshop: Watercolor",
+          "categoryName": "Workshop"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Workshop Pass",
+            "quantity": 3,
+            "unitPrice": 500000
+          }
+        ]
+      },
+      {
+        "id": 1000130,
+        "createdAt": "2026-02-23T08:14:03.000Z",
+        "totalAmount": 300000,
+        "status": "PENDING",
+        "userEmail": "khanh.bui@example.com",
+        "eventSnapshot": {
+          "title": "Movie Premiere",
+          "categoryName": "Entertainment"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Seat A",
+            "quantity": 1,
+            "unitPrice": 300000
+          }
+        ]
+      },
+      {
+        "id": 1000131,
+        "createdAt": "2026-02-22T19:50:26.000Z",
+        "totalAmount": 2200000,
+        "status": "CONFIRMED",
+        "userEmail": "phuong.ho@example.com",
+        "eventSnapshot": {
+          "title": "Business Summit 2026",
+          "categoryName": "Conference"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Premium",
+            "quantity": 1,
+            "unitPrice": 2200000
+          }
+        ]
+      },
+      {
+        "id": 1000132,
+        "createdAt": "2026-02-21T16:02:58.000Z",
+        "totalAmount": 800000,
+        "status": "CANCELLED",
+        "userEmail": "tuan.ngo@example.com",
+        "eventSnapshot": {
+          "title": "Live DJ Set",
+          "categoryName": "Music"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Standing",
+            "quantity": 2,
+            "unitPrice": 400000
+          }
+        ]
+      },
+      {
+        "id": 1000133,
+        "createdAt": "2026-02-20T06:45:12.000Z",
+        "totalAmount": 500000,
+        "status": "EXPIRED",
+        "userEmail": "ngoc.ha@example.com",
+        "eventSnapshot": {
+          "title": "Photography Walk",
+          "categoryName": "Outdoor"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Walk Pass",
+            "quantity": 1,
+            "unitPrice": 500000
+          }
+        ]
+      },
+      {
+        "id": 1000134,
+        "createdAt": "2026-02-19T12:28:39.000Z",
+        "totalAmount": 950000,
+        "status": "CONFIRMED",
+        "userEmail": "son.luu@example.com",
+        "eventSnapshot": {
+          "title": "Cooking Class: Pho",
+          "categoryName": "Workshop"
+        },
+        "items": [
+          {
+            "ticketTypeName": "Class Ticket",
+            "quantity": 1,
+            "unitPrice": 950000
+          }
+        ]
+      }
+    ],
+    "page": 0,
+    "size": 200,
+    "totalElements": 12,
+    "totalPages": 1
+  }
+}

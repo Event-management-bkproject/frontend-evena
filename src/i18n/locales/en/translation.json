@@ -67,6 +67,7 @@
       "dashboard": "Dashboard",
       "organizations": "Organizations",
       "events": "Events",
+      "orders": "Orders",
       "menu": "Menu"
     },
     "status": {

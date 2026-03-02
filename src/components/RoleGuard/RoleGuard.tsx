@@ -31,14 +31,14 @@ export default function RoleGuard({ children, allowedRoles, redirectTo }: RoleGu
 
     // Not authenticated → redirect to login
     if (!isAuthenticated) {
-      router.push(`/login?redirect=${window.location.pathname}`);
+      router.replace(`/login?redirect=${window.location.pathname}`);
       return;
     }
 
     // Authenticated but no roles → shouldn't happen, but handle it
     if (!auth.user?.roles || auth.user.roles.length === 0) {
       console.error('User has no roles assigned');
-      router.push('/login');
+      router.replace('/login');
       return;
     }
 
@@ -66,17 +66,17 @@ export default function RoleGuard({ children, allowedRoles, redirectTo }: RoleGu
 
       // Redirect based on user's actual role
       if (redirectTo) {
-        router.push(redirectTo);
+        router.replace(redirectTo);
       } else {
         // Auto-redirect to appropriate dashboard
         if (auth.user.roles.includes('ADMIN')) {
-          router.push('/dashboard/admin');
+          router.replace('/dashboard/admin');
         } else if (auth.user.roles.includes('ORGANIZER')) {
-          router.push('/dashboard/organizer');
+          router.replace('/dashboard/organizer');
         } else if (auth.user.roles.includes('USER')) {
-          router.push('/dashboard/customer');
+          router.replace('/dashboard/customer');
         } else {
-          router.push('/');
+          router.replace('/');
         }
       }
     }

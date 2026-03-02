@@ -179,7 +179,7 @@ export default function EventDetailsPage() {
             }}
           >
             {/* Left Side - Event Content */}
-            <Box sx={{ flex: { xs: '1 1 100%', lg: 1 } }}>
+            <Box sx={{ flex: { xs: '1 1 100%', lg: 1 }, minWidth: 0 }}>
               <EventContent event={event} onRefresh={refetch} onEdit={handleEdit} onDelete={handleDelete} />
             </Box>
 

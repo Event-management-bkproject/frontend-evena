@@ -39,8 +39,8 @@ export function useLogin() {
         const redirectUrl = searchParams.get('redirect');
 
         if (redirectUrl) {
-          // Redirect to the original page
-          router.push(redirectUrl);
+          // Replace login page in history so back button doesn't return to login
+          router.replace(redirectUrl);
         } else {
           // Redirect based on role
           let redirectPath;
@@ -55,7 +55,7 @@ export function useLogin() {
             // Default fallback for unknown roles
             redirectPath = '/dashboard/customer';
           }
-          router.push(redirectPath);
+          router.replace(redirectPath);
         }
 
         return true;

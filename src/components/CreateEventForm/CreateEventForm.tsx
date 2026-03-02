@@ -16,6 +16,7 @@ import { Box, Button, MenuItem, Chip, Typography, Alert } from '@mui/material';
 import { FormikHelpers } from 'formik';
 import { useTranslation } from 'react-i18next';
 import FormTextField from '../FormTextField';
+import FormDateTimePicker from '../FormDateTimePicker';
 import { eventSchema } from '@/src/utils/validationSchema/eventValidationSchema';
 import Forms from '../Forms';
 import FormTextareaField from '../FormTextAreaField';
@@ -122,23 +123,15 @@ const CreateEventForm = ({
 
         {/* Date Fields */}
         <Box display="flex" gap={2}>
-          <FormTextField
-            id="event-startAt"
+          <FormDateTimePicker
             name="startAt"
             label={t('event.form.startDate')}
-            type="datetime-local"
-            required={true}
-            InputLabelProps={{ shrink: true }}
-            fullWidth={true}
+            required
           />
-          <FormTextField
-            id="event-endAt"
+          <FormDateTimePicker
             name="endAt"
             label={t('event.form.endDate')}
-            type="datetime-local"
-            required={true}
-            InputLabelProps={{ shrink: true }}
-            fullWidth={true}
+            required
           />
         </Box>
 

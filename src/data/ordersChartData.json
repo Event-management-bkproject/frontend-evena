@@ -1,0 +1,37 @@
+{
+  "overview": {
+    "weekly": [
+      { "day": "Sun", "orders": 500 },
+      { "day": "Mon", "orders": 1400 },
+      { "day": "Tue", "orders": 800 },
+      { "day": "Wed", "orders": 1500 },
+      { "day": "Thu", "orders": 1200 },
+      { "day": "Fri", "orders": 1800 },
+      { "day": "Sat", "orders": 1100 }
+    ],
+    "monthly": [
+      { "day": "Week 1", "orders": 4500 },
+      { "day": "Week 2", "orders": 7200 },
+      { "day": "Week 3", "orders": 5800 },
+      { "day": "Week 4", "orders": 9100 }
+    ]
+  },
+  "category": {
+    "categories": [
+      { "name": "Âm nhạc",   "percentage": 25.77, "value": 14172, "color": "#F36BF9" },
+      { "name": "Thể thao",  "percentage": 22.68, "value": 12476, "color": "#36437C" },
+      { "name": "Công nghệ", "percentage": 17.83, "value": 9801,  "color": "#DDD8D8" },
+      { "name": "Ẩm thực",   "percentage": 13.93, "value": 7661,  "color": "#EEF0FF" },
+      { "name": "Others",    "percentage": 19.79, "value": 0,     "color": "#F7F7F7" }
+    ],
+    "topCategoryBreakdown": {
+      "name": "Âm nhạc",
+      "totalOrders": 14172,
+      "events": [
+        { "name": "Vietnam Music Festival 2025", "current": 3415, "total": 4000 },
+        { "name": "Indie Night – Vol.3",          "current": 2246, "total": 3000 },
+        { "name": "New Year Countdown 2025",      "current": 2000, "total": 3200 }
+      ]
+    }
+  }
+}

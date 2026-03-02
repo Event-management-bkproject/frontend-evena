@@ -81,6 +81,23 @@ export const OrderAPI = createApi({
       ],
     }),
 
+    // Get orders for all events managed by current organizer (paginated)
+    getOrganizerOrders: builder.query<
+      ApiResponse<PaginatedResponse<OrderResponse>>,
+      { page?: number; size?: number; status?: string }
+    >({
+      query: (params = {}) => ({
+        url: '/orders/organizer',
+        method: 'GET',
+        params: {
+          page: params.page ?? 0,
+          size: params.size ?? 20,
+          ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
+        },
+      }),
+      providesTags: ['Order'],
+    }),
+
     // Get current user's tickets
     getMyTickets: builder.query<ApiResponse<TicketResponse[]>, void>({
       query: () => ({
@@ -106,6 +123,7 @@ export const {
   useCheckoutOrderMutation,
   useGetOrderByIdQuery,
   useGetMyOrdersQuery,
+  useGetOrganizerOrdersQuery,
   useCancelOrderMutation,
   useGetMyTicketsQuery,
   useGetTicketByIdQuery,

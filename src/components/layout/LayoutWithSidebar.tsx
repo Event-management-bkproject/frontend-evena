@@ -18,7 +18,7 @@ const LayoutWithSidebar: React.FC<LayoutWithSidebarProps> = ({ children, current
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} currentPage={currentPage} />
 
       {/* Main content */}
-      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)', overflow: 'hidden' }}>
         {children}
       </Box>
     </Box>

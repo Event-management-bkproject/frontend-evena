@@ -45,7 +45,7 @@ export function DashboardHeader({
       }}
     >
       {/* Left: Breadcrumbs */}
-      <Box>
+      <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <Breadcrumbs separator={<NavigateNext fontSize="small" />} aria-label="breadcrumb">
           {breadcrumbs.map((crumb, index) => {
             const isLast = index === breadcrumbs.length - 1;
@@ -87,7 +87,7 @@ export function DashboardHeader({
       </Box>
 
       {/* Right: Actions and User Info */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
         {/* Notifications */}
         <IconButton
           onClick={onNotificationClick}

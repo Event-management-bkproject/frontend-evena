@@ -211,7 +211,7 @@ export default function OrganizationDetailPage() {
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
               {/* Organization Info Card */}
-              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 66%' } }}>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 66%' }, minWidth: 0 }}>
                 <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -332,20 +332,9 @@ export default function OrganizationDetailPage() {
                         gap: 3,
                         overflowX: 'auto',
                         pb: 2,
-                        '&::-webkit-scrollbar': {
-                          height: 8,
-                        },
-                        '&::-webkit-scrollbar-track': {
-                          backgroundColor: '#F0F0F0',
-                          borderRadius: 4,
-                        },
-                        '&::-webkit-scrollbar-thumb': {
-                          backgroundColor: '#F36BF9',
-                          borderRadius: 4,
-                          '&:hover': {
-                            backgroundColor: '#e55ae0',
-                          },
-                        },
+                        '&::-webkit-scrollbar': { height: 8 },
+                        '&::-webkit-scrollbar-track': { backgroundColor: '#F0F0F0', borderRadius: 4 },
+                        '&::-webkit-scrollbar-thumb': { backgroundColor: '#F36BF9', borderRadius: 4 },
                       }}
                     >
                       {organizationEvents.map((event) => (

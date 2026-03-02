@@ -49,6 +49,7 @@
     "react-redux": "^9.2.0",
     "react-virtualized-auto-sizer": "^2.0.2",
     "react-window": "^2.2.5",
+    "recharts": "^3.7.0",
     "redux-persist": "^6.0.0",
     "sass": "^1.94.0",
     "yup": "^1.7.1"
