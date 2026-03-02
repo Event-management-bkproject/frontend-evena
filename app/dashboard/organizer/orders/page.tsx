@@ -19,7 +19,6 @@ import {
   ConfirmationNumber as TicketIcon,
   CheckCircle as SoldIcon,
   AttachMoney as EarningsIcon,
-  MoreVert as MoreIcon,
 } from '@mui/icons-material';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
@@ -29,78 +28,20 @@ import { OrdersCategoryChart } from '@/src/components/charts/OrdersCategoryChart
 import { useGetOrganizerOrdersQuery } from '@/src/stores/services/OrderApi';
 import { OrderStatus, OrderResponse } from '@/src/stores/types/order';
 import ordersMock from '@/src/data/orders.sample.json';
+import { StatCard } from '@/src/components/common/StatCard';
+import { formatCurrency, formatTableDate } from '@/src/utils/format';
+import { ORDER_STATUS_CONFIG, ORDER_STATUSES, TABLE_PER_PAGE, OrderStatusFilter } from '@/src/utils/constants/constant';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type SortKey = 'id' | 'createdAt' | 'totalAmount' | 'status' | null;
 type SortDir = 'asc' | 'desc';
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
-  CONFIRMED: { label: 'Confirmed', bg: '#FDE3FE', color: '#F36BF9' },
-  CANCELLED: { label: 'Cancelled', bg: '#FABABB', color: '#FF5B5E' },
-  PENDING:   { label: 'Pending',   bg: '#EDEDED', color: '#36437C' },
-  EXPIRED:   { label: 'Expired',   bg: '#FFE5CC', color: '#FF8C00' },
-  REFUNDED:  { label: 'Refunded',  bg: '#CCF0F0', color: '#009999' },
-};
-
-const STATUSES = ['ALL', 'CONFIRMED', 'CANCELLED', 'PENDING', 'EXPIRED'] as const;
-type StatusFilter = typeof STATUSES[number];
-
-const PER_PAGE = 10;
-
-// ─── Stat Card ───────────────────────────────────────────────────────────────
-
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <Box
-      sx={{
-        bgcolor: 'white',
-        borderRadius: '25px',
-        width: '100%',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Top: icon + more icon */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '15px', pt: '15px', pb: '10px' }}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            bgcolor: '#F36BF9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            flexShrink: 0,
-          }}
-        >
-          {icon}
-        </Box>
-        <MoreIcon sx={{ color: '#DDD8D8', fontSize: 18 }} />
-      </Box>
-      {/* Bottom: label + value */}
-      <Box sx={{ px: '15px', pb: '15px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-        <Typography sx={{ fontSize: 11, color: '#ADACAE', fontWeight: 500 }}>{label}</Typography>
-        <Typography sx={{ fontSize: 18, fontWeight: 700, color: '#36437C' }}>{value}</Typography>
-      </Box>
-    </Box>
-  );
-}
-
 // ─── Orders Content ───────────────────────────────────────────────────────────
 
 function OrdersContent() {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('ALL');
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(0);
@@ -147,8 +88,8 @@ function OrdersContent() {
     return rows;
   }, [allOrders, search, sortKey, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(processed.length / PER_PAGE));
-  const paged = processed.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(processed.length / TABLE_PER_PAGE));
+  const paged = processed.slice(page * TABLE_PER_PAGE, (page + 1) * TABLE_PER_PAGE);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -156,7 +97,7 @@ function OrdersContent() {
   }
 
   function handleSearch(v: string) { setSearch(v); setPage(0); }
-  function handleStatus(s: StatusFilter) { setStatusFilter(s); setPage(0); }
+  function handleStatus(s: OrderStatusFilter) { setStatusFilter(s); setPage(0); }
 
   const totalOrders = processed.length;
   const confirmedOrders = processed.filter((o) => o.status === OrderStatus.CONFIRMED).length;
@@ -164,20 +105,6 @@ function OrdersContent() {
     .filter((o) => o.status === OrderStatus.CONFIRMED)
     .reduce((sum, o) => sum + (o.totalAmount ?? 0), 0);
 
-  const fmtCurrency = (n: number) =>
-    n >= 1_000_000
-      ? `${(n / 1_000_000).toFixed(1)}M ₫`
-      : n >= 1_000
-      ? `${(n / 1_000).toFixed(0)}K ₫`
-      : `${n} ₫`;
-
-  const fmtDate = (iso: string) => {
-    const d = new Date(iso);
-    return {
-      date: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      time: d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    };
-  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0, flex: 1, minHeight: 0, height: '100%' }}>
@@ -216,7 +143,7 @@ function OrdersContent() {
                 <StatCard icon={<SoldIcon sx={{ fontSize: 28 }} />} label="Confirmed Orders" value={confirmedOrders.toLocaleString()} />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label="Total Revenue" value={fmtCurrency(totalRevenue)} />
+                <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label="Total Revenue" value={formatCurrency(totalRevenue)} />
               </Box>
             </Box>
 
@@ -290,7 +217,7 @@ function OrdersContent() {
                   p: '4px',
                 }}
               >
-                {STATUSES.map((s) => (
+                {ORDER_STATUSES.map((s) => (
                   <Box
                     key={s}
                     component="button"
@@ -309,7 +236,7 @@ function OrdersContent() {
                       '&:hover': { bgcolor: statusFilter === s ? '#F36BF9' : '#EEF0FF' },
                     }}
                   >
-                    {s === 'ALL' ? 'All' : STATUS_CONFIG[s]?.label ?? s}
+                    {s === 'ALL' ? 'All' : ORDER_STATUS_CONFIG[s]?.label ?? s}
                   </Box>
                 ))}
               </Box>
@@ -374,8 +301,8 @@ function OrdersContent() {
                     </TableRow>
                   ) : (
                     paged.map((order, i) => {
-                      const sc = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.PENDING;
-                      const { date, time } = fmtDate(order.createdAt);
+                      const sc = ORDER_STATUS_CONFIG[order.status] ?? ORDER_STATUS_CONFIG.PENDING;
+                      const { date, time } = formatTableDate(order.createdAt);
                       const item = order.items?.[0];
                       const ticketTypeName = item?.ticketTypeName ?? '—';
                       const eventTitle = order.eventSnapshot?.title ?? '—';
@@ -430,7 +357,7 @@ function OrdersContent() {
                           </TableCell>
                           {/* Price — Group 3: 90px */}
                           <TableCell sx={{ py: '10px', px: '8px', border: 'none', width: '90px' }}>
-                            <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'black' }}>{fmtCurrency(unitPrice)}</Typography>
+                            <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'black' }}>{formatCurrency(unitPrice)}</Typography>
                           </TableCell>
                           {/* Quantity — Group 3: 90px */}
                           <TableCell sx={{ py: '10px', px: '8px', border: 'none', width: '90px' }}>
@@ -438,7 +365,7 @@ function OrdersContent() {
                           </TableCell>
                           {/* Amount — Group 3: 90px */}
                           <TableCell sx={{ py: '10px', px: '8px', border: 'none', width: '90px' }}>
-                            <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'black' }}>{fmtCurrency(order.totalAmount ?? 0)}</Typography>
+                            <Typography sx={{ fontSize: 12, fontWeight: 700, color: 'black' }}>{formatCurrency(order.totalAmount ?? 0)}</Typography>
                           </TableCell>
                           {/* Status — Group 2: 110px */}
                           <TableCell sx={{ py: '10px', px: '8px', border: 'none', width: '110px' }}>
@@ -472,7 +399,7 @@ function OrdersContent() {
           {/* Pagination */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '15px', py: '10px', borderTop: '1px solid #F7F7F7' }}>
             <Typography sx={{ fontSize: 11, color: '#ADACAE' }}>
-              Showing {processed.length === 0 ? 0 : page * PER_PAGE + 1}–{Math.min((page + 1) * PER_PAGE, processed.length)} of {processed.length} orders
+              Showing {processed.length === 0 ? 0 : page * TABLE_PER_PAGE + 1}–{Math.min((page + 1) * TABLE_PER_PAGE, processed.length)} of {processed.length} orders
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Box

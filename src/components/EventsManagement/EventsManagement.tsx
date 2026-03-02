@@ -267,7 +267,7 @@ export default function EventsManagement({
       </Box>
 
       {/* Content */}
-      <Box sx={{ flex: 1, p: 3, overflow: 'auto', backgroundColor: '#F7F7F7', borderRadius: '20px' }}>
+      <Box sx={{ flex: 1, p: 3, overflow: 'hidden', backgroundColor: '#F7F7F7', borderRadius: '20px', display: 'flex', flexDirection: 'column' }}>
         {/* Filters */}
         <EventFilters
           onSearch={setSearchKeyword}
@@ -288,14 +288,16 @@ export default function EventsManagement({
           </Box>
         )}
 
-        {/* Events List */}
-        <EventRowList
-          events={filteredEvents}
-          onEdit={handleEventEdit}
-          onDelete={handleEventDelete}
-          onClick={handleEventClick}
-          loading={isLoading}
-        />
+        {/* Events List — only this part scrolls */}
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          <EventRowList
+            events={filteredEvents}
+            onEdit={handleEventEdit}
+            onDelete={handleEventDelete}
+            onClick={handleEventClick}
+            loading={isLoading}
+          />
+        </Box>
       </Box>
 
       {/* Create Event Modal */}

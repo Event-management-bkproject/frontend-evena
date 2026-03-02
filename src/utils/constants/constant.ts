@@ -6,3 +6,20 @@ export const CharacterKeyCode = {
   POSITIVE_KEYCODE: [107, 187],
   NON_NUMBER_KEYCODE: [83, 188],
 };
+
+// ─── Table / Pagination ───────────────────────────────────────────────────────
+
+export const TABLE_PER_PAGE = 10;
+
+// ─── Order Status ─────────────────────────────────────────────────────────────
+
+export const ORDER_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  CONFIRMED: { label: 'Confirmed', bg: '#FDE3FE', color: '#F36BF9' },
+  CANCELLED: { label: 'Cancelled', bg: '#FABABB', color: '#FF5B5E' },
+  PENDING:   { label: 'Pending',   bg: '#EDEDED', color: '#36437C' },
+  EXPIRED:   { label: 'Expired',   bg: '#FFE5CC', color: '#FF8C00' },
+  REFUNDED:  { label: 'Refunded',  bg: '#CCF0F0', color: '#009999' },
+};
+
+export const ORDER_STATUSES = ['ALL', 'CONFIRMED', 'CANCELLED', 'PENDING', 'EXPIRED'] as const;
+export type OrderStatusFilter = typeof ORDER_STATUSES[number];

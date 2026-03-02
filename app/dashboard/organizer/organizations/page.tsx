@@ -269,7 +269,7 @@ export default function OrganizationsPage() {
           </Box>
 
           {/* Content */}
-          <Box sx={{ flex: 1, p: 3, overflow: 'auto', backgroundColor: '#F7F7F7', borderRadius: '20px' }}>
+          <Box sx={{ flex: 1, p: 3, overflow: 'hidden', backgroundColor: '#F7F7F7', borderRadius: '20px', display: 'flex', flexDirection: 'column' }}>
             {/* Filters */}
             <OrganizationFilters
               onSearch={setSearchKeyword}
@@ -285,15 +285,17 @@ export default function OrganizationsPage() {
               </Box>
             )}
 
-            {/* Organizations List */}
-            <OrganizationRowList
-              organizations={filteredOrganizations}
-              onEdit={handleOrganizationEdit}
-              onDelete={handleOrganizationDelete}
-              onManageMembers={handleManageMembers}
-              onClick={handleOrganizationClick}
-              loading={isLoading}
-            />
+            {/* Organizations List — only this part scrolls */}
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+              <OrganizationRowList
+                organizations={filteredOrganizations}
+                onEdit={handleOrganizationEdit}
+                onDelete={handleOrganizationDelete}
+                onManageMembers={handleManageMembers}
+                onClick={handleOrganizationClick}
+                loading={isLoading}
+              />
+            </Box>
           </Box>
         </Box>
 

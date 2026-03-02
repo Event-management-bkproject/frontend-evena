@@ -3,7 +3,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from './storage';
 import { AuthAPI } from './services/AuthApi';
 import { OrganizerAPI } from './services/OrganizerApi';
-import authReducer from './slices/authSlice';
+import authReducer, { AuthState } from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import { CategoryAPI } from './services/CategoryApi';
 import { EventAPI } from './services/EventApi';
@@ -67,5 +67,8 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-export type RootState = ReturnType<typeof store.getState>;
+// Override auth type: persistReducer wraps AuthState in PersistPartial which hides fields.
+// Casting back to AuthState gives correct autocomplete and type safety across all selectors.
+type StoreState = ReturnType<typeof store.getState>;
+export type RootState = Omit<StoreState, 'auth'> & { auth: AuthState };
 export type AppDispatch = typeof store.dispatch;

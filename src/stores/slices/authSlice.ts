@@ -2,7 +2,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { UserResponse } from '../types';
 
-interface AuthState {
+export interface AuthState {
   accessToken: string | null;
   // refreshToken: string | null; // COMMENTED OUT: Backend refresh token not implemented yet
   user: UserResponse | null;
