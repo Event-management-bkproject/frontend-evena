@@ -6,6 +6,7 @@ import { Notifications, Settings, NavigateNext } from '@mui/icons-material';
 import Link from 'next/link';
 import { DashboardHeaderProps } from './types';
 import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
+import { getInitials } from '@/src/utils/common.utils';
 
 export function DashboardHeader({
   title,
@@ -17,15 +18,6 @@ export function DashboardHeader({
   onProfileClick,
 }: DashboardHeaderProps) {
   const [languageSwitcherOpen, setLanguageSwitcherOpen] = useState(false);
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const handleSettingsClick = () => {
     setLanguageSwitcherOpen(true);

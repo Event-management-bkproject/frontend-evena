@@ -12,7 +12,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-
 import chartData from '@/src/data/ordersChartData.json';
 
 const weeklyData  = chartData.overview.weekly;
@@ -22,7 +21,13 @@ type Period = 'This Week' | 'This Month';
 
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
 
-function CustomTooltip({ active, payload, label }: any) {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <Box

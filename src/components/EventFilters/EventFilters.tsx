@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Button, InputAdornment, Typography, Chip } from '@mui/material';
+import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Button, InputAdornment, Typography, Chip, SelectChangeEvent } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { useState, useMemo } from 'react';
 import { EventFiltersProps } from './types';
@@ -47,14 +47,14 @@ export function EventFilters({
     onSearch(value);
   };
 
-  const handleCategoryChange = (event: any) => {
+  const handleCategoryChange = (event: SelectChangeEvent<number | ''>) => {
     const value = event.target.value;
     setCategory(value);
-    onCategoryChange(value === '' ? null : value);
+    onCategoryChange(value === '' ? null : (value as number));
   };
 
-  const handleTimeRangeChange = (event: any) => {
-    const value = event.target.value;
+  const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value as 'week' | 'month' | 'year' | 'all';
     setTimeRange(value);
     onTimeRangeChange(value);
   };

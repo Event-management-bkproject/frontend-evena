@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { MoreVert, Email, Phone, Language, Edit, Delete, Event, Verified, Pending, Group } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
+import { getInitials } from '@/src/utils/common.utils';
 
 interface OrganizationCardProps {
   organization: OrganizationResponse;
@@ -63,15 +64,6 @@ const OrganizationCard: React.FC<OrganizationCardProps> = ({
 
   const handleCardClick = () => {
     onClick?.(organization);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   const cardContent = (

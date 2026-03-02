@@ -28,7 +28,7 @@ import { OrdersCategoryChart } from '@/src/components/charts/OrdersCategoryChart
 import { useGetOrganizerOrdersQuery } from '@/src/stores/services/OrderApi';
 import { OrderStatus, OrderResponse } from '@/src/stores/types/order';
 import ordersMock from '@/src/data/orders.sample.json';
-import { StatCard } from '@/src/components/common/StatCard';
+import { StatCard } from '@/src/components/common/StatCard/StatCard';
 import { formatCurrency, formatTableDate } from '@/src/utils/format';
 import { ORDER_STATUS_CONFIG, ORDER_STATUSES, TABLE_PER_PAGE, OrderStatusFilter } from '@/src/utils/constants/constant';
 

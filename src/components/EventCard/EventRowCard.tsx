@@ -5,6 +5,7 @@ import React from 'react';
 import { Card, Typography, Box, IconButton } from '@mui/material';
 import { CalendarToday, Place, ConfirmationNumber } from '@mui/icons-material';
 import { EventListResponse, EventResponse } from '@/src/stores/types';
+import { formatDate, formatTime } from '@/src/utils/dateFormatters';
 
 interface EventRowCardProps {
   event: EventListResponse | EventResponse;
@@ -26,21 +27,6 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
 
   const handleCardClick = () => {
     onClick?.(event);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   // Helper function để lấy venue info

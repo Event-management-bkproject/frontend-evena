@@ -18,6 +18,8 @@ import { MoreVert, CalendarToday, Place, Category, Edit, Delete, Groups, Public,
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { EventListResponse, EventResponse, EventStatus } from '@/src/stores/types';
+import { formatDate, formatTime } from '@/src/utils/dateFormatters';
+import { getInitials } from '@/src/utils/common.utils';
 
 interface EventCardProps {
   event: EventListResponse | EventResponse;
@@ -63,22 +65,7 @@ const EventCard: React.FC<EventCardProps> = ({
     onClick?.(event);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getStatusColor = (status: EventStatus) => {
+  const getStatusColor = (status: EventStatus): 'success' | 'default' | 'error' | 'info' | 'secondary' | 'primary' => {
     switch (status) {
       case EventStatus.PUBLISHED:
         return 'success';
@@ -104,15 +91,6 @@ const EventCard: React.FC<EventCardProps> = ({
       default:
         return undefined;
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   // Helper function để lấy thông tin organizer name
@@ -334,7 +312,7 @@ const EventCard: React.FC<EventCardProps> = ({
           icon={getStatusIcon(event.status)}
           label={event.status}
           size="small"
-          color={getStatusColor(event.status) as any}
+          color={getStatusColor(event.status)}
           variant={event.status === EventStatus.PUBLISHED ? 'filled' : 'outlined'}
         />
       </Box>

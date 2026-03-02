@@ -14,6 +14,12 @@ export const formatCurrency = (n: number): string => {
 };
 
 /**
+ * Format a plain number for display using locale-aware thousands separator.
+ * e.g. 1500 → "1,500"
+ */
+export const formatNumber = (n: number): string => n.toLocaleString();
+
+/**
  * Split an ISO datetime string into a separate date and time string
  * formatted for Vietnamese locale (DD/MM/YYYY and HH:MM).
  * Used by table cells that display date and time on two lines.
