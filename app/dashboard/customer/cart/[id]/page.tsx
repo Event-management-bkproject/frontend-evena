@@ -98,7 +98,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   if (error || !order) {
     return (
       <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
-        <Header cartItemCount={0} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Alert severity="error">{t('messages.error.notFound', { item: t('common.entities.order') })}</Alert>
         </Container>
@@ -109,7 +109,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   return (
     <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header cartItemCount={0} />
+      <Header />
 
       <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
         <Button

@@ -2,8 +2,6 @@
 'use client';
 
 import { useAuth } from '@/src/hooks/auth/useAuth';
-import { useSSE } from '@/src/providers/SSEProvider';
-import { SSENormalizedType } from '@/src/stores/types/sse';
 import {
   useCreateOrganizationMutation,
   useGetMyOrganizationsQuery,
@@ -12,7 +10,7 @@ import {
 } from '@/src/stores/services/OrganizerApi';
 import { useInviteMemberMutation } from '@/src/stores/services';
 import { useRouter } from 'next/navigation';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import { Box } from '@mui/material';
 import BaseModal from '@/src/components/BaseModal';
@@ -24,7 +22,7 @@ import UpdateOrganizationForm from '@/src/components/UpdateOrganizationForm';
 import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
 import DashboardHeader from '@/src/components/DashboardHeader';
 import OrganizationFilters from '@/src/components/OrganizationFilters';
-import Snackbar from '@/src/components/SnackBar';
+import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { OrganizationResponse } from '@/src/stores/types';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
 import { OrganizationRowList } from '@/src/components/OrganizationCard/OrganizationRowList';
@@ -32,12 +30,14 @@ import InviteMemberModal from '@/src/components/InviteMemberModal';
 import MemberManagementModal from '@/src/components/MemberManagementModal';
 import { OrganizationRole } from '@/src/stores/types/enums';
 import { useTranslation } from 'react-i18next';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
+import { BRAND } from '@/src/utils/constants/constant';
 
 export default function OrganizationsPage() {
   const { auth } = useAuth();
   const router = useRouter();
-  const { lastEvent } = useSSE();
   const { t } = useTranslation();
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -48,22 +48,13 @@ export default function OrganizationsPage() {
   // Filters state
   const [searchKeyword, setSearchKeyword] = useState('');
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'warning' | 'info',
-  });
-
   // Queries
   const {
     data: organizersResponse,
     isLoading: loadingOrganizers,
     error: organizersError,
-    refetch: refetchOrganizers,
   } = useGetMyOrganizationsQuery(undefined, {
     skip: !auth.accessToken,
-    // refetchOnMountOrArgChange: true, // Auto-refetch when cache invalidated
-    // refetchOnFocus: true, // Auto-refetch when window regains focus
   });
 
   // Mutations
@@ -72,33 +63,8 @@ export default function OrganizationsPage() {
   const [deleteOrganization, { isLoading: deletingOrganization }] = useDeleteOrganizationMutation();
   const [inviteMember, { isLoading: invitingMember }] = useInviteMemberMutation();
 
-  // Listen to SSE events from SSEProvider
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    console.log('📨 [Organizer] Received SSE event:', lastEvent.type);
-
-    // Handle organization events
-    switch (lastEvent.type) {
-      case SSENormalizedType.ORGANIZATION_CREATED:
-      case SSENormalizedType.ORGANIZATION_UPDATED:
-      case SSENormalizedType.ORGANIZATION_VERIFIED:
-      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
-      case SSENormalizedType.ORGANIZATION_DELETED:
-      case SSENormalizedType.INVITATION_ACCEPTED:
-      case SSENormalizedType.INVITATION_REJECTED:
-        console.log('🔄 [Organizer] Refetching organizations...');
-        refetchOrganizers().then((result) => {
-          console.log('✅ [Organizer] Refetch completed:', result);
-        });
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, refetchOrganizers]);
-
   // Data processing
-  const organizations: OrganizationResponse[] = organizersResponse?.data || [];
+  const organizations: OrganizationResponse[] = organizersResponse?.data ?? [];
 
   // Filter organizations
   const filteredOrganizations = useMemo(() => {
@@ -121,11 +87,11 @@ export default function OrganizationsPage() {
   const handleCreateOrganization = async (formData: OrganizationFormData) => {
     try {
       await createOrganization(formData).unwrap();
-      showSuccessMessage(t('messages.success.created', { item: t('common.entities.organization') }));
+      showSnackbar(t('messages.success.created', { item: t('common.entities.organization') }), 'success');
       setCreateModalOpen(false);
-      refetchOrganizers();
-    } catch (error: any) {
-      showErrorMessage(error?.data?.message || t('messages.error.updateFailed', { item: t('common.entities.organization') }));
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.updateFailed', { item: t('common.entities.organization') }), 'error');
     }
   };
 
@@ -134,21 +100,20 @@ export default function OrganizationsPage() {
 
     try {
       await updateOrganization({ id: selectedOrganization.id, data: formData }).unwrap();
-      showSuccessMessage(t('messages.success.updated', { item: t('common.entities.organization') }));
+      showSnackbar(t('messages.success.updated', { item: t('common.entities.organization') }), 'success');
       setUpdateModalOpen(false);
       setSelectedOrganization(null);
-      refetchOrganizers();
-    } catch (error: any) {
-      const errorMessage = error?.data?.message || t('messages.error.updateFailed', { item: t('common.entities.organization') });
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      const errorMessage = err?.data?.message ?? t('messages.error.updateFailed', { item: t('common.entities.organization') });
 
       // Check for version conflict error (optimistic locking)
       if (errorMessage.includes('has been modified by another user')) {
-        showErrorMessage(t('messages.error.conflictUpdate', { item: t('common.entities.organization') }));
+        showSnackbar(t('messages.error.conflictUpdate', { item: t('common.entities.organization') }), 'error');
         setUpdateModalOpen(false);
         setSelectedOrganization(null);
-        refetchOrganizers();
       } else {
-        showErrorMessage(errorMessage);
+        showSnackbar(errorMessage, 'error');
       }
     }
   };
@@ -158,23 +123,22 @@ export default function OrganizationsPage() {
 
     try {
       await deleteOrganization(selectedOrganization.id).unwrap();
-      showSuccessMessage(t('messages.success.deleted', { item: t('common.entities.organization') }));
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.organization') }), 'success');
       setDeleteDialogOpen(false);
       setSelectedOrganization(null);
-      refetchOrganizers();
-    } catch (error: any) {
-      // console.error('Delete organization error:', error);
-      const errorMessage =
-        error?.data?.message ||
-        error?.data?.error ||
-        error?.message ||
-        t('messages.error.deleteFailed');
-      showErrorMessage(errorMessage);
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string; error?: string }; message?: string };
+      const errorMessage = err?.data?.message ?? err?.data?.error ?? err?.message ?? t('messages.error.deleteFailed');
+      showSnackbar(errorMessage, 'error');
       setDeleteDialogOpen(false);
     }
   };
 
   const handleOrganizationEdit = (organization: OrganizationResponse) => {
+    if (organization.verified) {
+      showSnackbar(t('messages.error.verifiedOrgCannotEdit'), 'error');
+      return;
+    }
     setSelectedOrganization(organization);
     setUpdateModalOpen(true);
   };
@@ -182,7 +146,6 @@ export default function OrganizationsPage() {
   const handleCloseUpdateModal = () => {
     setUpdateModalOpen(false);
     setSelectedOrganization(null);
-    refetchOrganizers(); // Refetch to get latest data when modal closes
   };
 
   const handleOrganizationDelete = (organization: OrganizationResponse) => {
@@ -200,63 +163,32 @@ export default function OrganizationsPage() {
   };
 
   const handleInviteMember = async (email: string, role: OrganizationRole) => {
-    if (!selectedOrganization) {
-      console.error('No organization selected');
-      return;
-    }
+    if (!selectedOrganization) return;
 
     // Client-side validation: prevent inviting yourself
     if (auth?.user?.email && email.toLowerCase() === auth.user.email.toLowerCase()) {
-      showErrorMessage(t('messages.error.cannotInviteSelf'));
+      showSnackbar(t('messages.error.cannotInviteSelf'), 'error');
       throw new Error('Cannot invite yourself');
     }
 
-    console.log('Inviting member:', {
-      organizationId: selectedOrganization.id,
-      email,
-      role,
-    });
-
     try {
-      const result = await inviteMember({
+      await inviteMember({
         organizationId: selectedOrganization.id,
         data: { email, role },
       }).unwrap();
 
-      console.log('Invitation result:', result);
-      showSuccessMessage(t('messages.success.invitationSent', { email }));
+      showSnackbar(t('messages.success.invitationSent', { email }), 'success');
       setInviteModalOpen(false);
-    } catch (error: any) {
-      console.error('Error inviting member:', error);
-      console.error('Error details:', {
-        status: error?.status,
-        data: error?.data,
-        message: error?.data?.message,
-      });
-
-      const errorMessage = error?.data?.message || error?.message || t('messages.error.invitationFailed');
-      showErrorMessage(errorMessage);
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string }; message?: string };
+      const errorMessage = err?.data?.message ?? err?.message ?? t('messages.error.invitationFailed');
+      showSnackbar(errorMessage, 'error');
       throw error; // Re-throw to let InviteMemberModal handle it
     }
   };
 
-  const showSuccessMessage = (message: string) => {
-    setSnackbar({ open: true, message, severity: 'success' });
-  };
-
-  const showErrorMessage = (message: string) => {
-    setSnackbar({ open: true, message, severity: 'error' });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
-
-  const isLoading = loadingOrganizers;
-
   return (
     <ProtectedContent>
-      {/* <SSESync /> */}
       <LayoutWithSidebar currentPage="organizations">
         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 20px)' }}>
           {/* Header */}
@@ -264,24 +196,24 @@ export default function OrganizationsPage() {
             <DashboardHeader
               title={t('common.navigation.organizations')}
               breadcrumbs={[{ label: t('common.navigation.dashboard'), href: '/dashboard/organizer' }, { label: t('common.navigation.organizations') }]}
-              userName={auth.user?.name || 'User'}
+              userName={auth.user?.name ?? 'User'}
             />
           </Box>
 
           {/* Content */}
-          <Box sx={{ flex: 1, p: 3, overflow: 'hidden', backgroundColor: '#F7F7F7', borderRadius: '20px', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, p: 3, overflow: 'hidden', backgroundColor: BRAND.bgSection, borderRadius: '20px', display: 'flex', flexDirection: 'column' }}>
             {/* Filters */}
             <OrganizationFilters
               onSearch={setSearchKeyword}
               onCreateClick={() => setCreateModalOpen(true)}
               organizations={organizations}
-              loading={isLoading}
+              loading={loadingOrganizers}
             />
 
             {/* Error Display */}
             {organizersError && (
               <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', borderRadius: 1, color: 'error.contrastText' }}>
-                Error loading organizations: {(organizersError as any)?.data?.message || t('messages.error.operationFailed')}
+                {(organizersError as { data?: { message?: string } })?.data?.message ?? t('messages.error.operationFailed')}
               </Box>
             )}
 
@@ -293,7 +225,7 @@ export default function OrganizationsPage() {
                 onDelete={handleOrganizationDelete}
                 onManageMembers={handleManageMembers}
                 onClick={handleOrganizationClick}
-                loading={isLoading}
+                loading={loadingOrganizers}
               />
             </Box>
           </Box>
@@ -336,7 +268,7 @@ export default function OrganizationsPage() {
           onClose={() => setDeleteDialogOpen(false)}
           onConfirm={handleDeleteOrganization}
           title={`${t('common.buttons.delete')} ${t('common.entities.organization')}`}
-          message={t('dialog.delete.message', { name: selectedOrganization?.name || '' })}
+          message={t('dialog.delete.message', { name: selectedOrganization?.name ?? '' })}
           variant="error"
           loading={deletingOrganization}
           confirmText={t('common.buttons.delete')}
@@ -354,9 +286,6 @@ export default function OrganizationsPage() {
             }}
             organization={selectedOrganization}
             onInviteMember={() => setInviteModalOpen(true)}
-            onSuccess={() => {
-              refetchOrganizers();
-            }}
           />
         )}
 
@@ -370,14 +299,11 @@ export default function OrganizationsPage() {
           />
         )}
 
-        {/* Snackbar */}
-        <Snackbar
+        <SnackbarNotification
           open={snackbar.open}
           message={snackbar.message}
           severity={snackbar.severity}
-          onClose={handleCloseSnackbar}
-          vertical="top"
-          horizontal="right"
+          onClose={closeSnackbar}
         />
       </LayoutWithSidebar>
     </ProtectedContent>

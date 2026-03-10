@@ -19,6 +19,7 @@ import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { GenericDataTable, TableColumn, TableAction } from '@/src/components/common/GenericDataTable';
 import { CategoryIcon, ICON_MAP } from '@/src/components/CategoryIcon/CategoryIcon';
+import { CategoryResponse } from '@/src/stores/types/event';
 
 // ==========================================
 // ICON RENDERING HELPERS (PRESERVED LOGIC)
@@ -127,19 +128,12 @@ const renderIcon = (iconUrl?: string | null) => {
 // TYPES
 // ==========================================
 
-interface Category {
-  id: number;
-  name: string;
-  description?: string;
-  iconUrl?: string | null;
-}
-
 interface CategoryTableProps {
-  categories: Category[];
+  categories: CategoryResponse[];
   isLoading: boolean;
   searchTerm: string;
   isDeletingCategory: boolean;
-  onEditCategory: (category: Category) => void;
+  onEditCategory: (category: CategoryResponse) => void;
   onDeleteCategory: (id: number) => void;
 }
 
@@ -158,7 +152,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
   const { t } = useTranslation();
 
   // Column definitions
-  const columns: TableColumn<Category>[] = [
+  const columns: TableColumn<CategoryResponse>[] = [
     {
       key: 'id',
       headerKey: 'common.labels.id',
@@ -188,7 +182,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
   ];
 
   // Action definitions
-  const actions: TableAction<Category>[] = [
+  const actions: TableAction<CategoryResponse>[] = [
     {
       type: 'edit',
       icon: <EditIcon />,
@@ -205,7 +199,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
   ];
 
   return (
-    <GenericDataTable<Category>
+    <GenericDataTable<CategoryResponse>
       data={categories}
       columns={columns}
       actions={actions}

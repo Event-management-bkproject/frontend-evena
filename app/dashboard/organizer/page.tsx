@@ -14,6 +14,7 @@ import EventCard from '@/src/components/EventCard/EventCard';
 import EventCalendar from '@/src/components/EventCalendar/EventCalendar';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+import { BRAND } from '@/src/utils/constants/constant';
 
 export default function OrganizerDashboard() {
   const { auth } = useAuth();
@@ -32,8 +33,8 @@ export default function OrganizerDashboard() {
     },
   );
 
-  const events: EventListResponse[] = eventsResponse?.data?.content || [];
-  const totalEvents = eventsResponse?.data?.totalElements || 0;
+  const events: EventListResponse[] = eventsResponse?.data?.content ?? [];
+  const totalEvents = eventsResponse?.data?.totalElements ?? 0;
 
   // Get event dates for calendar highlighting
   const eventDates = useMemo(() => {
@@ -57,19 +58,19 @@ export default function OrganizerDashboard() {
             <DashboardHeader
               title={t('common.navigation.dashboard')}
               breadcrumbs={[{ label: t('common.navigation.dashboard') }]}
-              userName={auth.user?.name || 'User'}
+              userName={auth.user?.name ?? 'User'}
             />
           </Box>
 
           {/* Content */}
-          <Box sx={{ flex: 1, p: '20px', overflow: 'auto', backgroundColor: '#F7F7F7', borderRadius: '20px' }}>
+          <Box sx={{ flex: 1, p: '20px', overflow: 'auto', backgroundColor: BRAND.bgSection, borderRadius: '20px' }}>
             <Grid container spacing={'20px'}>
               {/* Events Section - 3/4 width */}
               <Grid size={{ xs: 12, lg: 9 }} sx={{ minWidth: 0 }}>
                 <Box sx={{ minWidth: 0 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Box>
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363', mb: 0.5 }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: BRAND.dark, mb: 0.5 }}>
                         {t('organizer.allEvents')}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -96,7 +97,7 @@ export default function OrganizerDashboard() {
                   {/* Horizontal Scrolling Event Cards */}
                   {loadingEvents ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                      <CircularProgress sx={{ color: '#F36BF9' }} />
+                      <CircularProgress sx={{ color: BRAND.primary }} />
                     </Box>
                   ) : eventsError ? (
                     <Box sx={{ p: 3, bgcolor: '#FEE', borderRadius: 2 }}>
@@ -124,11 +125,11 @@ export default function OrganizerDashboard() {
                         startIcon={<EventIcon />}
                         onClick={handleViewAllEvents}
                         sx={{
-                          backgroundColor: '#F36BF9',
+                          backgroundColor: BRAND.primary,
                           borderRadius: '12px',
                           textTransform: 'none',
                           fontWeight: 600,
-                          '&:hover': { backgroundColor: '#e55ae0' },
+                          '&:hover': { backgroundColor: BRAND.primaryHover },
                         }}
                       >
                         {t('organizer.goToEvents')}
@@ -149,10 +150,10 @@ export default function OrganizerDashboard() {
                           borderRadius: 4,
                         },
                         '&::-webkit-scrollbar-thumb': {
-                          backgroundColor: '#F36BF9',
+                          backgroundColor: BRAND.primary,
                           borderRadius: 4,
                           '&:hover': {
-                            backgroundColor: '#e55ae0',
+                            backgroundColor: BRAND.primaryHover,
                           },
                         },
                       }}

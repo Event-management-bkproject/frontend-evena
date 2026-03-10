@@ -14,6 +14,8 @@ import {
   Alert,
   Tooltip,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { BRAND } from '@/src/utils/constants/constant';
 import {
   Search as SearchIcon,
   ConfirmationNumber as TicketIcon,
@@ -27,7 +29,6 @@ import { OrdersOverviewChart } from '@/src/components/charts/OrdersOverviewChart
 import { OrdersCategoryChart } from '@/src/components/charts/OrdersCategoryChart';
 import { useGetOrganizerOrdersQuery } from '@/src/stores/services/OrderApi';
 import { OrderStatus, OrderResponse } from '@/src/stores/types/order';
-import ordersMock from '@/src/data/orders.sample.json';
 import { StatCard } from '@/src/components/common/StatCard/StatCard';
 import { formatCurrency, formatTableDate } from '@/src/utils/format';
 import { ORDER_STATUS_CONFIG, ORDER_STATUSES, TABLE_PER_PAGE, OrderStatusFilter } from '@/src/utils/constants/constant';
@@ -40,22 +41,20 @@ type SortDir = 'asc' | 'desc';
 // ─── Orders Content ───────────────────────────────────────────────────────────
 
 function OrdersContent() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('ALL');
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(0);
 
-  // const { data, isLoading, isError } = useGetOrganizerOrdersQuery({
-  //   page: 0,
-  //   size: 200,
-  //   status: statusFilter === 'ALL' ? undefined : statusFilter,
-  // });
+  const { data, isLoading, isError } = useGetOrganizerOrdersQuery({
+    page: 0,
+    size: 200,
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
+  });
 
-  // const allOrders: OrderResponse[] = data?.data?.content ?? [];
-
-  const allOrders: OrderResponse[] =
-  (ordersMock as any)?.data?.content ?? [];
+  const allOrders: OrderResponse[] = data?.data?.content ?? [];
 
   const processed = useMemo(() => {
     let rows = [...allOrders];
@@ -109,16 +108,16 @@ function OrdersContent() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0, flex: 1, minHeight: 0, height: '100%' }}>
       <DashboardHeader
-        title="Orders"
+        title={t('common.navigation.orders')}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard/organizer' },
-          { label: 'Orders' },
+          { label: t('common.navigation.dashboard'), href: '/dashboard/organizer' },
+          { label: t('common.navigation.orders') },
         ]}
       />
 
       <Box
         sx={{
-            bgcolor: '#F7F7F7',
+            bgcolor: BRAND.bgSection,
             borderRadius: '20px',
             p: '25px',
             display: 'flex',
@@ -137,13 +136,13 @@ function OrdersContent() {
             {/* Stat cards — 3 evenly spaced, gap 10px */}
             <Box sx={{ display: 'flex', gap: '10px' }}>
               <Box sx={{ flex: 1 }}>
-                <StatCard icon={<TicketIcon sx={{ fontSize: 28 }} />} label="Total Orders" value={totalOrders.toLocaleString()} />
+                <StatCard icon={<TicketIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalOrders')} value={totalOrders.toLocaleString()} />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <StatCard icon={<SoldIcon sx={{ fontSize: 28 }} />} label="Confirmed Orders" value={confirmedOrders.toLocaleString()} />
+                <StatCard icon={<SoldIcon sx={{ fontSize: 28 }} />} label={t('organizer.confirmedOrders')} value={confirmedOrders.toLocaleString()} />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label="Total Revenue" value={formatCurrency(totalRevenue)} />
+                <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalRevenue')} value={formatCurrency(totalRevenue)} />
               </Box>
             </Box>
 
@@ -181,7 +180,7 @@ function OrdersContent() {
               borderBottom: '1px solid #F7F7F7',
             }}
           >
-            <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'black' }}>Orders List</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'black' }}>{t('organizer.ordersList')}</Typography>
 
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               {/* Search */}
@@ -199,7 +198,7 @@ function OrdersContent() {
               >
                 <SearchIcon sx={{ color: '#ADACAE', fontSize: 14, flexShrink: 0 }} />
                 <InputBase
-                  placeholder="Search orders..."
+                  placeholder={t('organizer.searchOrders')}
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
                   sx={{ fontSize: 12, color: '#36437C', width: 140, '& input::placeholder': { color: '#ADACAE' } }}
@@ -230,10 +229,10 @@ function OrdersContent() {
                       border: 'none',
                       cursor: 'pointer',
                       fontWeight: statusFilter === s ? 700 : 500,
-                      bgcolor: statusFilter === s ? '#F36BF9' : 'transparent',
-                      color: statusFilter === s ? 'white' : '#36437C',
+                      bgcolor: statusFilter === s ? BRAND.primary : 'transparent',
+                      color: statusFilter === s ? 'white' : BRAND.darkSecondary,
                       transition: 'all 0.15s',
-                      '&:hover': { bgcolor: statusFilter === s ? '#F36BF9' : '#EEF0FF' },
+                      '&:hover': { bgcolor: statusFilter === s ? BRAND.primary : '#EEF0FF' },
                     }}
                   >
                     {s === 'ALL' ? 'All' : ORDER_STATUS_CONFIG[s]?.label ?? s}
@@ -250,26 +249,26 @@ function OrdersContent() {
               overflowY: 'auto',
               overflowX: 'auto',
             }}>
-            {/* {isLoading ? (
+            {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-                <CircularProgress size={32} sx={{ color: '#F36BF9' }} />
+                <CircularProgress size={32} sx={{ color: BRAND.primary }} />
               </Box>
             ) : isError ? (
-              <Alert severity="error" sx={{ m: 2 }}>Failed to load orders.</Alert>
-            ) : ( */}
+              <Alert severity="error" sx={{ m: 2 }}>{t('messages.error.loadFailed', { item: t('common.navigation.orders') })}</Alert>
+            ) : (
               <Table sx={{ minWidth: 800, borderCollapse: 'collapse' }}>
                 <TableHead sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'white' }}>
                   <TableRow sx={{ borderBottom: '1px solid #F7F7F7' }}>
                     {([
-                      { label: 'Order ID',    key: 'id' as SortKey,           pl: '15px', pr: '8px', width: '110px' },
-                      { label: 'Date',        key: 'createdAt' as SortKey,                           width: '150px' },
-                      { label: 'Name',        key: null,                                              width: '150px' },
-                      { label: 'Event',       key: null,                                              width: '150px' },
-                      { label: 'Ticket Type', key: null,                                              width: '150px' },
-                      { label: 'Price',       key: null,                                              width: '90px',  align: 'center' },
-                      { label: 'Quantity',    key: null,                                              width: '90px',  align: 'center' },
-                      { label: 'Amount',      key: 'totalAmount' as SortKey,                         width: '90px',  align: 'center' },
-                      { label: 'Status',      key: 'status' as SortKey,       pr: '15px',            width: '110px' },
+                      { label: t('common.labels.orderId'),    key: 'id' as SortKey,           pl: '15px', pr: '8px', width: '110px' },
+                      { label: t('common.labels.date'),        key: 'createdAt' as SortKey,                           width: '150px' },
+                      { label: t('common.labels.name'),        key: null,                                              width: '150px' },
+                      { label: t('common.labels.event'),       key: null,                                              width: '150px' },
+                      { label: t('common.labels.ticketType'), key: null,                                              width: '150px' },
+                      { label: t('common.labels.price'),       key: null,                                              width: '90px',  align: 'center' },
+                      { label: t('common.labels.quantity'),    key: null,                                              width: '90px',  align: 'center' },
+                      { label: t('common.labels.amount'),      key: 'totalAmount' as SortKey,                         width: '90px',  align: 'center' },
+                      { label: t('common.labels.status'),      key: 'status' as SortKey,       pr: '15px',            width: '110px' },
                     ] as Array<{ label: string; key: SortKey; pl?: string; pr?: string; width?: string; align?: 'center' | 'left' }>).map(({ label, key, pl, pr, width, align }) => (
                       <TableCell
                         key={label}
@@ -296,7 +295,7 @@ function OrdersContent() {
                   {paged.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} sx={{ textAlign: 'center', py: '30px', color: '#ADACAE', fontSize: 12, borderBottom: 'none' }}>
-                        No orders found.
+                        {t('organizer.noOrdersFound')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -393,29 +392,33 @@ function OrdersContent() {
                   )}
                 </TableBody>
               </Table>
-            {/* // )} */}
+            )}
           </Box>
 
           {/* Pagination */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '15px', py: '10px', borderTop: '1px solid #F7F7F7' }}>
             <Typography sx={{ fontSize: 11, color: '#ADACAE' }}>
-              Showing {processed.length === 0 ? 0 : page * TABLE_PER_PAGE + 1}–{Math.min((page + 1) * TABLE_PER_PAGE, processed.length)} of {processed.length} orders
+              {t('organizer.showingOrders', {
+                from: processed.length === 0 ? 0 : page * TABLE_PER_PAGE + 1,
+                to: Math.min((page + 1) * TABLE_PER_PAGE, processed.length),
+                total: processed.length,
+              })}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Box
                 component="button"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                sx={{ px: '10px', py: '5px', borderRadius: '8px', border: 'none', cursor: page === 0 ? 'not-allowed' : 'pointer', bgcolor: 'transparent', fontSize: 11, fontWeight: 500, color: '#36437C', opacity: page === 0 ? 0.4 : 1, '&:hover': { bgcolor: page === 0 ? 'transparent' : '#EEF0FF' } }}
+                sx={{ px: '10px', py: '5px', borderRadius: '8px', border: 'none', cursor: page === 0 ? 'not-allowed' : 'pointer', bgcolor: 'transparent', fontSize: 11, fontWeight: 500, color: BRAND.darkSecondary, opacity: page === 0 ? 0.4 : 1, '&:hover': { bgcolor: page === 0 ? 'transparent' : '#EEF0FF' } }}
               >
-                Prev
+                {t('common.buttons.previous')}
               </Box>
               {Array.from({ length: totalPages }, (_, i) => i).map((p) => (
                 <Box
                   key={p}
                   component="button"
                   onClick={() => setPage(p)}
-                  sx={{ width: 28, height: 28, borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, bgcolor: page === p ? '#36437C' : 'transparent', color: page === p ? 'white' : '#36437C', transition: 'all 0.15s', '&:hover': { bgcolor: page === p ? '#36437C' : '#EEF0FF' } }}
+                  sx={{ width: 28, height: 28, borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, bgcolor: page === p ? BRAND.dark : 'transparent', color: page === p ? 'white' : BRAND.dark, transition: 'all 0.15s', '&:hover': { bgcolor: page === p ? BRAND.dark : '#EEF0FF' } }}
                 >
                   {p + 1}
                 </Box>
@@ -424,9 +427,9 @@ function OrdersContent() {
                 component="button"
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
-                sx={{ px: '10px', py: '5px', borderRadius: '8px', border: 'none', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', bgcolor: 'transparent', fontSize: 11, fontWeight: 500, color: '#36437C', opacity: page >= totalPages - 1 ? 0.4 : 1, '&:hover': { bgcolor: page >= totalPages - 1 ? 'transparent' : '#EEF0FF' } }}
+                sx={{ px: '10px', py: '5px', borderRadius: '8px', border: 'none', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', bgcolor: 'transparent', fontSize: 11, fontWeight: 500, color: BRAND.darkSecondary, opacity: page >= totalPages - 1 ? 0.4 : 1, '&:hover': { bgcolor: page >= totalPages - 1 ? 'transparent' : '#EEF0FF' } }}
               >
-                Next
+                {t('common.buttons.next')}
               </Box>
             </Box>
           </Box>

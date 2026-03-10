@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -20,8 +20,9 @@ import UpdateEventForm from '../UpdateEventForm';
 import { ConfirmationDialog } from '../ConfirmationDialog';
 import DashboardHeader from '../DashboardHeader';
 import EventFilters from '../EventFilters';
-import Snackbar from '../SnackBar';
 import { EventRowList } from '../EventCard';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
+import SnackbarNotification from '../SnackbarNotification';
 import {
   CategoryResponse,
   EventListResponse,
@@ -61,11 +62,7 @@ export default function EventsManagement({
   const [selectedStatus, setSelectedStatus] = useState<import('@/src/stores/types/enums').EventStatus | null>(null);
   const [editingEvent, setEditingEvent] = useState<EventResponse | null>(null); // Snapshot for edit modal
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'warning' | 'info',
-  });
+  const { snackbar, showSnackbar: showSnackbarMsg, closeSnackbar } = useSnackbar();
 
   // ========== SERVER STATE từ RTK Query ==========
   // Use /events/my-events API to get only organizer's events
@@ -75,11 +72,8 @@ export default function EventsManagement({
   } = useGetMyEventsQuery(
     {
       page: 0,
-      size: 50,
+      size: 200, // Fetch up to 200 events; client-side filtering handles display
     },
-    {
-      // SSEProvider handles real-time cache invalidation via tag system
-    }
   );
 
   // Fetch full event details khi editing
@@ -93,7 +87,7 @@ export default function EventsManagement({
   const [deleteEvent, { isLoading: deletingEvent }] = useDeleteEventMutation();
 
   // ========== DATA PROCESSING ==========
-  const events: EventListResponse[] = eventsResponse?.data?.content || [];
+  const events: EventListResponse[] = eventsResponse?.data?.content ?? [];
   const fullEvent = fullEventResponse?.data;
 
   // Store snapshot of fullEvent when it loads (for edit modal - not affected by SSE refetch)
@@ -239,17 +233,8 @@ export default function EventsManagement({
     router.push(`/dashboard/organizer/events/${event.id}`);
   };
 
-  const showSuccessMessage = (message: string) => {
-    setSnackbar({ open: true, message, severity: 'success' });
-  };
-
-  const showErrorMessage = (message: string) => {
-    setSnackbar({ open: true, message, severity: 'error' });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
+  const showSuccessMessage = useCallback((message: string) => showSnackbarMsg(message, 'success'), [showSnackbarMsg]);
+  const showErrorMessage = useCallback((message: string) => showSnackbarMsg(message, 'error'), [showSnackbarMsg]);
 
   const isLoading = loadingEvents || loadingOrganizations;
 
@@ -351,14 +336,11 @@ export default function EventsManagement({
         disableBackdropClose
       />
 
-      {/* Snackbar */}
-      <Snackbar
+      <SnackbarNotification
         open={snackbar.open}
         message={snackbar.message}
         severity={snackbar.severity}
-        onClose={handleCloseSnackbar}
-        vertical="top"
-        horizontal="right"
+        onClose={closeSnackbar}
       />
     </Box>
   );

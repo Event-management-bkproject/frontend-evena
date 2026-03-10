@@ -44,7 +44,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
 
   // Count only PENDING orders for the badge
   const pendingOrdersCount =
-    ordersResponse?.data?.content?.filter((order) => order.status === OrderStatus.PENDING).length || 0;
+    ordersResponse?.data?.content?.filter((order) => order.status === OrderStatus.PENDING).length ?? 0;
 
   const handleNavigate = (path: string) => {
     router.push(path);

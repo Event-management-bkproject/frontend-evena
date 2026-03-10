@@ -72,7 +72,7 @@ export default function MyTicketsPage() {
 
   return (
     <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header cartItemCount={0} />
+      <Header />
 
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#2A3363', mb: 4 }}>

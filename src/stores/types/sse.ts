@@ -198,13 +198,23 @@ export interface SSEEvent {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   timestamp: string;
+  /** The SSE channel this event arrived on (e.g. 'organizer', 'admin', 'user:123') */
+  channel: string;
 }
 
 // ============= SSE CONTEXT =============
 
+export interface SSENotification {
+  message: string;
+  severity: 'success' | 'info' | 'warning' | 'error';
+}
+
 export interface SSEContextType {
   isConnected: boolean;
   lastEvent: SSEEvent | null;
+  /** Personal SSE notification to display as a global toast */
+  notification: SSENotification | null;
+  clearNotification: () => void;
 }
 
 // ============= SSE CHANNELS =============

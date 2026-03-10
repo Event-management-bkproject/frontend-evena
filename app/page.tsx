@@ -62,7 +62,7 @@ export default function LandingPage() {
   return (
     <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
       {/* Header */}
-      <Header cartItemCount={0} />
+      <Header />
 
       {/* Hero Section */}
       <Box

@@ -1,3 +1,16 @@
+// ─── Brand Colors ─────────────────────────────────────────────────────────────
+// Single source of truth for Evena brand palette.
+// Use these instead of hardcoding hex strings in component sx props.
+export const BRAND = {
+  primary: '#F36BF9',
+  primaryHover: '#e55ae0',
+  primaryLight: '#FDE3FE',
+  dark: '#2A3363',
+  darkSecondary: '#36437C',
+  bgPage: '#FAFAFA',
+  bgSection: '#F7F7F7',
+} as const;
+
 export const KEY_CODE_IS_NOT_NUMERIC_VALUE = [69, 83, 107, 109, 110, 187, 188, 189, 190];
 export const CharacterKeyCode = {
   DECIMALPOINT_KEYCODE: [110, 190],

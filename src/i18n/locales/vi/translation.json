@@ -20,7 +20,10 @@
       "sendInvitation": "Gửi lời mời",
       "browseEvents": "Xem các sự kiện",
       "checkout": "Thanh toán",
-      "bookNow": "Đặt ngay!"
+      "bookNow": "Đặt ngay!",
+      "confirm": "Xác nhận",
+      "previous": "Trước",
+      "next": "Tiếp"
     },
     "labels": {
       "email": "Email",
@@ -55,7 +58,9 @@
       "event": "Sự kiện",
       "organizedBy": "Do tổ chức bởi",
       "category": "Danh mục",
-      "location": "Địa điểm"
+      "location": "Địa điểm",
+      "amount": "Số tiền",
+      "orderId": "Mã đơn hàng"
     },
     "navigation": {
       "home": "Trang chủ",
@@ -379,7 +384,8 @@
       "cancelFailed": "Hủy {{item}} thất bại: {{reason}}",
       "conflictUpdate": "{{item}} đã được ai đó khác chỉnh sửa. Vui lòng đóng form và thử lại.",
       "cannotInviteSelf": "Bạn không thể tự mời chính mình. Vui lòng nhập email của người khác.",
-      "invitationFailed": "Không thể gửi lời mời"
+      "invitationFailed": "Không thể gửi lời mời",
+      "verifiedOrgCannotEdit": "Tổ chức đã được xác minh không thể chỉnh sửa. Vui lòng liên hệ admin để thay đổi."
     },
     "info": {
       "featureComingSoon": "Tính năng chỉnh sửa {{item}} sẽ có sớm"
@@ -469,6 +475,7 @@
     "noItemsFound": "Không tìm thấy mặt hàng",
     "viewDetails": "Xem chi tiết",
     "cancelOrder": "Hủy đơn hàng",
+    "cancelOrderTitle": "Hủy đơn hàng",
     "confirmCancelOrder": "Bạn có chắc chắn muốn hủy đơn hàng này?",
     "orderPlacedSuccess": "Đặt đơn hàng thành công! Vé đã được gửi đến email của bạn."
   },
@@ -489,7 +496,14 @@
     "totalMembersLabel": "Tổng thành viên",
     "members": "Thành viên",
     "pendingInvitation": "Chờ",
-    "createOrganization": "Tạo tổ chức mới"
+    "createOrganization": "Tạo tổ chức mới",
+    "totalOrders": "Tổng đơn hàng",
+    "confirmedOrders": "Đơn hàng đã xác nhận",
+    "totalRevenue": "Tổng doanh thu",
+    "ordersList": "Danh sách đơn hàng",
+    "searchOrders": "Tìm kiếm đơn hàng...",
+    "noOrdersFound": "Không tìm thấy đơn hàng",
+    "showingOrders": "Hiển thị {{from}}–{{to}} trong {{total}} đơn hàng"
   },
   "searchBar": {
     "searchEvents": "Tìm kiếm sự kiện...",

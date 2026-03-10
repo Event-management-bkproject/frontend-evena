@@ -230,8 +230,8 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
             >
               <People />
             </IconButton>
-            {/* Edit - Only for Owner */}
-            {isOwner ? (
+            {/* Edit - Only for Owner, disabled when verified */}
+            {isOwner && !organization.verified ? (
               <Tooltip title="Edit Organization" arrow>
                 <IconButton
                   onClick={(e) => {
@@ -250,7 +250,14 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
                 </IconButton>
               </Tooltip>
             ) : (
-              <Tooltip title="Only owner can edit this organization" arrow>
+              <Tooltip
+                title={
+                  organization.verified
+                    ? 'Verified organizations cannot be edited. Contact admin to make changes.'
+                    : 'Only owner can edit this organization'
+                }
+                arrow
+              >
                 <span>
                   <IconButton
                     disabled

@@ -20,7 +20,10 @@
       "sendInvitation": "Send Invitation",
       "browseEvents": "Browse Events",
       "checkout": "Checkout",
-      "bookNow": "Book Now!"
+      "bookNow": "Book Now!",
+      "confirm": "Confirm",
+      "previous": "Prev",
+      "next": "Next"
     },
     "labels": {
       "email": "Email",
@@ -55,7 +58,9 @@
       "event": "Event",
       "organizedBy": "Organized by",
       "category": "Category",
-      "location": "Location"
+      "location": "Location",
+      "amount": "Amount",
+      "orderId": "Order ID"
     },
     "navigation": {
       "home": "Home",
@@ -379,7 +384,8 @@
       "cancelFailed": "Failed to cancel {{item}}: {{reason}}",
       "conflictUpdate": "{{item}} was modified by someone else. Please close the form and try again.",
       "cannotInviteSelf": "You cannot invite yourself. Please enter a different email.",
-      "invitationFailed": "Failed to send invitation"
+      "invitationFailed": "Failed to send invitation",
+      "verifiedOrgCannotEdit": "Verified organizations cannot be edited. Please contact admin to make changes."
     },
     "info": {
       "featureComingSoon": "{{item}} editing feature coming soon"
@@ -469,6 +475,7 @@
     "noItemsFound": "No items found",
     "viewDetails": "View Details",
     "cancelOrder": "Cancel Order",
+    "cancelOrderTitle": "Cancel Order",
     "confirmCancelOrder": "Are you sure you want to cancel this order?",
     "orderPlacedSuccess": "Order placed successfully! Your tickets have been sent to your email."
   },
@@ -489,7 +496,14 @@
     "totalMembersLabel": "Total Members",
     "members": "Members",
     "pendingInvitation": "Pending",
-    "createOrganization": "Create New Organization"
+    "createOrganization": "Create New Organization",
+    "totalOrders": "Total Orders",
+    "confirmedOrders": "Confirmed Orders",
+    "totalRevenue": "Total Revenue",
+    "ordersList": "Orders List",
+    "searchOrders": "Search orders...",
+    "noOrdersFound": "No orders found",
+    "showingOrders": "Showing {{from}}–{{to}} of {{total}} orders"
   },
   "searchBar": {
     "searchEvents": "Search events...",

@@ -2,19 +2,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useDispatch } from 'react-redux';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
 import { EventAPI } from '@/src/stores/services/EventApi';
 import { CategoryAPI } from '@/src/stores/services/CategoryApi';
 import { VenueAPI } from '@/src/stores/services/VenueApi';
-import { useLazyGetMeQuery } from '@/src/stores/services/AuthApi';
 import { AuthLoadingPage } from './AuthLoadingPage';
 
 export default function AuthInitializer() {
   const { setAuthFromInit, auth } = useAuth();
   const dispatch = useDispatch();
-  const [getMe] = useLazyGetMeQuery();
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -87,25 +85,15 @@ export default function AuthInitializer() {
           dispatch(CategoryAPI.util.resetApiState());
           dispatch(VenueAPI.util.resetApiState());
         }
-      } catch (error) {
-        // Only log error if it's not a 401 (unauthorized is expected when token is invalid)
-        const is401 = error && typeof error === 'object' && 'status' in error && error.status === 401;
-        if (!is401) {
-          console.error('Auth initialization error:', error);
-        }
-
-        // Calculate remaining time even for error case
+      } catch {
+        // Network error or unexpected failure — treat as unauthenticated.
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
-        // Only update state if component is still mounted
         if (!isMountedRef.current) return;
 
-        // Clear auth state on error
         setAuthFromInit(null, null);
-
-        // Clear cache
         dispatch(OrganizerAPI.util.resetApiState());
         dispatch(EventAPI.util.resetApiState());
         dispatch(CategoryAPI.util.resetApiState());
@@ -119,7 +107,10 @@ export default function AuthInitializer() {
     return () => {
       isMountedRef.current = false;
     };
-  }, [setAuthFromInit, auth.isInitialized, auth.accessToken, dispatch, getMe]);
+  // Only re-run if initialization status changes — NOT on token refresh.
+  // Token refresh is handled by baseQueryWithReAuth independently.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.isInitialized]);
 
   // Only show loading page if:
   // 1. Not initialized yet AND

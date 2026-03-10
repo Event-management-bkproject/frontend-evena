@@ -1,98 +1,60 @@
 'use client';
 
-import React, { use, useState, useEffect } from 'react';
-import { Box, Container, Typography, Button, Card, Alert, Grid, Chip, Divider, CircularProgress } from '@mui/material';
+import React, { use, useState } from 'react';
+import {
+  Box, Container, Typography, Button, Card, Alert,
+  Grid, Chip, Divider, CircularProgress,
+} from '@mui/material';
 import { ShoppingCart, Add, Remove, CalendarToday, Place, ArrowBack } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useGetEventByIdQuery } from '@/src/stores/services/EventApi';
 import { useGetAvailableTicketTypesQuery } from '@/src/stores/services/TicketTypeApi';
-import { useCreateOrderMutation, useCheckoutOrderMutation } from '@/src/stores/services/OrderApi';
-import { useAuth } from '@/src/hooks/auth/useAuth';
+import { useCreateOrderMutation } from '@/src/stores/services/OrderApi';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
-import { orderLogger } from '@/src/utils/logger/flowLogger';
 import { PaymentProvider } from '@/src/stores/types/order';
 import SnackbarNotification from '@/src/components/SnackbarNotification';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 import { useTranslation } from 'react-i18next';
-import { useSSE } from '@/src/providers/SSEProvider';
-import { SSENormalizedType } from '@/src/stores/types/sse';
+import { BRAND } from '@/src/utils/constants/constant';
+
+// SSE cache invalidation is handled globally by SSEProvider.
+// TicketType and Event caches are auto-refreshed when SSE events arrive.
 
 export default function EventTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { t } = useTranslation();
-  const { lastEvent } = useSSE();
-  const resolvedParams = use(params);
-  const eventId = resolvedParams.id;
-  const { isAuthenticated } = useAuth();
+  const { id: eventId } = use(params);
 
   const [selectedTickets, setSelectedTickets] = useState<Record<number, number>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentProvider>(PaymentProvider.CASH);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
-  const { data: eventResponse, isLoading: eventLoading, refetch: refetchEvent } = useGetEventByIdQuery(eventId);
-  const { data: ticketTypesResponse, isLoading: ticketsLoading, refetch: refetchTickets } = useGetAvailableTicketTypesQuery(eventId);
+  const { data: eventResponse, isLoading: eventLoading } = useGetEventByIdQuery(eventId);
+  const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetAvailableTicketTypesQuery(eventId);
   const [createOrder] = useCreateOrderMutation();
-  const [checkoutOrder] = useCheckoutOrderMutation();
 
   const event = eventResponse?.data;
-  const ticketTypes = ticketTypesResponse?.data || [];
-
-  // Listen to SSE events for real-time ticket availability updates
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    const eventData = lastEvent.data;
-    const affectsThisEvent =
-      eventData?.eventId === eventId ||
-      eventData?.eventId?.toString() === eventId;
-
-    console.log('📨 [TicketsPage] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case SSENormalizedType.EVENT_UPDATED:
-      case SSENormalizedType.EVENT_CANCELLED:
-        if (affectsThisEvent) {
-          console.log('🔄 [TicketsPage] Refetching event...');
-          refetchEvent();
-        }
-        break;
-      case SSENormalizedType.TICKET_TYPE_CREATED:
-      case SSENormalizedType.TICKET_TYPE_UPDATED:
-      case SSENormalizedType.TICKET_TYPE_DELETED:
-      case SSENormalizedType.TICKET_TYPE_DEACTIVATED:
-      case SSENormalizedType.ORDER_CONFIRMED:
-        // Refetch tickets when availability changes
-        if (affectsThisEvent) {
-          console.log('🔄 [TicketsPage] Refetching tickets (availability changed)...');
-          refetchTickets();
-        }
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, eventId, refetchEvent, refetchTickets]);
+  const ticketTypes = ticketTypesResponse?.data ?? [];
 
   const handleQuantityChange = (ticketTypeId: number, change: number) => {
     const ticket = ticketTypes.find((t) => t.id === ticketTypeId);
     if (!ticket) return;
 
     setSelectedTickets((prev) => {
-      const newQuantity = (prev[ticketTypeId] || 0) + change;
+      const newQuantity = (prev[ticketTypeId] ?? 0) + change;
 
       if (newQuantity <= 0) {
-        const { [ticketTypeId]: removed, ...rest } = prev;
+        const { [ticketTypeId]: _removed, ...rest } = prev;
         return rest;
       }
 
-      // Check perUserLimit if set
       if (ticket.perUserLimit && newQuantity > ticket.perUserLimit) {
         showSnackbar(t('customer.maxTicketsPerUser', { count: ticket.perUserLimit, name: ticket.name }), 'warning');
         return prev;
       }
 
-      // Check available stock
       const available = ticket.total - ticket.sold;
       if (newQuantity > available) {
         showSnackbar(t('customer.onlyTicketsAvailable', { count: available, name: ticket.name }), 'warning');
@@ -103,81 +65,28 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
     });
   };
 
-  const calculateTotal = () => {
-    return ticketTypes.reduce((total, ticket) => {
-      const quantity = selectedTickets[ticket.id] || 0;
-      return total + ticket.price * quantity;
-    }, 0);
-  };
-
-  const getTotalQuantity = () => {
-    return Object.values(selectedTickets).reduce((sum, qty) => sum + qty, 0);
-  };
+  const totalAmount = ticketTypes.reduce((sum, ticket) => sum + ticket.price * (selectedTickets[ticket.id] ?? 0), 0);
+  const totalQuantity = Object.values(selectedTickets).reduce((sum, qty) => sum + qty, 0);
 
   const handleCheckout = async () => {
-    // No auth check needed - already in protected route
-    if (getTotalQuantity() === 0) {
+    if (totalQuantity === 0) {
       showSnackbar(t('customer.selectAtLeastOneTicket'), 'warning');
       return;
     }
 
     setIsProcessing(true);
-
     try {
-      // Prepare order items
-      const orderItems = [];
-      for (const [ticketTypeId, quantity] of Object.entries(selectedTickets)) {
-        const ticket = ticketTypes.find((t) => t.id === parseInt(ticketTypeId));
-        if (!ticket) {
-          throw new Error(`Ticket type ${ticketTypeId} not found`);
-        }
+      const orderItems = Object.entries(selectedTickets).map(([ticketTypeId, quantity]) => ({
+        ticketTypeId: parseInt(ticketTypeId),
+        quantity,
+      }));
 
-        // Check availability
-        const available = ticket.total - ticket.sold;
-        if (quantity > available) {
-          throw new Error(`Only ${available} tickets available for ${ticket.name}`);
-        }
-
-        orderItems.push({
-          ticketTypeId: parseInt(ticketTypeId),
-          quantity,
-        });
-      }
-
-      console.log('Creating order for event:', eventId);
-      console.log('Order items:', orderItems);
-
-      // ✅ ĐÚNG: Có cả eventId và items
-      const orderResult = await createOrder({
-        eventId: eventId, // UUID string
-        items: orderItems,
-      }).unwrap();
-
-      if (!orderResult.success || !orderResult.data) {
-        throw new Error(orderResult.message || 'Failed to create order');
-      }
-
-      const orderId = orderResult.data.id;
-      console.log('Order created, ID:', orderId);
-
-      // Process payment
-      // const checkoutResult = await checkoutOrder({
-      //   orderId,
-      //   paymentProvider: selectedPaymentMethod,
-      // }).unwrap();
-
-      // if (!checkoutResult.success) {
-      //   throw new Error(checkoutResult.message || 'Payment failed');
-      // }
-
-      // Success - redirect to order confirmation
-      router.push(`/dashboard/customer/cart`);
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-
-      // Display detailed error
-      const errorMsg = error?.data?.message || error?.message || 'Checkout failed';
-      showSnackbar(`Error: ${errorMsg}`, 'error');
+      await createOrder({ eventId, items: orderItems }).unwrap();
+      router.push('/dashboard/customer/cart');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string }; message?: string };
+      const msg = err?.data?.message ?? err?.message ?? t('messages.error.operationFailed');
+      showSnackbar(msg, 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -186,15 +95,15 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   if (eventLoading || ticketsLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <CircularProgress sx={{ color: '#F36BF9' }} />
+        <CircularProgress sx={{ color: BRAND.primary }} />
       </Box>
     );
   }
 
   if (!event) {
     return (
-      <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh' }}>
-        <Header cartItemCount={0} />
+      <Box sx={{ backgroundColor: BRAND.bgPage, minHeight: '100vh' }}>
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Alert severity="error">{t('messages.error.notFound', { item: t('common.entities.event') })}</Alert>
         </Container>
@@ -204,36 +113,35 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header cartItemCount={getTotalQuantity()} />
+    <Box sx={{ backgroundColor: BRAND.bgPage, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header />
 
       <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
-        {/* Back Button */}
-        <Button startIcon={<ArrowBack />} onClick={() => router.back()} sx={{ mb: 3, color: '#2A3363' }}>
+        <Button startIcon={<ArrowBack />} onClick={() => router.back()} sx={{ mb: 3, color: BRAND.dark }}>
           {t('customer.backToEvents')}
         </Button>
 
-        {/* Event Info */}
+        {/* Event summary */}
         <Card sx={{ p: 3, mb: 4, borderRadius: '16px' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: BRAND.dark, mb: 2 }}>
             {event.title}
           </Typography>
           <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CalendarToday sx={{ color: '#F36BF9' }} />
+              <CalendarToday sx={{ color: BRAND.primary }} />
               <Typography variant="body2">{new Date(event.startAt).toLocaleDateString()}</Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Place sx={{ color: '#F36BF9' }} />
+              <Place sx={{ color: BRAND.primary }} />
               <Typography variant="body2">{event.venue?.name}</Typography>
             </Box>
           </Box>
         </Card>
 
         <Grid container spacing={4}>
-          {/* Ticket Selection */}
+          {/* Ticket list */}
           <Grid size={{ xs: 12, md: 8 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#2A3363', mb: 3 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: BRAND.dark, mb: 3 }}>
               {t('customer.selectTickets')}
             </Typography>
 
@@ -244,24 +152,36 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                 {ticketTypes.map((ticket) => {
                   const available = ticket.total - ticket.sold;
                   const isAvailable = available > 0;
+                  const qty = selectedTickets[ticket.id] ?? 0;
+                  const atMax = qty >= available || Boolean(ticket.perUserLimit && qty >= ticket.perUserLimit);
 
                   return (
                     <Card key={ticket.id} sx={{ p: 3, borderRadius: '12px' }}>
                       <Grid container spacing={2} alignItems="center">
                         <Grid size={{ xs: 12, sm: 6 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 600, color: '#2A3363' }}>
+                          <Typography variant="h6" sx={{ fontWeight: 600, color: BRAND.dark }}>
                             {ticket.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {ticket.description}
                           </Typography>
                           <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {ticket.earlyBird && <Chip label={t('customer.earlyBird')} size="small" color="secondary" />}
+                            {ticket.earlyBird && (
+                              <Chip label={t('customer.earlyBird')} size="small" color="secondary" />
+                            )}
                             {ticket.perUserLimit && (
-                              <Chip label={t('customer.maxPerUser', { count: ticket.perUserLimit })} size="small" color="info" />
+                              <Chip
+                                label={t('customer.maxPerUser', { count: ticket.perUserLimit })}
+                                size="small"
+                                color="info"
+                              />
                             )}
                             <Chip
-                              label={isAvailable ? t('customer.available', { count: available }) : t('customer.soldOut')}
+                              label={
+                                isAvailable
+                                  ? t('customer.available', { count: available })
+                                  : t('customer.soldOut')
+                              }
                               size="small"
                               color={isAvailable ? 'success' : 'error'}
                             />
@@ -269,8 +189,8 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                         </Grid>
 
                         <Grid size={{ xs: 12, sm: 3 }}>
-                          <Typography variant="h5" sx={{ fontWeight: 700, color: '#F36BF9' }}>
-                            ${ticket.price.toLocaleString()}
+                          <Typography variant="h5" sx={{ fontWeight: 700, color: BRAND.primary }}>
+                            {ticket.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                           </Typography>
                         </Grid>
 
@@ -281,35 +201,26 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                                 variant="outlined"
                                 size="small"
                                 onClick={() => handleQuantityChange(ticket.id, -1)}
-                                disabled={!selectedTickets[ticket.id]}
-                                sx={{ minWidth: '40px', p: 1 }}
+                                disabled={!qty}
+                                aria-label={t('common.buttons.decrease')}
+                                sx={{ minWidth: 40, p: 1 }}
                               >
                                 <Remove />
                               </Button>
-                              <Typography
-                                sx={{
-                                  minWidth: '40px',
-                                  textAlign: 'center',
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {selectedTickets[ticket.id] || 0}
+                              <Typography sx={{ minWidth: 40, textAlign: 'center', fontWeight: 600 }}>
+                                {qty}
                               </Typography>
                               <Button
                                 variant="contained"
                                 size="small"
                                 onClick={() => handleQuantityChange(ticket.id, 1)}
-                                disabled={
-                                  (selectedTickets[ticket.id] || 0) >= available ||
-                                  Boolean(
-                                    ticket.perUserLimit && (selectedTickets[ticket.id] || 0) >= ticket.perUserLimit,
-                                  )
-                                }
+                                disabled={atMax}
+                                aria-label={t('common.buttons.increase')}
                                 sx={{
-                                  minWidth: '40px',
+                                  minWidth: 40,
                                   p: 1,
-                                  backgroundColor: '#F36BF9',
-                                  '&:hover': { backgroundColor: '#e55ae0' },
+                                  backgroundColor: BRAND.primary,
+                                  '&:hover': { backgroundColor: BRAND.primaryHover },
                                 }}
                               >
                                 <Add />
@@ -329,17 +240,10 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
             )}
           </Grid>
 
-          {/* Order Summary */}
+          {/* Order summary sidebar */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <Card
-              sx={{
-                p: 3,
-                borderRadius: '16px',
-                position: { md: 'sticky' },
-                top: { md: 100 },
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
+            <Card sx={{ p: 3, borderRadius: '16px', position: { md: 'sticky' }, top: { md: 100 } }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: BRAND.dark, mb: 2 }}>
                 {t('customer.orderSummary')}
               </Typography>
 
@@ -347,21 +251,13 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                 {Object.entries(selectedTickets).map(([ticketTypeId, quantity]) => {
                   const ticket = ticketTypes.find((t) => t.id === parseInt(ticketTypeId));
                   if (!ticket) return null;
-
                   return (
-                    <Box
-                      key={ticketTypeId}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        mb: 1,
-                      }}
-                    >
+                    <Box key={ticketTypeId} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2">
-                        {ticket.name} x {quantity}
+                        {ticket.name} × {quantity}
                       </Typography>
                       <Typography variant="body2" fontWeight={600}>
-                        ${(ticket.price * quantity).toLocaleString()}
+                        {(ticket.price * quantity).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                       </Typography>
                     </Box>
                   );
@@ -374,12 +270,11 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                 <Typography variant="h6" fontWeight={700}>
                   {t('common.labels.total')}
                 </Typography>
-                <Typography variant="h6" fontWeight={700} color="#F36BF9">
-                  ${calculateTotal().toLocaleString()}
+                <Typography variant="h6" fontWeight={700} sx={{ color: BRAND.primary }}>
+                  {totalAmount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                 </Typography>
               </Box>
 
-              {/* Payment Method Selection */}
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
                 {t('customer.paymentMethod')}
               </Typography>
@@ -390,9 +285,10 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                     variant={selectedPaymentMethod === provider ? 'contained' : 'outlined'}
                     onClick={() => setSelectedPaymentMethod(provider)}
                     sx={{
-                      backgroundColor: selectedPaymentMethod === provider ? '#F36BF9' : 'transparent',
+                      backgroundColor: selectedPaymentMethod === provider ? BRAND.primary : 'transparent',
                       '&:hover': {
-                        backgroundColor: selectedPaymentMethod === provider ? '#e55ae0' : 'rgba(243, 107, 249, 0.1)',
+                        backgroundColor:
+                          selectedPaymentMethod === provider ? BRAND.primaryHover : 'rgba(243,107,249,0.1)',
                       },
                     }}
                   >
@@ -405,16 +301,16 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                 fullWidth
                 variant="contained"
                 size="large"
-                startIcon={isProcessing ? <CircularProgress size={20} /> : <ShoppingCart />}
-                disabled={getTotalQuantity() === 0 || isProcessing}
+                startIcon={isProcessing ? <CircularProgress size={20} color="inherit" /> : <ShoppingCart />}
+                disabled={totalQuantity === 0 || isProcessing}
                 onClick={handleCheckout}
                 sx={{
-                  backgroundColor: '#F36BF9',
+                  backgroundColor: BRAND.primary,
                   py: 1.5,
                   fontSize: '1.1rem',
                   fontWeight: 700,
                   borderRadius: '12px',
-                  '&:hover': { backgroundColor: '#e55ae0' },
+                  '&:hover': { backgroundColor: BRAND.primaryHover },
                 }}
               >
                 {isProcessing ? t('customer.processing') : t('common.buttons.checkout')}
@@ -426,7 +322,6 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
 
       <Footer />
 
-      {/* Snackbar for notifications */}
       <SnackbarNotification
         open={snackbar.open}
         message={snackbar.message}

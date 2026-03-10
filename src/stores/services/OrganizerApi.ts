@@ -83,7 +83,7 @@ export const OrganizerAPI = createApi({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Organizer', id }],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Organizer', id }, 'Organizer'],
     }),
 
     verifyOrganization: builder.mutation<ApiResponse<OrganizationResponse>, number>({

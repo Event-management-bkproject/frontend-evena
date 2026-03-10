@@ -1,13 +1,14 @@
 // app/dashboard/admin/page.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Box, Snackbar, Alert } from '@mui/material';
+import React, { useState } from 'react';
+import { Box } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import RoleGuard from '@/src/components/RoleGuard';
 
 import { CreateCategoryRequest, CreateVenueRequest } from '@/src/stores/types';
+import { CategoryResponse, VenueResponse } from '@/src/stores/types/event';
 import {
   useCreateCategoryMutation,
   useCreateVenueMutation,
@@ -25,8 +26,6 @@ import {
 import CreateCategoryForm from '@/src/components/CreateCategoryForm/CreateCategoryForm';
 import CreateVenueFormWithMap from '@/src/components/CreateVenueForm/CreateVenueFormWithMap';
 import { useAuth } from '@/src/hooks/auth/useAuth';
-import { useSSE } from '@/src/providers/SSEProvider';
-import { SSENormalizedType } from '@/src/stores/types/sse';
 import CategoryTable from '@/src/components/CategoryTable';
 import VenueTable from '@/src/components/VenueTable';
 import { AdminOrganizationTable } from '@/src/components/AdminOrganizationTable';
@@ -36,27 +35,28 @@ import {
   AdminTabBar,
 } from '@/src/components/AdminDashboard';
 import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
+import SnackbarNotification from '@/src/components/SnackbarNotification';
+import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 export default function AdminPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const { logout } = useAuth();
-  const { lastEvent } = useSSE();
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   // State
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   // Category Modal state
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any | undefined>(undefined);
+  const [editingCategory, setEditingCategory] = useState<CategoryResponse | undefined>(undefined);
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
 
   // Venue Modal state
   const [venueModalOpen, setVenueModalOpen] = useState(false);
-  const [editingVenue, setEditingVenue] = useState<any | undefined>(undefined);
+  const [editingVenue, setEditingVenue] = useState<VenueResponse | undefined>(undefined);
   const [deleteVenueDialogOpen, setDeleteVenueDialogOpen] = useState(false);
   const [venueToDelete, setVenueToDelete] = useState<number | null>(null);
 
@@ -65,15 +65,13 @@ export default function AdminPage() {
   const [organizationToDelete, setOrganizationToDelete] = useState<number | null>(null);
 
   // RTK Queries
-  const { data: categoriesData, refetch: refetchCategories, isLoading: isLoadingCategories } = useGetCategoriesQuery();
+  const { data: categoriesData, isLoading: isLoadingCategories } = useGetCategoriesQuery();
   const {
     data: venuesData,
-    refetch: refetchVenues,
     isLoading: isLoadingVenues,
   } = useGetVenuesQuery({ page: 0, size: 100 });
   const {
     data: organizationsData,
-    refetch: refetchOrganizations,
     isLoading: isLoadingOrganizations,
   } = useGetOrganizationsQuery({ page: 0, size: 100 });
 
@@ -89,11 +87,6 @@ export default function AdminPage() {
   const [verifyOrganization, { isLoading: isVerifying }] = useVerifyOrganizationMutation();
   const [deleteOrganization, { isLoading: isDeletingOrganization }] = useDeleteOrganizationMutation();
 
-  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-
   const handleLogout = async () => {
     await logout();
     router.push('/');
@@ -105,7 +98,7 @@ export default function AdminPage() {
     setCategoryModalOpen(true);
   };
 
-  const openEditCategory = (cat: any) => {
+  const openEditCategory = (cat: CategoryResponse) => {
     setEditingCategory(cat);
     setCategoryModalOpen(true);
   };
@@ -113,23 +106,21 @@ export default function AdminPage() {
   const closeCategoryModal = () => {
     setCategoryModalOpen(false);
     setEditingCategory(undefined);
-    refetchCategories(); // Refetch to get latest data when modal closes
   };
 
   const handleSubmitCategory = async (values: CreateCategoryRequest) => {
     try {
       if (editingCategory) {
         await updateCategory({ id: editingCategory.id, data: values }).unwrap();
-        showSnackbar(t('messages.success.updated', { item: t('common.entities.category') }));
+        showSnackbar(t('messages.success.updated', { item: t('common.entities.category') }), 'success');
       } else {
         await createCategory(values).unwrap();
-        showSnackbar(t('messages.success.created', { item: t('common.entities.category') }));
+        showSnackbar(t('messages.success.created', { item: t('common.entities.category') }), 'success');
       }
-      refetchCategories();
       closeCategoryModal();
-    } catch (error: any) {
-      const errorMessage = error?.data?.message || t('messages.error.operationFailed');
-      showSnackbar(errorMessage, 'error');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.operationFailed'), 'error');
     }
   };
 
@@ -143,10 +134,10 @@ export default function AdminPage() {
 
     try {
       await deleteCategory(categoryToDelete).unwrap();
-      showSnackbar(t('messages.success.deleted', { item: t('common.entities.category') }));
-      refetchCategories();
-    } catch (error: any) {
-      showSnackbar(error?.data?.message || t('messages.error.deleteFailed'), 'error');
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.category') }), 'success');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.deleteFailed'), 'error');
     } finally {
       setDeleteCategoryDialogOpen(false);
       setCategoryToDelete(null);
@@ -159,7 +150,7 @@ export default function AdminPage() {
     setVenueModalOpen(true);
   };
 
-  const openEditVenue = (v: any) => {
+  const openEditVenue = (v: VenueResponse) => {
     setEditingVenue(v);
     setVenueModalOpen(true);
   };
@@ -167,23 +158,21 @@ export default function AdminPage() {
   const closeVenueModal = () => {
     setVenueModalOpen(false);
     setEditingVenue(undefined);
-    refetchVenues(); // Refetch to get latest data when modal closes
   };
 
   const handleSubmitVenue = async (values: CreateVenueRequest) => {
     try {
       if (editingVenue) {
         await updateVenue({ id: editingVenue.id, data: values }).unwrap();
-        showSnackbar(t('messages.success.updated', { item: t('common.entities.venue') }));
+        showSnackbar(t('messages.success.updated', { item: t('common.entities.venue') }), 'success');
       } else {
         await createVenue(values).unwrap();
-        showSnackbar(t('messages.success.created', { item: t('common.entities.venue') }));
+        showSnackbar(t('messages.success.created', { item: t('common.entities.venue') }), 'success');
       }
-      refetchVenues();
       closeVenueModal();
-    } catch (error: any) {
-      const errorMessage = error?.data?.message || t('messages.error.operationFailed');
-      showSnackbar(errorMessage, 'error');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.operationFailed'), 'error');
     }
   };
 
@@ -197,10 +186,10 @@ export default function AdminPage() {
 
     try {
       await deleteVenue(venueToDelete).unwrap();
-      showSnackbar(t('messages.success.deleted', { item: t('common.entities.venue') }));
-      refetchVenues();
-    } catch (error: any) {
-      showSnackbar(error?.data?.message || t('messages.error.deleteFailed'), 'error');
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.venue') }), 'success');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.deleteFailed'), 'error');
     } finally {
       setDeleteVenueDialogOpen(false);
       setVenueToDelete(null);
@@ -211,10 +200,10 @@ export default function AdminPage() {
   const handleVerifyOrganization = async (id: number) => {
     try {
       await verifyOrganization(id).unwrap();
-      showSnackbar(t('messages.success.verified', { item: t('common.entities.organization') }));
-      refetchOrganizations();
-    } catch (error: any) {
-      showSnackbar(error?.data?.message || t('messages.error.verificationFailed'), 'error');
+      showSnackbar(t('messages.success.verified', { item: t('common.entities.organization') }), 'success');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.verificationFailed'), 'error');
     }
   };
 
@@ -228,10 +217,10 @@ export default function AdminPage() {
 
     try {
       await deleteOrganization(organizationToDelete).unwrap();
-      showSnackbar(t('messages.success.deleted', { item: t('common.entities.organization') }));
-      refetchOrganizations();
-    } catch (error: any) {
-      showSnackbar(error?.data?.message || t('messages.error.deleteFailed'), 'error');
+      showSnackbar(t('messages.success.deleted', { item: t('common.entities.organization') }), 'success');
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      showSnackbar(err?.data?.message ?? t('messages.error.deleteFailed'), 'error');
     } finally {
       setDeleteOrganizationDialogOpen(false);
       setOrganizationToDelete(null);
@@ -253,41 +242,17 @@ export default function AdminPage() {
   };
 
 
-// Listen to SSE events from SSEProvider
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    console.log('📨 [Admin] Received SSE event:', lastEvent.type);
-
-    // Handle organization events
-    switch (lastEvent.type) {
-      case SSENormalizedType.ORGANIZATION_CREATED:
-      case SSENormalizedType.ORGANIZATION_UPDATED:
-      case SSENormalizedType.ORGANIZATION_VERIFIED:
-      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
-      case SSENormalizedType.ORGANIZATION_DELETED:
-        console.log('🔄 [Admin] Refetching organizations...');
-        refetchOrganizations().then((result) => {
-          console.log('✅ [Admin] Refetch completed:', result);
-        });
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, refetchOrganizations]);
-
   return (
     <RoleGuard allowedRoles={['ADMIN']}>
-      {/* <SSESync /> */}
       <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 3 }}>
         {/* Header */}
         <AdminHeader onLogout={handleLogout} />
 
         {/* Stats Cards */}
         <AdminStatsCards
-          categoriesCount={categoriesData?.data?.length || 0}
-          venuesCount={venuesData?.data?.totalElements || 0}
-          organizationsCount={organizationsData?.data?.totalElements || 0}
+          categoriesCount={categoriesData?.data?.length ?? 0}
+          venuesCount={venuesData?.data?.totalElements ?? 0}
+          organizationsCount={organizationsData?.data?.totalElements ?? 0}
         />
 
         {/* Tabs and Search Bar */}
@@ -303,7 +268,7 @@ export default function AdminPage() {
         {/* Category Tab Panel */}
         {activeTab === 0 && (
           <CategoryTable
-            categories={categoriesData?.data || []}
+            categories={categoriesData?.data ?? []}
             isLoading={isLoadingCategories}
             searchTerm={searchTerm}
             isDeletingCategory={isDeletingCategory}
@@ -315,7 +280,7 @@ export default function AdminPage() {
         {/* Venue Tab Panel */}
         {activeTab === 1 && (
           <VenueTable
-            venues={venuesData?.data?.content || []}
+            venues={venuesData?.data?.content ?? []}
             isLoading={isLoadingVenues}
             searchTerm={searchTerm}
             isDeletingVenue={isDeletingVenue}
@@ -327,7 +292,7 @@ export default function AdminPage() {
         {/* Organization Tab Panel */}
         {activeTab === 2 && (
           <AdminOrganizationTable
-            organizations={organizationsData?.data?.content || []}
+            organizations={organizationsData?.data?.content ?? []}
             isLoading={isLoadingOrganizations}
             searchTerm={searchTerm}
             isVerifying={isVerifying}
@@ -398,8 +363,8 @@ export default function AdminPage() {
             category={editingCategory}
             initialValues={{
               name: editingCategory.name,
-              description: editingCategory.description || '',
-              iconUrl: editingCategory.iconUrl || '',
+              description: editingCategory.description ?? '',
+              iconUrl: editingCategory.iconUrl ?? '',
               version: editingCategory.version,
             }}
           />
@@ -426,7 +391,7 @@ export default function AdminPage() {
               address: editingVenue.address,
               city: editingVenue.city,
               capacity: editingVenue.capacity,
-              description: editingVenue.description || '',
+              description: editingVenue.description ?? '',
               lat: editingVenue.lat,
               lng: editingVenue.lng,
               version: editingVenue.version,
@@ -434,22 +399,12 @@ export default function AdminPage() {
           />
         )}
 
-        {/* Snackbar */}
-        <Snackbar
+        <SnackbarNotification
           open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            variant="filled"
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+          message={snackbar.message}
+          severity={snackbar.severity}
+          onClose={closeSnackbar}
+        />
       </Box>
     </RoleGuard>
   );

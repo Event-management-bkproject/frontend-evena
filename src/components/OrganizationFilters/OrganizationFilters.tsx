@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Button, TextField, InputAdornment, Typography, IconButton, Badge } from '@mui/material';
 import { Search, Add, Notifications } from '@mui/icons-material';
 import { OrganizationResponse } from '@/src/stores/types';
 import { useGetPendingInvitationsQuery } from '@/src/stores/services/OrganizationMemberApi';
 import InvitationNotificationModal from '../InvitationNotificationModal';
-import { useSSE } from '@/src/providers/SSEProvider';
-import { SSENormalizedType } from '@/src/stores/types/sse';
 import { useTranslation } from 'react-i18next';
 
 interface OrganizationFiltersProps {
@@ -27,27 +25,9 @@ export default function OrganizationFilters({
   const [searchValue, setSearchValue] = useState('');
   const [invitationModalOpen, setInvitationModalOpen] = useState(false);
 
-  // Fetch pending invitations count
-  const { data: invitationsData, refetch: refetchInvitations } = useGetPendingInvitationsQuery();
-  const pendingCount = invitationsData?.data?.length || 0;
-
-  // Listen to SSE events for invitations
-  const { lastEvent } = useSSE();
-
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    console.log('📨 [OrganizationFilters] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case SSENormalizedType.INVITATION_CREATED:
-      case SSENormalizedType.INVITATION_ACCEPTED:
-      case SSENormalizedType.INVITATION_REJECTED:
-        console.log('🔄 [OrganizationFilters] Refetching pending invitations...');
-        refetchInvitations();
-        break;
-    }
-  }, [lastEvent, refetchInvitations]);
+  // Fetch pending invitations count (auto-refreshed by SSEProvider invalidating 'Invitation' tag)
+  const { data: invitationsData } = useGetPendingInvitationsQuery();
+  const pendingCount = invitationsData?.data?.length ?? 0;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

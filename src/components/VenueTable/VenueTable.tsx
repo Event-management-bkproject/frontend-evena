@@ -17,28 +17,18 @@ import { Typography, Chip } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { GenericDataTable, TableColumn, TableAction } from '@/src/components/common/GenericDataTable';
+import { VenueResponse } from '@/src/stores/types/event';
 
 // ==========================================
 // TYPES
 // ==========================================
 
-interface Venue {
-  id: number;
-  name: string;
-  address: string;
-  city: string;
-  capacity: number;
-  lat?: number;
-  lng?: number;
-  description?: string;
-}
-
 interface VenueTableProps {
-  venues: Venue[];
+  venues: VenueResponse[];
   isLoading: boolean;
   searchTerm: string;
   isDeletingVenue: boolean;
-  onEditVenue: (venue: Venue) => void;
+  onEditVenue: (venue: VenueResponse) => void;
   onDeleteVenue: (id: number) => void;
 }
 
@@ -57,7 +47,7 @@ const VenueTable: React.FC<VenueTableProps> = ({
   const { t } = useTranslation();
 
   // Column definitions
-  const columns: TableColumn<Venue>[] = [
+  const columns: TableColumn<VenueResponse>[] = [
     {
       key: 'id',
       headerKey: 'common.labels.id',
@@ -96,7 +86,7 @@ const VenueTable: React.FC<VenueTableProps> = ({
   ];
 
   // Action definitions
-  const actions: TableAction<Venue>[] = [
+  const actions: TableAction<VenueResponse>[] = [
     {
       type: 'edit',
       icon: <EditIcon />,
@@ -113,7 +103,7 @@ const VenueTable: React.FC<VenueTableProps> = ({
   ];
 
   return (
-    <GenericDataTable<Venue>
+    <GenericDataTable<VenueResponse>
       data={venues}
       columns={columns}
       actions={actions}
