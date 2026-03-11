@@ -337,6 +337,8 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                             <IconButton
                               size="small"
                               onClick={() => handleEdit(ticketType)}
+                              disabled={event?.status !== 'DRAFT'}
+                              title={event?.status !== 'DRAFT' ? 'Cannot edit: event is published' : 'Edit ticket type'}
                               sx={{
                                 color: '#1976d2',
                                 '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' },

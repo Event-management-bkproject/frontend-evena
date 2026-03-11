@@ -242,6 +242,7 @@ export interface CreateTicketTypeRequest {
 }
 
 export interface UpdateTicketTypeRequest {
+  version: number;
   name?: string;
   description?: string;
   price?: number;
@@ -258,6 +259,7 @@ export interface UpdateTicketTypeRequest {
 
 export interface TicketTypeResponse {
   id: number;
+  version: number;
   name: string;
   description?: string;
   price: number;

@@ -112,6 +112,11 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
     );
   }
 
+  if (event.status !== 'PUBLISHED') {
+    router.replace('/dashboard/customer');
+    return null;
+  }
+
   return (
     <Box sx={{ backgroundColor: BRAND.bgPage, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />

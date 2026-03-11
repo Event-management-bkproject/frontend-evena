@@ -21,6 +21,7 @@ import { ticketTypeSchema } from '@/src/utils/validationSchema/ticketTypeValidat
 import { useCreateTicketTypeMutation, useUpdateTicketTypeMutation } from '@/src/stores/services';
 import { TicketTypeResponse, CreateTicketTypeRequest, EventStatus } from '@/src/stores/types';
 import { isBusinessRuleViolation } from '@/src/stores/types/api';
+import { useOptimisticLocking, ENTITY_EVENT_TYPES } from '@/src/hooks/useOptimisticLocking';
 
 interface TicketTypeFormModalProps {
   open: boolean;
@@ -46,6 +47,13 @@ const TicketTypeFormModal = ({
 
   const isEditMode = !!ticketType;
   const loading = creating || updating;
+
+  const { hasConflict, conflictMessage, version } = useOptimisticLocking({
+    entityId: ticketType?.id ?? 0,
+    entityVersion: ticketType?.version ?? 0,
+    entityType: 'TICKET_TYPE',
+    eventTypes: ENTITY_EVENT_TYPES.TICKET_TYPE,
+  });
 
   // Business rule: Critical fields are immutable when event is published or has sold tickets
   const isEventPublished =
@@ -88,11 +96,12 @@ const TicketTypeFormModal = ({
         // When critical fields are locked, only send safe update fields
         const updateData = isCriticalFieldsLocked
           ? {
+              version,
               name: values.name,
               description: values.description,
               visible: values.visible,
             }
-          : values;
+          : { ...values, version };
 
         await updateTicketType({
           eventId,
@@ -154,6 +163,15 @@ const TicketTypeFormModal = ({
             <Form>
               <DialogContent dividers sx={{ py: 3 }}>
                 <Grid container spacing={3}>
+                  {/* Optimistic Locking Conflict Warning */}
+                  {hasConflict && (
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="warning">
+                        {conflictMessage}
+                      </Alert>
+                    </Grid>
+                  )}
+
                   {/* Business Rule Warning */}
                   {isCriticalFieldsLocked && (
                     <Grid size={{ xs: 12 }}>
@@ -326,7 +344,7 @@ const TicketTypeFormModal = ({
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={loading}
+                  disabled={loading || hasConflict}
                   sx={{
                     backgroundColor: '#f36bf9',
                     '&:hover': {
@@ -334,7 +352,11 @@ const TicketTypeFormModal = ({
                     },
                   }}
                 >
-                  {loading ? (isEditMode ? 'Updating...' : 'Creating...') : isEditMode ? 'Update' : 'Create'}
+                  {loading
+                    ? (isEditMode ? 'Updating...' : 'Creating...')
+                    : hasConflict
+                      ? 'Data Changed — Close & Reopen'
+                      : isEditMode ? 'Update' : 'Create'}
                 </Button>
               </DialogActions>
             </Form>

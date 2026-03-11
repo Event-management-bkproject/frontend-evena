@@ -222,6 +222,8 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
                 {onEdit && (
                   <IconButton
                     onClick={onEdit}
+                    disabled={event.status !== EventStatus.DRAFT}
+                    title={event.status !== EventStatus.DRAFT ? 'Cannot edit: event is published' : 'Edit event'}
                     sx={{
                       color: '#F36BF9',
                       padding: '8px',

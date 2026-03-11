@@ -460,6 +460,8 @@
     "eventOrganizer": "Ban tổ chức",
     "standardAdmission": "Vé vào cửa thông thường",
     "bookNow": "Đặt ngay!",
+    "eventCancelled": "Sự kiện đã hủy",
+    "eventCancelledMessage": "Sự kiện này đã bị hủy. Không thể đặt vé nữa.",
     "saleFrom": "BÁN TỪ",
     "dateAndTime": "NGÀY & GIỜ",
     "location": "ĐỊA ĐIỂM",

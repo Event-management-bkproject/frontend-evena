@@ -38,10 +38,13 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     console.log('📨 [CustomerEventDetail] Received SSE event:', lastEvent.type);
 
     switch (lastEvent.type) {
-      case SSENormalizedType.EVENT_UPDATED:
       case SSENormalizedType.EVENT_CANCELLED:
         if (affectsThisEvent) {
-          console.log('🔄 [CustomerEventDetail] Refetching event...');
+          router.replace('/dashboard/customer');
+        }
+        break;
+      case SSENormalizedType.EVENT_UPDATED:
+        if (affectsThisEvent) {
           refetchEvent();
         }
         break;
@@ -112,6 +115,11 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
         <CircularProgress sx={{ color: '#F36BF9' }} />
       </Box>
     );
+  }
+
+  if (event && event.status !== 'PUBLISHED') {
+    router.replace('/dashboard/customer');
+    return null;
   }
 
   if (eventError || !event) {

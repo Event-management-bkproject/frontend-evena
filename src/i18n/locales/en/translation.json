@@ -460,6 +460,8 @@
     "eventOrganizer": "Event Organizer",
     "standardAdmission": "Standard admission ticket",
     "bookNow": "Book Now!",
+    "eventCancelled": "Event Cancelled",
+    "eventCancelledMessage": "This event has been cancelled. Booking is no longer available.",
     "saleFrom": "SALE FROM",
     "dateAndTime": "DATE & TIME",
     "location": "LOCATION",
