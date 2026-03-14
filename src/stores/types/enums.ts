@@ -16,10 +16,10 @@ export enum EventStatus {
 }
 
 export enum TicketTypeStatus {
+  DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
   SOLD_OUT = 'SOLD_OUT',
-  CANCELLED = 'CANCELLED',
+  DEACTIVATED = 'DEACTIVATED',
 }
 
 export enum UserStatus {

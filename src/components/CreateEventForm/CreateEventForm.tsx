@@ -34,6 +34,8 @@ interface CreateEventFormProps {
   categories: Array<{ id: number; name: string }>;
   venues: Array<{ id: number; name: string }>;
   isEdit?: boolean;
+  /** When true, contractual fields (title, dates, venue, category) are locked per spec §3.3 */
+  isPublished?: boolean;
 }
 
 const CreateEventForm = ({
@@ -47,6 +49,7 @@ const CreateEventForm = ({
   categories,
   venues,
   isEdit = false,
+  isPublished = false,
 }: CreateEventFormProps) => {
   const { t } = useTranslation();
   const [imageUrlInput, setImageUrlInput] = useState('');
@@ -111,7 +114,14 @@ const CreateEventForm = ({
           {conflictMessage}
         </Alert>
       )}
-        {/* Title Field */}
+      {/* Published event: contractual fields locked notice (spec §3.3) */}
+      {isPublished && (
+        <Alert severity="info" sx={{ mb: 1 }}>
+          This event is published. Contractual fields (title, dates, venue, category) are locked to protect existing bookings.
+          Only description and cover image can be updated.
+        </Alert>
+      )}
+        {/* Title Field — locked when published (spec §3.3) */}
         <FormTextField
           id="event-title"
           name="title"
@@ -119,19 +129,22 @@ const CreateEventForm = ({
           type="text"
           required={true}
           placeholder={t('event.form.titlePlaceholder')}
+          disabled={isPublished}
         />
 
-        {/* Date Fields */}
+        {/* Date Fields — locked when published (spec §3.3) */}
         <Box display="flex" gap={2}>
           <FormDateTimePicker
             name="startAt"
             label={t('event.form.startDate')}
             required
+            disabled={isPublished}
           />
           <FormDateTimePicker
             name="endAt"
             label={t('event.form.endDate')}
             required
+            disabled={isPublished}
           />
         </Box>
 
@@ -153,6 +166,7 @@ const CreateEventForm = ({
           type="text"
           required={true}
           select={true}
+          disabled={isPublished}
         >
           <MenuItem value={0}>{t('event.form.selectOrganizer')}</MenuItem>
           {organizers.map((organizer) => (
@@ -169,6 +183,7 @@ const CreateEventForm = ({
           type="text"
           required={true}
           select={true}
+          disabled={isPublished}
         >
           <MenuItem value={0}>{t('event.form.selectCategory')}</MenuItem>
           {categories.map((category) => (
@@ -178,7 +193,7 @@ const CreateEventForm = ({
           ))}
         </FormTextField>
 
-        <FormTextField id="event-venueId" name="venueId" label={t('event.form.venue')} type="text" required={true} select={true}>
+        <FormTextField id="event-venueId" name="venueId" label={t('event.form.venue')} type="text" required={true} select={true} disabled={isPublished}>
           <MenuItem value={0}>{t('event.form.selectVenue')}</MenuItem>
           {venues.map((venue) => (
             <MenuItem key={venue.id} value={venue.id}>

@@ -5,6 +5,7 @@ import React from 'react';
 import { Card, Typography, Box, IconButton } from '@mui/material';
 import { CalendarToday, Place, ConfirmationNumber } from '@mui/icons-material';
 import { EventListResponse, EventResponse } from '@/src/stores/types';
+import { TicketTypeStatus } from '@/src/stores/types/enums';
 import { formatDate, formatTime } from '@/src/utils/dateFormatters';
 
 interface EventRowCardProps {
@@ -77,9 +78,11 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
     if ('availableTickets' in event) {
       return (event as EventListResponse).availableTickets;
     }
-    // EventResponse có ticketTypes array - tính tổng available
+    // EventResponse có ticketTypes array - tính tổng available của các active ticket types
     if ('ticketTypes' in event && event.ticketTypes) {
-      return (event as EventResponse).ticketTypes.reduce((total, ticketType) => total + ticketType.available, 0);
+      return (event as EventResponse).ticketTypes
+        .filter((tt) => tt.status === TicketTypeStatus.ACTIVE)
+        .reduce((total, ticketType) => total + ticketType.available, 0);
     }
     return 0;
   };
@@ -90,10 +93,11 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
     if ('minPrice' in event) {
       return (event as EventListResponse).minPrice;
     }
-    // EventResponse có ticketTypes array - tìm price nhỏ nhất
+    // EventResponse có ticketTypes array - tìm price nhỏ nhất trong các active ticket types
     if ('ticketTypes' in event && event.ticketTypes && event.ticketTypes.length > 0) {
-      const prices = (event as EventResponse).ticketTypes.map((tt) => tt.price);
-      return Math.min(...prices);
+      const activeTypes = (event as EventResponse).ticketTypes.filter((tt) => tt.status === TicketTypeStatus.ACTIVE);
+      if (activeTypes.length === 0) return 0;
+      return Math.min(...activeTypes.map((tt) => tt.price));
     }
     return 0;
   };

@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { EventResponse, EventStatus } from '@/src/stores/types';
+import { TicketTypeStatus } from '@/src/stores/types/enums';
 import VenueMap from '../VenueMap';
 import { ConfirmationDialog } from '../ConfirmationDialog';
 import SnackbarNotification from '../SnackbarNotification';
@@ -116,8 +117,8 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
     }
   };
 
-  const minPrice =
-    event.ticketTypes && event.ticketTypes.length > 0 ? Math.min(...event.ticketTypes.map((t) => t.price)) : 0;
+  const activeTicketTypes = event.ticketTypes?.filter((t) => t.status === TicketTypeStatus.ACTIVE) ?? [];
+  const minPrice = activeTicketTypes.length > 0 ? Math.min(...activeTicketTypes.map((t) => t.price)) : 0;
 
   return (
     <>
@@ -222,8 +223,8 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
                 {onEdit && (
                   <IconButton
                     onClick={onEdit}
-                    disabled={event.status !== EventStatus.DRAFT}
-                    title={event.status !== EventStatus.DRAFT ? 'Cannot edit: event is published' : 'Edit event'}
+                    disabled={event.status !== EventStatus.DRAFT && event.status !== EventStatus.PUBLISHED}
+                    title={event.status !== EventStatus.DRAFT && event.status !== EventStatus.PUBLISHED ? 'Cannot edit cancelled or completed event' : 'Edit event'}
                     sx={{
                       color: '#F36BF9',
                       padding: '8px',

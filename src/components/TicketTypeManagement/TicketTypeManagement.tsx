@@ -24,7 +24,6 @@ import {
   Add,
   Edit,
   Delete,
-  Visibility,
   VisibilityOff,
   ConfirmationNumber,
   CheckCircle,
@@ -32,13 +31,15 @@ import {
   Block,
   SellOutlined,
   PowerSettingsNew,
+  PlayArrow,
+  DraftsOutlined,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import {
   useGetTicketTypesQuery,
   useDeleteTicketTypeMutation,
+  useActivateTicketTypeMutation,
   useDeactivateTicketTypeMutation,
-  useGetEventByIdQuery,
 } from '@/src/stores/services';
 import { EventResponse, TicketTypeResponse, TicketTypeStatus } from '@/src/stores/types';
 import TicketTypeFormModal from '../TicketTypeFormModal';
@@ -67,6 +68,7 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
   });
 
   const [deleteTicketType, { isLoading: deleting }] = useDeleteTicketTypeMutation();
+  const [activateTicketType, { isLoading: activating }] = useActivateTicketTypeMutation();
   const [deactivateTicketType, { isLoading: deactivating }] = useDeactivateTicketTypeMutation();
 
   const ticketTypes = ticketTypesResponse?.data || [];
@@ -119,18 +121,27 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
     }
   };
 
+  const handleActivate = async (ticketType: TicketTypeResponse) => {
+    try {
+      await activateTicketType({ eventId, ticketTypeId: ticketType.id }).unwrap();
+      showSnackbar('Ticket type activated successfully', 'success');
+    } catch (error: any) {
+      showSnackbar(error?.data?.message || 'Failed to activate ticket type', 'error');
+    }
+  };
+
   const getStatusColor = (status: TicketTypeStatus) => {
     switch (status) {
+      case TicketTypeStatus.DRAFT:
+        return { bg: '#E3F2FD', color: '#1565C0', icon: <DraftsOutlined fontSize="small" /> };
       case TicketTypeStatus.ACTIVE:
         return { bg: '#E8F5E9', color: '#2E7D32', icon: <CheckCircle fontSize="small" /> };
       case TicketTypeStatus.SOLD_OUT:
         return { bg: '#FFF3E0', color: '#E65100', icon: <SellOutlined fontSize="small" /> };
-      case TicketTypeStatus.INACTIVE:
+      case TicketTypeStatus.DEACTIVATED:
         return { bg: '#F5F5F5', color: '#616161', icon: <Block fontSize="small" /> };
-      case TicketTypeStatus.CANCELLED:
-        return { bg: '#FFEBEE', color: '#C62828', icon: <Cancel fontSize="small" /> };
       default:
-        return { bg: '#F5F5F5', color: '#616161', icon: <Block fontSize="small" /> };
+        return { bg: '#F5F5F5', color: '#616161', icon: <Cancel fontSize="small" /> };
     }
   };
 
@@ -334,11 +345,16 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                         </TableCell>
                         <TableCell align="center">
                           <Box display="flex" gap={0.5} justifyContent="center">
+                            {/* Edit: only allowed while DRAFT (spec §4.3) */}
                             <IconButton
                               size="small"
                               onClick={() => handleEdit(ticketType)}
-                              disabled={event?.status !== 'DRAFT'}
-                              title={event?.status !== 'DRAFT' ? 'Cannot edit: event is published' : 'Edit ticket type'}
+                              disabled={ticketType.status !== TicketTypeStatus.DRAFT}
+                              title={
+                                ticketType.status !== TicketTypeStatus.DRAFT
+                                  ? 'Cannot edit: ticket type is ' + ticketType.status + ' (contractual fields locked)'
+                                  : 'Edit ticket type'
+                              }
                               sx={{
                                 color: '#1976d2',
                                 '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' },
@@ -346,7 +362,23 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                             >
                               <Edit fontSize="small" />
                             </IconButton>
-                            {ticketType.status === TicketTypeStatus.ACTIVE && (
+                            {/* Activate: DRAFT → ACTIVE (spec §4.2) */}
+                            {ticketType.status === TicketTypeStatus.DRAFT && (
+                              <IconButton
+                                size="small"
+                                onClick={() => handleActivate(ticketType)}
+                                disabled={activating}
+                                title="Activate ticket type (makes it publicly available)"
+                                sx={{
+                                  color: '#2e7d32',
+                                  '&:hover': { backgroundColor: 'rgba(46, 125, 50, 0.08)' },
+                                }}
+                              >
+                                <PlayArrow fontSize="small" />
+                              </IconButton>
+                            )}
+                            {/* Deactivate: ACTIVE or SOLD_OUT (spec §4.5) */}
+                            {(ticketType.status === TicketTypeStatus.ACTIVE || ticketType.status === TicketTypeStatus.SOLD_OUT) && (
                               <IconButton
                                 size="small"
                                 onClick={() => handleDeactivateClick(ticketType)}
@@ -360,15 +392,20 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                                 <PowerSettingsNew fontSize="small" />
                               </IconButton>
                             )}
+                            {/* Delete: only DRAFT with no sales (spec §4.8) */}
                             <IconButton
                               size="small"
                               onClick={() => handleDeleteClick(ticketType)}
-                              disabled={deleting || ticketType.sold > 0 || event?.status !== 'DRAFT'}
-                              title={
+                              disabled={
+                                deleting ||
+                                ticketType.status !== TicketTypeStatus.DRAFT ||
                                 ticketType.sold > 0
-                                  ? 'Cannot delete: has sold tickets'
-                                  : event?.status !== 'DRAFT'
-                                    ? 'Cannot delete: event is published'
+                              }
+                              title={
+                                ticketType.status !== TicketTypeStatus.DRAFT
+                                  ? 'Cannot delete: use Deactivate instead (spec §4.8)'
+                                  : ticketType.sold > 0
+                                    ? 'Cannot delete: has sold tickets'
                                     : 'Delete ticket type'
                               }
                               sx={{

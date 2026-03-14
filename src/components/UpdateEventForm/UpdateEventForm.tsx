@@ -113,6 +113,7 @@ export function UpdateEventForm({
         venues={venues}
         initialValues={initialValues}
         isEdit={true}
+        isPublished={event.status === 'PUBLISHED'}
       />
     </Box>
   );

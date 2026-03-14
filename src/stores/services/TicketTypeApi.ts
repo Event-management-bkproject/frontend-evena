@@ -109,6 +109,22 @@ export const TicketTypeAPI = createApi({
       ],
     }),
 
+    // Activate ticket type (DRAFT → ACTIVE)
+    activateTicketType: builder.mutation<
+      ApiResponse<TicketTypeResponse>,
+      { eventId: string; ticketTypeId: number }
+    >({
+      query: ({ eventId, ticketTypeId }) => ({
+        url: `/events/${eventId}/ticket-types/${ticketTypeId}/activate`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, { eventId, ticketTypeId }) => [
+        { type: 'TicketType', id: eventId },
+        { type: 'TicketType', id: ticketTypeId },
+        { type: 'Event', id: eventId },
+      ],
+    }),
+
     // Deactivate ticket type
     deactivateTicketType: builder.mutation<
       ApiResponse<TicketTypeResponse>,
@@ -148,6 +164,7 @@ export const {
   useGetAvailableTicketTypesQuery,
   useGetEarlyBirdTicketTypesQuery,
   useUpdateTicketTypeMutation,
+  useActivateTicketTypeMutation,
   useDeactivateTicketTypeMutation,
   useDeleteTicketTypeMutation,
 } = TicketTypeAPI;

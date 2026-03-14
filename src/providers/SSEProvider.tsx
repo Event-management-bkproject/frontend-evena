@@ -141,6 +141,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
       // TicketType events
       on(SSEAction.TICKET_TYPE_CREATE,     SSENormalizedType.TICKET_TYPE_CREATED);
+      on(SSEAction.TICKET_TYPE_ACTIVATE,   SSENormalizedType.TICKET_TYPE_ACTIVATED);
       on(SSEAction.TICKET_TYPE_UPDATE,     SSENormalizedType.TICKET_TYPE_UPDATED);
       on(SSEAction.TICKET_TYPE_DELETE,     SSENormalizedType.TICKET_TYPE_DELETED);
       on(SSEAction.TICKET_TYPE_DEACTIVATE, SSENormalizedType.TICKET_TYPE_DEACTIVATED);
@@ -293,6 +294,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
       // TicketType events - targeted by eventId
       case SSENormalizedType.TICKET_TYPE_CREATED:
+      case SSENormalizedType.TICKET_TYPE_ACTIVATED:
       case SSENormalizedType.TICKET_TYPE_UPDATED:
       case SSENormalizedType.TICKET_TYPE_DELETED:
       case SSENormalizedType.TICKET_TYPE_DEACTIVATED: {

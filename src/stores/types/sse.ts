@@ -37,6 +37,7 @@ export enum SSEAction {
 
   // TicketType
   TICKET_TYPE_CREATE     = 'ticket_type:create',
+  TICKET_TYPE_ACTIVATE   = 'ticket_type:activate',
   TICKET_TYPE_UPDATE     = 'ticket_type:update',
   TICKET_TYPE_DELETE     = 'ticket_type:delete',
   TICKET_TYPE_DEACTIVATE = 'ticket_type:deactivate',
@@ -87,9 +88,10 @@ export enum SSENormalizedType {
   INVITATION_REJECTED = 'INVITATION_REJECTED',
 
   // TicketType
-  TICKET_TYPE_CREATED     = 'TICKET_TYPE_CREATED',
-  TICKET_TYPE_UPDATED     = 'TICKET_TYPE_UPDATED',
-  TICKET_TYPE_DELETED     = 'TICKET_TYPE_DELETED',
+  TICKET_TYPE_CREATED    = 'TICKET_TYPE_CREATED',
+  TICKET_TYPE_ACTIVATED  = 'TICKET_TYPE_ACTIVATED',
+  TICKET_TYPE_UPDATED    = 'TICKET_TYPE_UPDATED',
+  TICKET_TYPE_DELETED    = 'TICKET_TYPE_DELETED',
   TICKET_TYPE_DEACTIVATED = 'TICKET_TYPE_DEACTIVATED',
 
   // Order (private user channel)
@@ -180,9 +182,10 @@ export type SSEEventData =
   | { type: SSENormalizedType.INVITATION_CREATED;  data: InvitationEventData }
   | { type: SSENormalizedType.INVITATION_ACCEPTED; data: InvitationEventData }
   | { type: SSENormalizedType.INVITATION_REJECTED; data: InvitationEventData }
-  | { type: SSENormalizedType.TICKET_TYPE_CREATED;     data: TicketTypeEventData }
-  | { type: SSENormalizedType.TICKET_TYPE_UPDATED;     data: TicketTypeEventData }
-  | { type: SSENormalizedType.TICKET_TYPE_DELETED;     data: TicketTypeEventData }
+  | { type: SSENormalizedType.TICKET_TYPE_CREATED;    data: TicketTypeEventData }
+  | { type: SSENormalizedType.TICKET_TYPE_ACTIVATED;  data: TicketTypeEventData }
+  | { type: SSENormalizedType.TICKET_TYPE_UPDATED;    data: TicketTypeEventData }
+  | { type: SSENormalizedType.TICKET_TYPE_DELETED;    data: TicketTypeEventData }
   | { type: SSENormalizedType.TICKET_TYPE_DEACTIVATED; data: TicketTypeEventData }
   | { type: SSENormalizedType.ORDER_CREATED;   data: OrderEventData }
   | { type: SSENormalizedType.ORDER_CONFIRMED; data: OrderEventData }
