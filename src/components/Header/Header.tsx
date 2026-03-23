@@ -39,6 +39,14 @@ export default function Header({ cartItemCount }: HeaderProps) {
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<null | HTMLElement>(null);
   const { logout, auth } = useAuth();
 
+  // Resolve the correct home path based on role — prevents admin landing on /dashboard/customer
+  const homePath = (() => {
+    const roles = auth.user?.roles ?? [];
+    if (roles.includes('ADMIN')) return '/dashboard/admin';
+    if (roles.includes('ORGANIZER')) return '/dashboard/organizer';
+    return '/dashboard/customer';
+  })();
+
   // Fetch pending orders count for cart badge
   const { data: ordersResponse } = useGetMyOrdersQuery({ page: 0, size: 100 }, { skip: !auth?.accessToken });
 
@@ -77,7 +85,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
   };
 
   const menuItems = [
-    { label: 'Home', path: '/dashboard/customer' },
+    { label: 'Home', path: homePath },
     { label: 'About Us', path: '/about' },
     { label: 'Services', path: '/services' },
     { label: 'Contact', path: '/contact' },
@@ -95,7 +103,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
       <Toolbar sx={{ py: 1, px: { xs: 2, sm: 3, md: 4 } }}>
         {/* Logo */}
         <Box
-          onClick={() => handleNavigate('/dashboard/customer')}
+          onClick={() => handleNavigate(homePath)}
           sx={{
             display: 'flex',
             alignItems: 'center',

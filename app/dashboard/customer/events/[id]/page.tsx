@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useEffect } from 'react';
+import React, { use } from 'react';
 import { Box, Container, Typography, Button, Card, Chip, Alert, CircularProgress } from '@mui/material';
 import { CalendarToday, Place, AccessTime, AttachMoney } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -10,58 +10,23 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
-import { useSSE } from '@/src/providers/SSEProvider';
-import { SSENormalizedType } from '@/src/stores/types/sse';
+
+// SSE cache invalidation is handled globally by SSEProvider.
+// useGetEventByIdQuery (provides {type:'Event', id}) auto-refetches on event:update/cancel/publish.
+// useGetAvailableTicketTypesQuery (provides {type:'TicketType', id}) auto-refetches on ticket_type:* events.
+// The status guard below (line ~120) redirects to /dashboard/customer when event is CANCELLED.
 
 export default function CustomerEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { t } = useTranslation();
-  const { lastEvent } = useSSE();
   const resolvedParams = use(params);
   const eventId = resolvedParams.id;
 
-  const { data: eventResponse, isLoading: eventLoading, error: eventError, refetch: refetchEvent } = useGetEventByIdQuery(eventId);
-  const { data: ticketTypesResponse, isLoading: ticketsLoading, refetch: refetchTickets } = useGetAvailableTicketTypesQuery(eventId);
+  const { data: eventResponse, isLoading: eventLoading, error: eventError } = useGetEventByIdQuery(eventId);
+  const { data: ticketTypesResponse, isLoading: ticketsLoading } = useGetAvailableTicketTypesQuery(eventId);
 
   const event = eventResponse?.data;
   const ticketTypes = ticketTypesResponse?.data || [];
-
-  // Listen to SSE events for real-time updates
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    const eventData = lastEvent.data;
-    const affectsThisEvent =
-      eventData?.eventId === eventId ||
-      eventData?.eventId?.toString() === eventId;
-
-    console.log('📨 [CustomerEventDetail] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case SSENormalizedType.EVENT_CANCELLED:
-        if (affectsThisEvent) {
-          router.replace('/dashboard/customer');
-        }
-        break;
-      case SSENormalizedType.EVENT_UPDATED:
-        if (affectsThisEvent) {
-          refetchEvent();
-        }
-        break;
-      case SSENormalizedType.TICKET_TYPE_CREATED:
-      case SSENormalizedType.TICKET_TYPE_UPDATED:
-      case SSENormalizedType.TICKET_TYPE_DELETED:
-      case SSENormalizedType.TICKET_TYPE_DEACTIVATED:
-        // Refetch tickets when ticket types change (availability updates)
-        if (affectsThisEvent) {
-          console.log('🔄 [CustomerEventDetail] Refetching tickets...');
-          refetchTickets();
-        }
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, eventId, refetchEvent, refetchTickets]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

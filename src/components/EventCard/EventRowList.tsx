@@ -61,10 +61,13 @@ const EventRowList: React.FC<EventRowListProps> = ({
     };
   }, [handleObserver]);
 
-  // Reset display count when events change significantly
+  // Ensure all loaded events are visible when a new event is added (e.g. after SSE refetch)
   useEffect(() => {
     if (events.length < displayCount) {
       setDisplayCount(Math.min(ITEMS_PER_PAGE, events.length));
+    } else if (events.length > displayCount) {
+      // Extend display to cover all currently-loaded events so data-id attrs are in DOM
+      setDisplayCount(events.length);
     }
   }, [events.length]);
 

@@ -69,7 +69,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
     if ('coverUrl' in event && event.coverUrl) {
       return event.coverUrl;
     }
-    return '/placeholder-event.jpg'; // Fallback image
+    return 'https://static.vecteezy.com/system/resources/thumbnails/041/388/388/small/ai-generated-concert-crowd-enjoying-live-music-event-photo.jpg';
   };
 
   // Helper function để lấy số lượng tickets available
@@ -108,6 +108,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
 
   return (
     <Card
+      data-id={event.id}
       sx={{
         mb: 3,
         borderRadius: '25px',
@@ -147,7 +148,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
               maxHeight: 'calc(100% - 32px)',
             }}
             onError={(e: any) => {
-              e.target.src = 'https://via.placeholder.com/280x200?text=Event+Image';
+              e.target.src = 'https://static.vecteezy.com/system/resources/thumbnails/041/388/388/small/ai-generated-concert-crowd-enjoying-live-music-event-photo.jpg';
             }}
           />
         </Box>
@@ -187,6 +188,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
             {/* Action Buttons */}
             <Box display="flex" gap={2}>
               <IconButton
+                aria-label="edit"
                 onClick={handleEdit}
                 sx={{
                   color: '#F36BF9',

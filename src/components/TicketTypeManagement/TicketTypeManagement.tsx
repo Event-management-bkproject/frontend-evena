@@ -262,7 +262,7 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
                     const statusStyle = getStatusColor(ticketType.status);
 
                     return (
-                      <TableRow key={ticketType.id} hover>
+                      <TableRow key={ticketType.id} data-id={ticketType.id} hover>
                         <TableCell sx={{ overflow: 'hidden' }}>
                           <Box>
                             <Typography

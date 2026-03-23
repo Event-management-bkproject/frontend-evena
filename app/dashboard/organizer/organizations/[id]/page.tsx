@@ -4,7 +4,7 @@ import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetOrganizationDetailsQuery } from '@/src/stores/services/OrganizerApi';
 import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import {
   Box,
@@ -16,6 +16,7 @@ import {
   CircularProgress,
   Button,
   Divider,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -34,8 +35,10 @@ import EventCard from '@/src/components/EventCard/EventCard';
 import { OrganizationRole } from '@/src/stores/types/enums';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useSSE } from '@/src/providers/SSEProvider';
-import { SSENormalizedType } from '@/src/stores/types/sse';
+
+// SSE cache invalidation is handled globally by SSEProvider.
+// useGetOrganizationDetailsQuery and useGetMyEventsQuery auto-refetch
+// when SSEProvider invalidates their tags on organization:* and event:* events.
 
 export default function OrganizationDetailPage() {
   const { auth } = useAuth();
@@ -43,14 +46,11 @@ export default function OrganizationDetailPage() {
   const params = useParams();
   const organizationId = parseInt(params.id as string, 10);
   const { t } = useTranslation();
-  const { lastEvent } = useSSE();
-
   // Fetch organization details
   const {
     data: orgResponse,
     isLoading: loadingOrg,
     error: orgError,
-    refetch: refetchOrganization,
   } = useGetOrganizationDetailsQuery(organizationId, {
     skip: !auth.accessToken || isNaN(organizationId),
   });
@@ -60,7 +60,6 @@ export default function OrganizationDetailPage() {
     data: eventsResponse,
     isLoading: loadingEvents,
     error: eventsError,
-    refetch: refetchEvents,
   } = useGetMyEventsQuery(
     { page: 0, size: 100 },
     {
@@ -77,52 +76,12 @@ export default function OrganizationDetailPage() {
     return allEvents.filter((event) => event.organizerName === organization.name);
   }, [allEvents, organization]);
 
-  // Listen to SSE events for real-time updates
-  useEffect(() => {
-    if (!lastEvent) return;
-
-    const eventData = lastEvent.data;
-    const affectsThisOrg =
-      eventData?.organizationId === organizationId ||
-      eventData?.organizationId?.toString() === organizationId.toString();
-
-    console.log('📨 [OrganizationDetail] Received SSE event:', lastEvent.type);
-
-    switch (lastEvent.type) {
-      case SSENormalizedType.ORGANIZATION_UPDATED:
-      case SSENormalizedType.ORGANIZATION_VERIFIED:
-      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
-        if (affectsThisOrg) {
-          console.log('🔄 [OrganizationDetail] Refetching organization...');
-          refetchOrganization();
-        }
-        break;
-      case SSENormalizedType.INVITATION_ACCEPTED:
-      case SSENormalizedType.INVITATION_REJECTED:
-        if (affectsThisOrg) {
-          console.log('🔄 [OrganizationDetail] Refetching organization (member change)...');
-          refetchOrganization();
-        }
-        break;
-      case SSENormalizedType.EVENT_CREATED:
-      case SSENormalizedType.EVENT_UPDATED:
-      case SSENormalizedType.EVENT_DELETED:
-      case SSENormalizedType.EVENT_PUBLISHED:
-        console.log('🔄 [OrganizationDetail] Refetching events...');
-        refetchEvents();
-        break;
-      default:
-        break;
-    }
-  }, [lastEvent, organizationId, refetchOrganization, refetchEvents]);
-
   const handleBack = () => {
     router.push('/dashboard/organizer/organizations');
   };
 
   const handleEditOrganization = () => {
     // TODO: Implement edit functionality
-    console.log('Edit organization:', organizationId);
   };
 
   const handleEventClick = (eventId: string) => {
@@ -241,15 +200,23 @@ export default function OrganizationDetailPage() {
                         </Typography>
                       </Box>
                     </Box>
-                    <IconButton
-                      onClick={handleEditOrganization}
-                      sx={{
-                        color: '#37437D',
-                        '&:hover': { backgroundColor: 'rgba(55, 67, 125, 0.08)' },
-                      }}
+                    <Tooltip
+                      title={organization.verified ? 'Verified organizations cannot be edited. Contact admin to make changes.' : 'Edit'}
+                      arrow
                     >
-                      <Edit />
-                    </IconButton>
+                      <span>
+                        <IconButton
+                          onClick={handleEditOrganization}
+                          disabled={organization.verified}
+                          sx={{
+                            color: organization.verified ? '#cccccc' : '#37437D',
+                            '&:hover': { backgroundColor: organization.verified ? 'transparent' : 'rgba(55, 67, 125, 0.08)' },
+                          }}
+                        >
+                          <Edit />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </Box>
 
                   <Divider sx={{ my: 2 }} />

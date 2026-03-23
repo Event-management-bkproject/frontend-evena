@@ -62,7 +62,7 @@ export default function CustomerEventCard({ event }: CustomerEventCardProps) {
       {/* Event Image */}
       <CardMedia
         component="img"
-        image={event.coverUrl || '/images/event-placeholder.jpg'}
+        image={event.coverUrl || 'https://static.vecteezy.com/system/resources/thumbnails/041/388/388/small/ai-generated-concert-crowd-enjoying-live-music-event-photo.jpg'}
         alt={`${event.title} event cover image`}
         sx={{
           height: 200,

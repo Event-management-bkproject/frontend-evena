@@ -150,17 +150,21 @@ export const ENTITY_EVENT_TYPES = {
     SSENormalizedType.ORGANIZATION_UPDATED,
     SSENormalizedType.ORGANIZATION_VERIFIED,
     SSENormalizedType.ORGANIZATION_UNVERIFIED,
+    SSENormalizedType.ORGANIZATION_DELETED,   // lock form when org is concurrently deleted
   ],
   EVENT: [
     SSENormalizedType.EVENT_UPDATED,
     SSENormalizedType.EVENT_PUBLISHED,
     SSENormalizedType.EVENT_CANCELLED,
+    SSENormalizedType.EVENT_DELETED,   // lock form when event is concurrently deleted
   ],
   VENUE: [
     SSENormalizedType.VENUE_UPDATED,
+    SSENormalizedType.VENUE_DELETED,   // lock form when venue is concurrently deleted
   ],
   CATEGORY: [
     SSENormalizedType.CATEGORY_UPDATED,
+    SSENormalizedType.CATEGORY_DELETED,   // lock form when category is concurrently deleted
   ],
   TICKET_TYPE: [
     SSENormalizedType.TICKET_TYPE_UPDATED,

@@ -10,9 +10,12 @@ interface I18nProviderProps {
 
 export function I18nProvider({ children }: I18nProviderProps) {
   useEffect(() => {
-    // Initialize i18n when component mounts
-    // i18n is already initialized in the config file
-    // This effect ensures it's ready before rendering children
+    // After hydration, restore the user's stored language preference.
+    // This runs client-side only, avoiding SSR/CSR hydration mismatches.
+    const storedLang = localStorage.getItem('i18nextLng');
+    if (storedLang && storedLang !== i18n.language) {
+      i18n.changeLanguage(storedLang);
+    }
   }, []);
 
   return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;

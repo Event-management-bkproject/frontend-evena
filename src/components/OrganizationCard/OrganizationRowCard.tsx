@@ -22,6 +22,7 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
   const isOwner = currentUser?.id === organization.owner.id;
   return (
     <Card
+      data-id={String(organization.id)}
       onClick={() => onClick?.(organization)}
       sx={{
         mb: 2,
@@ -234,6 +235,7 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
             {isOwner && !organization.verified ? (
               <Tooltip title="Edit Organization" arrow>
                 <IconButton
+                  aria-label="edit"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(organization);
@@ -260,6 +262,7 @@ export function OrganizationRowCard({ organization, onEdit, onDelete, onManageMe
               >
                 <span>
                   <IconButton
+                    aria-label="edit"
                     disabled
                     sx={{
                       color: '#cccccc',

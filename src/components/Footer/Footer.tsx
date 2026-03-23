@@ -161,7 +161,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Typography variant="body2" sx={{ color: '#B0B8D4' }}>
+          <Typography variant="body2" sx={{ color: '#B0B8D4' }} suppressHydrationWarning>
             © {new Date().getFullYear()} Evena. All rights reserved.
           </Typography>
           <Box sx={{ display: 'flex', gap: 3 }}>

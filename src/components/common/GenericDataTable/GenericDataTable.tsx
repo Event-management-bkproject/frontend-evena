@@ -272,6 +272,7 @@ function GenericDataTable<T extends { id: number | string }>({
             {processedData.map((item) => (
               <TableRow
                 key={item.id}
+                data-id={String(item.id)}
                 hover
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
                 sx={{ cursor: onRowClick ? 'pointer' : 'default' }}

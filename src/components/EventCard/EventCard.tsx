@@ -142,6 +142,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
     return (
       <Card
+        data-id={event.id}
         onClick={handleCardClick}
         sx={{
           minWidth: 320,
@@ -416,6 +417,7 @@ const EventCard: React.FC<EventCardProps> = ({
   return (
     <>
       <Card
+        data-id={event.id}
         sx={{
           height: '100%',
           display: 'flex',
