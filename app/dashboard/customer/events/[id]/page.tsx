@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useEffect } from 'react';
 import { Box, Container, Typography, Button, Card, Chip, Alert, CircularProgress } from '@mui/material';
 import { CalendarToday, Place, AccessTime, AttachMoney } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -61,6 +61,18 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     router.push(`/dashboard/customer/events/${eventId}/tickets`);
   };
 
+  // Redirect when event is no longer accessible as PUBLISHED.
+  // Handles two cases:
+  //   1. Backend returns event with status !== 'PUBLISHED' (e.g. CANCELLED)
+  //   2. Backend returns 404/error after cancel (public endpoint filters non-PUBLISHED events)
+  // Must be before any early returns — Rules of Hooks.
+  useEffect(() => {
+    if (eventLoading) return;
+    if (eventError || (event && event.status !== 'PUBLISHED')) {
+      router.replace('/dashboard/customer');
+    }
+  }, [event?.status, eventLoading, eventError, router]);
+
   // Split event title into lines
   const titleWords = event?.title.split(' ') || [];
   const titleLine1 = titleWords.slice(0, -1).join(' ');
@@ -82,8 +94,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     );
   }
 
-  if (event && event.status !== 'PUBLISHED') {
-    router.replace('/dashboard/customer');
+  if (!eventLoading && (eventError || (event && event.status !== 'PUBLISHED'))) {
     return null;
   }
 
@@ -417,6 +428,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                   ticketTypes.map((ticket) => (
                     <Card
                       key={ticket.id}
+                      data-id={ticket.id}
                       sx={{
                         p: 3.5,
                         borderRadius: '20px',

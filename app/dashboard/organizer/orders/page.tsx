@@ -32,6 +32,7 @@ import { OrderStatus, OrderResponse } from '@/src/stores/types/order';
 import { StatCard } from '@/src/components/common/StatCard/StatCard';
 import { formatCurrency, formatTableDate } from '@/src/utils/format';
 import { ORDER_STATUS_CONFIG, ORDER_STATUSES, TABLE_PER_PAGE, OrderStatusFilter } from '@/src/utils/constants/constant';
+import { SAMPLE_ORDERS } from './sample.data';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ function OrdersContent() {
     status: statusFilter === 'ALL' ? undefined : statusFilter,
   });
 
-  const allOrders: OrderResponse[] = data?.data?.content ?? [];
+  const allOrders: OrderResponse[] = data?.data?.content?.length ? data.data.content : SAMPLE_ORDERS;
 
   const processed = useMemo(() => {
     let rows = [...allOrders];
@@ -123,13 +124,11 @@ function OrdersContent() {
             display: 'flex',
             flexDirection: 'column',
             gap: '15px',
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden', // quan trọng để tránh double scroll
+            overflow: 'auto',
           }}
       >
         {/* Main two-column row */}
-        <Box sx={{ display: 'flex', gap: '15px', alignItems: 'stretch' }}>
+        <Box sx={{ display: 'flex', gap: '15px', alignItems: 'stretch', flexShrink: 0, height: '360px' }}>
 
           {/* Left column: stat cards + overview chart — 50% */}
           <Box sx={{ flex: '0 0 calc(50% - 7.5px)', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -158,14 +157,14 @@ function OrdersContent() {
         </Box>
 
         {/* Table card */}
-        <Box  sx={{
+        <Box sx={{
             bgcolor: 'white',
             borderRadius: '20px',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             flex: 1,
-            minHeight: 0, // cực quan trọng để scroll hoạt động trong flex
+            minHeight: '350px',
           }}>
           {/* Toolbar */}
           <Box

@@ -130,13 +130,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
               <Image
                 src="/logoOrg.svg"
                 alt="F-Anizer Logo"
-                width={40}
-                height={40}
+                width={50}
+                height={50}
                 priority
                 style={{
                   objectFit: 'contain',
                   width: 'auto',
-                  height: 'auto',
+                  height: '70px',
                 }}
               />
               <Typography
@@ -262,12 +262,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
               <Image
                 src="/logoOrg.svg"
                 alt="Logo"
-                width={200}
+                width={50}
                 height={50}
                 style={{
                   objectFit: 'contain',
                   width: 'auto',
-                  height: 'auto',
+                  height: '70px',
                 }}
               />
             </Box>

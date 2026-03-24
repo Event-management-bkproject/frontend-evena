@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Typography, Box, IconButton } from '@mui/material';
+import { Card, Typography, Box, IconButton, Chip } from '@mui/material';
 import { CalendarToday, Place, ConfirmationNumber } from '@mui/icons-material';
 import { EventListResponse, EventResponse } from '@/src/stores/types';
 import { TicketTypeStatus } from '@/src/stores/types/enums';
@@ -162,27 +162,47 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
             flexDirection: 'column',
           }}
         >
-          {/* Top Section: Category and Action Buttons */}
+          {/* Top Section: Category, Status and Action Buttons */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            {/* Category */}
-            <Box
-              sx={{
-                backgroundColor: '#FCE2FE',
-                borderRadius: '20px',
-                px: 2,
-                py: 0.75,
-              }}
-            >
-              <Typography
-                variant="body2"
+            {/* Category + Status */}
+            <Box display="flex" alignItems="center" gap={1}>
+              <Box
                 sx={{
-                  color: '#F36BF9',
-                  fontWeight: 600,
-                  fontSize: '14px',
+                  backgroundColor: '#FCE2FE',
+                  borderRadius: '20px',
+                  px: 2,
+                  py: 0.75,
                 }}
               >
-                {getCategoryInfo()}
-              </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#F36BF9',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                  }}
+                >
+                  {getCategoryInfo()}
+                </Typography>
+              </Box>
+              {event.status && (
+                <Chip
+                  label={event.status}
+                  size="small"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    backgroundColor:
+                      event.status === 'PUBLISHED' ? '#E8F5E9' :
+                      event.status === 'CANCELLED' ? '#FFEBEE' :
+                      event.status === 'COMPLETED' ? '#E3F2FD' : '#F5F5F5',
+                    color:
+                      event.status === 'PUBLISHED' ? '#2E7D32' :
+                      event.status === 'CANCELLED' ? '#C62828' :
+                      event.status === 'COMPLETED' ? '#1565C0' : '#616161',
+                  }}
+                />
+              )}
             </Box>
 
             {/* Action Buttons */}

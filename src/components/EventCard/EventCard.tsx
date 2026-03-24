@@ -246,6 +246,13 @@ const EventCard: React.FC<EventCardProps> = ({
               </Typography>
             )}
           </Box>
+
+          {/* Available tickets */}
+          {'availableTickets' in event && (
+            <Typography sx={{ fontSize: '10px', color: '#ADACAE', mt: 0.5 }}>
+              {(event as EventListResponse).availableTickets.toLocaleString()} tickets available
+            </Typography>
+          )}
         </Box>
       </Card>
     );

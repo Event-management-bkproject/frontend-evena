@@ -30,6 +30,7 @@ export default function CustomerEventCard({ event }: CustomerEventCardProps) {
 
   return (
     <Card
+      data-id={event.id}
       onClick={handleClick}
       role="button"
       tabIndex={0}
