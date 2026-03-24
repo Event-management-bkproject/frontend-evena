@@ -1,0 +1,85 @@
+'use client';
+
+import { useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import Header from '@/src/components/Header';
+import Footer from '@/src/components/Footer';
+import { TabType, TABS } from '@/src/components/FlexPassCustomer/types';
+import { EventCard } from '@/src/components/FlexPassCustomer/EventCard';
+import { BuyTab } from '@/src/components/FlexPassCustomer/BuyTab';
+import { ResellTab } from '@/src/components/FlexPassCustomer/ResellTab';
+import { MyTicketsTab } from '@/src/components/FlexPassCustomer/MyTicketsTab';
+import { HowItWorks } from '@/src/components/FlexPassCustomer/HowItWorks';
+
+export default function FlexPassCustomerPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('buy');
+  const [flexPassEnabled, setFlexPassEnabled] = useState(true);
+  const [selectedTicket, setSelectedTicket] = useState<string | null>('green');
+
+  return (
+    <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header />
+
+      <Box sx={{ flex: 1, py: '24px', px: { xs: '16px', sm: '24px' } }}>
+        <Box sx={{ maxWidth: 680, mx: 'auto' }}>
+
+          {/* Page header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '18px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Typography sx={{ fontSize: 20, fontWeight: 600, color: '#030213' }}>FlexPass</Typography>
+              <Box sx={{ fontSize: 11, fontWeight: 600, px: '10px', py: '3px', borderRadius: '20px', bgcolor: '#eff6ff', color: '#3b82f6' }}>
+                concept
+              </Box>
+            </Box>
+            <Typography sx={{ fontSize: 12, color: '#717182' }}>Flexible tickets · responsibly</Typography>
+          </Box>
+
+          <EventCard />
+
+          {/* Tabs card */}
+          <Box sx={{ bgcolor: 'white', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '15px', overflow: 'hidden', mb: '16px' }}>
+            {/* Tab nav */}
+            <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+              {TABS.map((tab) => (
+                <Box
+                  key={tab.value}
+                  component="button"
+                  onClick={() => setActiveTab(tab.value)}
+                  sx={{
+                    flex: 1, textAlign: 'center', py: '10px', fontSize: 13,
+                    border: 'none', bgcolor: 'transparent', cursor: 'pointer',
+                    borderBottom: `2px solid ${activeTab === tab.value ? '#030213' : 'transparent'}`,
+                    color: activeTab === tab.value ? '#030213' : '#717182',
+                    fontWeight: activeTab === tab.value ? 600 : 400,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {tab.label}
+                </Box>
+              ))}
+            </Box>
+
+            {/* Tab content */}
+            <Box sx={{ p: '16px' }}>
+              {activeTab === 'buy' && (
+                <BuyTab
+                  selectedTicket={selectedTicket}
+                  flexPassEnabled={flexPassEnabled}
+                  onSelectTicket={setSelectedTicket}
+                  onToggleFlexPass={() => setFlexPassEnabled((v) => !v)}
+                />
+              )}
+              {activeTab === 'resell' && <ResellTab />}
+              {activeTab === 'mine' && <MyTicketsTab />}
+            </Box>
+          </Box>
+
+          <HowItWorks />
+
+        </Box>
+      </Box>
+
+      <Footer />
+    </Box>
+  );
+}

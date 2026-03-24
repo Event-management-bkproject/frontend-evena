@@ -57,6 +57,14 @@ function OrdersSvgIcon({ color }: { color: string }) {
   );
 }
 
+function FlexPassSvgIcon({ color }: { color: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 16H4V9H5.5V7H4C2.89688 7 2 7.89688 2 9V16C2 17.1031 2.89688 18 4 18H11C12.1031 18 13 17.1031 13 16V14.5H11V16ZM9 13H16C17.1031 13 18 12.1031 18 11V4C18 2.89688 17.1031 2 16 2H9C7.89688 2 7 2.89688 7 4V11C7 12.1031 7.89688 13 9 13Z" fill={color} />
+    </svg>
+  );
+}
+
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
@@ -76,6 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
     { text: t('common.navigation.organizations'), path: '/dashboard/organizer/organizations', renderIcon: (a: boolean) => <OrganizationsSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
     { text: t('common.navigation.events'), path: '/dashboard/organizer/events', renderIcon: (a: boolean) => <EventsSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
     { text: t('common.navigation.orders') || 'Orders', path: '/dashboard/organizer/orders', renderIcon: (a: boolean) => <OrdersSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
+    { text: 'FlexPass', path: '/dashboard/organizer/flexpass', renderIcon: (a: boolean) => <FlexPassSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
   ];
 
   const isActiveRoute = (itemPath: string, exact: boolean = false) => {
