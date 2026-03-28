@@ -5,12 +5,13 @@ import { PaymentProvider, PaymentStatus } from './order';
 
 // ============= PAYMENT INITIATION =============
 
-/** Request for POST /api/payment/initiate */
+/** Request for POST /api/payment/initiate — matches backend PaymentRequest DTO.
+ *  Idempotency key is generated server-side (pay_u{userId}_o{orderId}), not sent by client.
+ */
 export interface InitiatePaymentRequest {
   orderId: number;
   provider: PaymentProvider;
-  /** Client-generated idempotency key to prevent duplicate payments */
-  idempotencyId: string;
+  amount: number;
   returnUrl?: string;
   cancelUrl?: string;
 }

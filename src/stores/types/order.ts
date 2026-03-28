@@ -36,6 +36,7 @@ export interface TicketTypeSnapshot {
 
 export enum OrderStatus {
   PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
   CONFIRMED = 'CONFIRMED',
   CANCELLED = 'CANCELLED',
   EXPIRED = 'EXPIRED',
@@ -181,10 +182,13 @@ export interface OrderResponse {
   updatedAt: string;
 }
 
-/** Response from POST /api/orders/checkout - includes generated tickets */
+/** Response from POST /api/orders/checkout
+ *  - paymentUrl: present for paid orders (redirect to MoMo gateway)
+ *  - paymentUrl absent/null: free order, tickets already issued, order is CONFIRMED
+ */
 export interface CheckoutResponse {
   order: OrderResponse;
-  tickets: TicketResponse[];
+  paymentUrl?: string | null;
   message: string;
 }
 

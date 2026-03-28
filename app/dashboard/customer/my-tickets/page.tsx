@@ -206,7 +206,7 @@ export default function MyTicketsPage() {
           {selectedTicket && (
             <Box sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#2A3363' }}>
-                {selectedTicket.event?.title || 'Event'}
+                {selectedTicket.eventTitle || 'Event'}
               </Typography>
 
               <Box
@@ -239,16 +239,16 @@ export default function MyTicketsPage() {
                     {t('common.labels.ticketType')}:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {selectedTicket.orderItem?.ticketType?.name}
+                    {selectedTicket.ticketTypeName}
                   </Typography>
                 </Grid>
 
                 <Grid size={{ xs: 6 }}>
                   <Typography variant="body2" color="text.secondary">
-                    {t('common.labels.owner')}:
+                    {t('common.labels.venue')}:
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
-                    {selectedTicket.user.name}
+                    {selectedTicket.venueName}
                   </Typography>
                 </Grid>
 

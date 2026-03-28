@@ -60,7 +60,9 @@
       "category": "Danh mục",
       "location": "Địa điểm",
       "amount": "Số tiền",
-      "orderId": "Mã đơn hàng"
+      "orderId": "Mã đơn hàng",
+      "free": "Miễn phí",
+      "processing": "Đang xử lý..."
     },
     "navigation": {
       "home": "Trang chủ",
@@ -87,7 +89,8 @@
       "cancelled": "Đã hủy",
       "soldOut": "Đã bán hết",
       "paid": "ĐÃ THANH TOÁN",
-      "pendingPayment": "CHƯA THANH TOÁN"
+      "pendingPayment": "CHƯA THANH TOÁN",
+      "processing": "Đang xử lý"
     },
     "entities": {
       "category": "danh mục",
@@ -479,7 +482,14 @@
     "cancelOrder": "Hủy đơn hàng",
     "cancelOrderTitle": "Hủy đơn hàng",
     "confirmCancelOrder": "Bạn có chắc chắn muốn hủy đơn hàng này?",
-    "orderPlacedSuccess": "Đặt đơn hàng thành công! Vé đã được gửi đến email của bạn."
+    "orderPlacedSuccess": "Đặt đơn hàng thành công! Vé đã được gửi đến email của bạn.",
+    "payNow": "Thanh toán ngay",
+    "claimFreeTickets": "Nhận vé miễn phí",
+    "selectPaymentMethod": "Chọn phương thức thanh toán",
+    "freeTicketNotice": "Đơn hàng này miễn phí. Nhấn bên dưới để nhận vé ngay.",
+    "processingPayment": "Thanh toán đang được xử lý. Bạn có thể tiếp tục thanh toán bên dưới.",
+    "continuePayment": "Tiếp tục thanh toán",
+    "viewOrder": "Xem đơn hàng"
   },
   "organizer": {
     "allEvents": "Tất cả sự kiện",
@@ -552,5 +562,13 @@
     "current": "Ngôn ngữ hiện tại",
     "english": "English (Tiếng Anh)",
     "vietnamese": "Tiếng Việt"
+  },
+  "payment": {
+    "successTitle": "Thanh toán thành công!",
+    "successDesc": "Thanh toán của bạn đã hoàn tất. Vé đã sẵn sàng.",
+    "failedTitle": "Thanh toán thất bại",
+    "failedDesc": "Thanh toán không thành công. Vui lòng thử lại.",
+    "pendingTitle": "Đang chờ thanh toán",
+    "pendingDesc": "Chúng tôi đang chờ xác nhận thanh toán."
   }
 }

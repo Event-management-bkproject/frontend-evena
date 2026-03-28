@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useMemo } from 'react';
+import React, { use, useMemo, useState } from 'react';
 import {
   Box,
   Container,
@@ -18,17 +18,25 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
 } from '@mui/material';
-import { ArrowBack, CheckCircle } from '@mui/icons-material';
+import { ArrowBack, CheckCircle, Payment } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
-import { OrderStatus } from '@/src/stores/types/order';
+import { useGetMyOrdersQuery, useCheckoutOrderMutation } from '@/src/stores/services/OrderApi';
+import { OrderStatus, PaymentProvider } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useTranslation } from 'react-i18next';
 
 // SSE cache invalidation is handled globally by SSEProvider.
 // useGetMyOrdersQuery (provides ['Order']) auto-refetches on order:confirm/cancel/expire events.
+
+const formatVND = (amount: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -38,27 +46,54 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const orderId = parseInt(resolvedParams.id);
   const isSuccess = searchParams.get('success') === 'true';
 
-  // Fetch all orders and find the specific one
+  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(PaymentProvider.MOMO);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
   const { data, isLoading, error } = useGetMyOrdersQuery({ page: 0, size: 100 });
+  const [checkoutOrder, { isLoading: isCheckingOut }] = useCheckoutOrderMutation();
 
   const order = useMemo(() => {
     if (!data?.data?.content) return null;
     return data.data.content.find((o: any) => o.id === orderId);
   }, [data, orderId]);
 
+  const isFreeOrder = order?.totalAmount === 0;
+
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
-      case OrderStatus.CONFIRMED:
-        return 'success';
-      case OrderStatus.PENDING:
-        return 'warning';
+      case OrderStatus.CONFIRMED:  return 'success';
+      case OrderStatus.PENDING:    return 'warning';
+      case OrderStatus.PROCESSING: return 'info';
       case OrderStatus.CANCELLED:
-      case OrderStatus.EXPIRED:
-        return 'error';
-      case OrderStatus.REFUNDED:
-        return 'info';
-      default:
-        return 'default';
+      case OrderStatus.EXPIRED:    return 'error';
+      case OrderStatus.REFUNDED:   return 'info';
+      default:                     return 'default';
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!order) return;
+    setCheckoutError(null);
+
+    try {
+      const returnUrl = `${window.location.origin}/payment/return?orderId=${order.id}`;
+      const result = await checkoutOrder({
+        orderId: order.id,
+        provider: isFreeOrder ? PaymentProvider.CASH : selectedProvider,
+        returnUrl,
+      }).unwrap();
+
+      const paymentUrl = result.data?.paymentUrl;
+
+      if (paymentUrl) {
+        // Paid order — redirect to MoMo gateway
+        window.location.href = paymentUrl;
+      } else {
+        // Free order — tickets issued immediately
+        router.push('/dashboard/customer/my-tickets');
+      }
+    } catch (err: any) {
+      setCheckoutError(err?.data?.message ?? t('messages.error.checkout'));
     }
   };
 
@@ -101,7 +136,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </Alert>
         )}
 
+        {checkoutError && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setCheckoutError(null)}>
+            {checkoutError}
+          </Alert>
+        )}
+
         <Grid container spacing={4}>
+          {/* Left: order info + items */}
           <Grid size={{ xs: 12, md: 8 }}>
             <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -161,9 +203,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       {order.items.map((item) => (
                         <TableRow key={item.id}>
                           <TableCell>{item.ticketTypeName}</TableCell>
-                          <TableCell>${item.unitPrice.toLocaleString()}</TableCell>
+                          <TableCell>
+                            {item.unitPrice === 0 ? (
+                              <Chip label={t('common.labels.free')} size="small" color="success" />
+                            ) : (
+                              formatVND(item.unitPrice)
+                            )}
+                          </TableCell>
                           <TableCell>{item.quantity}</TableCell>
-                          <TableCell><Typography fontWeight={600}>${item.subtotal.toLocaleString()}</Typography></TableCell>
+                          <TableCell>
+                            <Typography fontWeight={600}>
+                              {item.subtotal === 0 ? t('common.labels.free') : formatVND(item.subtotal)}
+                            </Typography>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -173,6 +225,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </Grid>
 
+          {/* Right: payment summary + checkout action */}
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
@@ -187,7 +240,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         {item.ticketTypeName} x {item.quantity}
                       </Typography>
                       <Typography variant="body2" fontWeight={600}>
-                        ${item.subtotal.toLocaleString()}
+                        {item.subtotal === 0 ? t('common.labels.free') : formatVND(item.subtotal)}
                       </Typography>
                     </Box>
                   ))}
@@ -201,7 +254,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   {t('common.labels.total')}
                 </Typography>
                 <Typography variant="h6" fontWeight={700} color="#F36BF9">
-                  ${order.totalAmount.toLocaleString()}
+                  {order.totalAmount === 0 ? t('common.labels.free') : formatVND(order.totalAmount)}
                 </Typography>
               </Box>
 
@@ -212,13 +265,95 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   {t('customer.paymentStatus')}
                 </Typography>
                 <Chip
-                  label={order.status === OrderStatus.CONFIRMED ? t('common.status.paid') : t('common.status.pendingPayment')}
-                  color={order.status === OrderStatus.CONFIRMED ? 'success' : 'warning'}
+                  label={
+                    order.status === OrderStatus.CONFIRMED
+                      ? t('common.status.paid')
+                      : order.status === OrderStatus.PROCESSING
+                        ? t('common.status.processing')
+                        : t('common.status.pendingPayment')
+                  }
+                  color={
+                    order.status === OrderStatus.CONFIRMED
+                      ? 'success'
+                      : order.status === OrderStatus.PROCESSING
+                        ? 'info'
+                        : 'warning'
+                  }
                   size="small"
                 />
               </Box>
             </Card>
 
+            {/* Checkout panel — only for PENDING orders */}
+            {order.status === OrderStatus.PENDING && (
+              <Card sx={{ p: 3, borderRadius: '16px', mb: 2 }}>
+                {isFreeOrder ? (
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {t('customer.freeTicketNotice')}
+                    </Typography>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={isCheckingOut ? <CircularProgress size={18} color="inherit" /> : <CheckCircle />}
+                      disabled={isCheckingOut}
+                      onClick={handleCheckout}
+                      sx={{
+                        backgroundColor: '#4CAF50',
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontWeight: 700,
+                        '&:hover': { backgroundColor: '#43A047' },
+                      }}
+                    >
+                      {isCheckingOut ? t('common.labels.processing') : t('customer.claimFreeTickets')}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <FormControl component="fieldset" sx={{ mb: 2, width: '100%' }}>
+                      <FormLabel component="legend" sx={{ fontWeight: 600, color: '#2A3363', mb: 1 }}>
+                        {t('customer.selectPaymentMethod')}
+                      </FormLabel>
+                      <RadioGroup
+                        value={selectedProvider}
+                        onChange={(e) => setSelectedProvider(e.target.value as PaymentProvider)}
+                      >
+                        <FormControlLabel
+                          value={PaymentProvider.MOMO}
+                          control={<Radio sx={{ color: '#A50064', '&.Mui-checked': { color: '#A50064' } }} />}
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Payment fontSize="small" />
+                              <Typography variant="body2" fontWeight={600}>MoMo</Typography>
+                            </Box>
+                          }
+                        />
+                      </RadioGroup>
+                    </FormControl>
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={isCheckingOut ? <CircularProgress size={18} color="inherit" /> : <Payment />}
+                      disabled={isCheckingOut}
+                      onClick={handleCheckout}
+                      sx={{
+                        backgroundColor: '#F36BF9',
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontWeight: 700,
+                        '&:hover': { backgroundColor: '#e55ae0' },
+                      }}
+                    >
+                      {isCheckingOut ? t('common.labels.processing') : t('customer.payNow')}
+                    </Button>
+                  </>
+                )}
+              </Card>
+            )}
+
+            {/* View tickets button after confirmation */}
             {order.status === OrderStatus.CONFIRMED && (
               <Button
                 fullWidth
@@ -234,6 +369,31 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               >
                 {t('customer.viewMyTickets')}
               </Button>
+            )}
+
+            {/* Processing state — allow user to continue payment */}
+            {order.status === OrderStatus.PROCESSING && (
+              <Card sx={{ p: 3, borderRadius: '16px', mb: 2 }}>
+                <Alert severity="info" sx={{ mb: 2, borderRadius: '8px' }}>
+                  {t('customer.processingPayment')}
+                </Alert>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={isCheckingOut ? <CircularProgress size={18} color="inherit" /> : <Payment />}
+                  disabled={isCheckingOut}
+                  onClick={handleCheckout}
+                  sx={{
+                    backgroundColor: '#F36BF9',
+                    py: 1.5,
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    '&:hover': { backgroundColor: '#e55ae0' },
+                  }}
+                >
+                  {isCheckingOut ? t('common.labels.processing') : t('customer.continuePayment')}
+                </Button>
+              </Card>
             )}
           </Grid>
         </Grid>

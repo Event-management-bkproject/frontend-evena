@@ -60,7 +60,9 @@
       "category": "Category",
       "location": "Location",
       "amount": "Amount",
-      "orderId": "Order ID"
+      "orderId": "Order ID",
+      "free": "Free",
+      "processing": "Processing..."
     },
     "navigation": {
       "home": "Home",
@@ -87,7 +89,8 @@
       "cancelled": "Cancelled",
       "soldOut": "Sold Out",
       "paid": "PAID",
-      "pendingPayment": "PENDING"
+      "pendingPayment": "PENDING",
+      "processing": "Processing"
     },
     "entities": {
       "category": "category",
@@ -479,7 +482,14 @@
     "cancelOrder": "Cancel Order",
     "cancelOrderTitle": "Cancel Order",
     "confirmCancelOrder": "Are you sure you want to cancel this order?",
-    "orderPlacedSuccess": "Order placed successfully! Your tickets have been sent to your email."
+    "orderPlacedSuccess": "Order placed successfully! Your tickets have been sent to your email.",
+    "payNow": "Pay Now",
+    "claimFreeTickets": "Claim Free Tickets",
+    "selectPaymentMethod": "Select Payment Method",
+    "freeTicketNotice": "This order is free. Click below to claim your tickets instantly.",
+    "processingPayment": "Your payment is in progress. You can continue payment below.",
+    "continuePayment": "Continue Payment",
+    "viewOrder": "View Order"
   },
   "organizer": {
     "allEvents": "All Events",
@@ -552,5 +562,13 @@
     "current": "Current Language",
     "english": "English",
     "vietnamese": "Tiếng Việt (Vietnamese)"
+  },
+  "payment": {
+    "successTitle": "Payment Successful!",
+    "successDesc": "Your payment was completed. Your tickets are ready.",
+    "failedTitle": "Payment Failed",
+    "failedDesc": "Your payment could not be completed. Please try again.",
+    "pendingTitle": "Payment Pending",
+    "pendingDesc": "We are waiting for payment confirmation."
   }
 }
