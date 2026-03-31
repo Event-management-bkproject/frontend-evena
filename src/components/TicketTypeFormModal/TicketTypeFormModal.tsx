@@ -14,8 +14,12 @@ import {
   Switch,
   FormControlLabel,
   Alert,
+  MenuItem,
+  Chip,
+  InputAdornment,
 } from '@mui/material';
-import { Close, Info } from '@mui/icons-material';
+import { Close, Info, CardGiftcard } from '@mui/icons-material';
+import { CURRENCY_MINIMUMS, SUPPORTED_CURRENCIES } from '@/src/utils/constants/constant';
 import FormTextField from '../FormTextField';
 import { ticketTypeSchema } from '@/src/utils/validationSchema/ticketTypeValidationSchema';
 import { useCreateTicketTypeMutation, useUpdateTicketTypeMutation } from '@/src/stores/services';
@@ -213,30 +217,73 @@ const TicketTypeFormModal = ({
 
                   {/* Pricing */}
                   <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-                      Pricing
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        Pricing
+                      </Typography>
+                      {values.price === 0 && (
+                        <Chip
+                          icon={<CardGiftcard fontSize="small" />}
+                          label="Free Ticket"
+                          size="small"
+                          color="success"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
                   </Grid>
 
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormTextField
-                      id="price"
-                      name="price"
-                      label="Price"
-                      type="number"
-                      required
-                      disabled={isCriticalFieldsLocked}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 6 }}>
+                  {/* Currency selector */}
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <FormTextField
                       id="currency"
                       name="currency"
                       label="Currency"
-                      disabled
-                      value="VND"
+                      select
+                      disabled={isCriticalFieldsLocked}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setFieldValue('currency', e.target.value);
+                        // Reset price when switching currency so validation re-runs
+                        setFieldValue('price', 0);
+                      }}
+                    >
+                      {SUPPORTED_CURRENCIES.map((c) => (
+                        <MenuItem key={c.code} value={c.code}>
+                          {c.code}
+                        </MenuItem>
+                      ))}
+                    </FormTextField>
+                  </Grid>
+
+                  {/* Price input */}
+                  <Grid size={{ xs: 12, md: 8 }}>
+                    <FormTextField
+                      id="price"
+                      name="price"
+                      label={values.price === 0 ? 'Price (Free)' : 'Price'}
+                      type="number"
+                      required
+                      disabled={isCriticalFieldsLocked}
+                      inputProps={{
+                        min: 0,
+                        step: values.currency === 'VND' ? 1000 : 1,
+                      }}
+                      InputProps={{
+                        endAdornment: values.price === 0 ? (
+                          <InputAdornment position="end">
+                            <Chip label="FREE" size="small" color="success" />
+                          </InputAdornment>
+                        ) : undefined,
+                      }}
                     />
+                    {/* Minimum price hint */}
+                    {!isCriticalFieldsLocked && (
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                        {values.currency && CURRENCY_MINIMUMS[values.currency]
+                          ? `Set 0 for free tickets · Minimum paid price: ${CURRENCY_MINIMUMS[values.currency].toLocaleString()} ${values.currency}`
+                          : 'Set 0 for free tickets'}
+                      </Typography>
+                    )}
                   </Grid>
 
                   {/* Early Bird Discount */}

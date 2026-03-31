@@ -11,6 +11,26 @@ export const BRAND = {
   bgSection: '#F7F7F7',
 } as const;
 
+// ─── Currency Minimums ────────────────────────────────────────────────────────
+// Minimum paid ticket price per currency.
+// price == 0 → free ticket (always allowed, bypasses gateway).
+// price > 0  → must be >= this minimum.
+export const CURRENCY_MINIMUMS: Record<string, number> = {
+  VND: 1000,
+  USD: 1,
+  EUR: 1,
+  GBP: 1,
+  SGD: 1,
+} as const;
+
+export const SUPPORTED_CURRENCIES = [
+  { code: 'VND', label: 'VND – Vietnamese Dong' },
+  { code: 'USD', label: 'USD – US Dollar' },
+  { code: 'EUR', label: 'EUR – Euro' },
+  { code: 'GBP', label: 'GBP – British Pound' },
+  { code: 'SGD', label: 'SGD – Singapore Dollar' },
+] as const;
+
 export const KEY_CODE_IS_NOT_NUMERIC_VALUE = [69, 83, 107, 109, 110, 187, 188, 189, 190];
 export const CharacterKeyCode = {
   DECIMALPOINT_KEYCODE: [110, 190],

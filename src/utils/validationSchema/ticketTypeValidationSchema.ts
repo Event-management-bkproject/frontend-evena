@@ -1,5 +1,6 @@
 // utils/validationSchema/ticketTypeValidationSchema.ts
 import * as yup from 'yup';
+import { CURRENCY_MINIMUMS } from '../constants/constant';
 
 export const ticketTypeSchema = yup.object({
   name: yup
@@ -8,12 +9,27 @@ export const ticketTypeSchema = yup.object({
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name cannot exceed 100 characters'),
   description: yup.string().optional().nullable().max(500, 'Description cannot exceed 500 characters'),
-  // optional at DRAFT creation; required at activation (enforced by backend)
   price: yup
     .number()
     .optional()
     .nullable()
-    .moreThan(0, 'Price must be greater than 0')
+    .min(0, 'Price cannot be negative')
+    .test(
+      'currency-minimum',
+      'Price must be 0 (free) or at least the currency minimum',
+      function (value) {
+        if (value === undefined || value === null) return true; // optional at DRAFT
+        if (value === 0) return true; // free ticket — always valid
+        const { currency } = this.parent;
+        const min = CURRENCY_MINIMUMS[currency ?? 'VND'] ?? 1;
+        if (value < min) {
+          return this.createError({
+            message: `Price must be 0 (free) or at least ${min.toLocaleString()} ${currency ?? 'VND'}`,
+          });
+        }
+        return true;
+      }
+    )
     .typeError('Price must be a number'),
   currency: yup
     .string()
@@ -69,7 +85,28 @@ export const updateTicketTypeSchema = yup.object({
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name cannot exceed 100 characters'),
   description: yup.string().optional().nullable().max(500, 'Description cannot exceed 500 characters'),
-  price: yup.number().optional().nullable().moreThan(0, 'Price must be greater than 0').typeError('Price must be a number'),
+  price: yup
+    .number()
+    .optional()
+    .nullable()
+    .min(0, 'Price cannot be negative')
+    .test(
+      'currency-minimum',
+      'Price must be 0 (free) or at least the currency minimum',
+      function (value) {
+        if (value === undefined || value === null) return true;
+        if (value === 0) return true;
+        const { currency } = this.parent;
+        const min = CURRENCY_MINIMUMS[currency ?? 'VND'] ?? 1;
+        if (value < min) {
+          return this.createError({
+            message: `Price must be 0 (free) or at least ${min.toLocaleString()} ${currency ?? 'VND'}`,
+          });
+        }
+        return true;
+      }
+    )
+    .typeError('Price must be a number'),
   currency: yup
     .string()
     .optional()
