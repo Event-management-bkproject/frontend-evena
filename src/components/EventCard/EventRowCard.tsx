@@ -194,10 +194,12 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
                     fontSize: '12px',
                     backgroundColor:
                       event.status === 'PUBLISHED' ? '#E8F5E9' :
+                      event.status === 'ONGOING'   ? '#E8EAF6' :
                       event.status === 'CANCELLED' ? '#FFEBEE' :
                       event.status === 'COMPLETED' ? '#E3F2FD' : '#F5F5F5',
                     color:
                       event.status === 'PUBLISHED' ? '#2E7D32' :
+                      event.status === 'ONGOING'   ? '#283593' :
                       event.status === 'CANCELLED' ? '#C62828' :
                       event.status === 'COMPLETED' ? '#1565C0' : '#616161',
                   }}

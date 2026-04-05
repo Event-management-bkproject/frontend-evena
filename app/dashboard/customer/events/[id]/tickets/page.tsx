@@ -112,7 +112,7 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  if (event.status !== 'PUBLISHED') {
+  if (event.status !== 'PUBLISHED' && event.status !== 'ONGOING') {
     router.replace('/dashboard/customer');
     return null;
   }

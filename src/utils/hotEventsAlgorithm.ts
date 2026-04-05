@@ -18,8 +18,8 @@ export function calculateHotEvents(events: EventListResponse[], limit: number = 
 
   const scoredEvents = events
     .filter((event) => {
-      if (event.status !== 'PUBLISHED') return false;
-      return new Date(event.startAt) >= now;
+      if (event.status !== 'PUBLISHED' && event.status !== 'ONGOING') return false;
+      return new Date(event.startAt) >= now || event.status === 'ONGOING';
     })
     .map((event) => {
       const eventDate = new Date(event.startAt);
@@ -102,10 +102,10 @@ export function filterUpcomingEvents(
   const now = new Date();
 
   return events.filter((event) => {
-    if (event.status !== 'PUBLISHED') return false;
+    if (event.status !== 'PUBLISHED' && event.status !== 'ONGOING') return false;
 
     const eventDate = new Date(event.startAt);
-    if (eventDate < now) return false;
+    if (eventDate < now && event.status !== 'ONGOING') return false;
 
     // Category filter
     if (filters.categoryId && event.categoryId !== filters.categoryId) {

@@ -61,14 +61,11 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     router.push(`/dashboard/customer/events/${eventId}/tickets`);
   };
 
-  // Redirect when event is no longer accessible as PUBLISHED.
-  // Handles two cases:
-  //   1. Backend returns event with status !== 'PUBLISHED' (e.g. CANCELLED)
-  //   2. Backend returns 404/error after cancel (public endpoint filters non-PUBLISHED events)
+  // Redirect when event is no longer customer-visible (spec §1.1: PUBLISHED + ONGOING only).
   // Must be before any early returns — Rules of Hooks.
   useEffect(() => {
     if (eventLoading) return;
-    if (eventError || (event && event.status !== 'PUBLISHED')) {
+    if (eventError || (event && event.status !== 'PUBLISHED' && event.status !== 'ONGOING')) {
       router.replace('/dashboard/customer');
     }
   }, [event?.status, eventLoading, eventError, router]);
@@ -94,7 +91,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     );
   }
 
-  if (!eventLoading && (eventError || (event && event.status !== 'PUBLISHED'))) {
+  if (!eventLoading && (eventError || (event && event.status !== 'PUBLISHED' && event.status !== 'ONGOING'))) {
     return null;
   }
 
@@ -689,12 +686,16 @@ Don't miss your chance to be part of this extraordinary occasion. Get your ticke
                         backgroundColor:
                           event.status === 'PUBLISHED'
                             ? '#D1FAE5'
+                            : event.status === 'ONGOING'
+                            ? '#E8EAF6'
                             : event.status === 'CANCELLED'
                             ? '#FEE2E2'
                             : '#FEF3C7',
                         color:
                           event.status === 'PUBLISHED'
                             ? '#065F46'
+                            : event.status === 'ONGOING'
+                            ? '#283593'
                             : event.status === 'CANCELLED'
                             ? '#991B1B'
                             : '#92400E',
