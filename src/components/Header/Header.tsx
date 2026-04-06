@@ -207,6 +207,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
               }}
             >
               <Avatar
+                src={auth.user.avatarUrl ?? undefined}
                 sx={{
                   width: 32,
                   height: 32,
@@ -216,7 +217,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
                   fontWeight: 600,
                 }}
               >
-                {auth.user.name?.[0]?.toUpperCase() || 'U'}
+                {!auth.user.avatarUrl && (auth.user.name?.[0]?.toUpperCase() || 'U')}
               </Avatar>
             </IconButton>
           )}

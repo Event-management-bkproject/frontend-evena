@@ -15,7 +15,7 @@ import {
   Avatar,
 } from '@mui/material';
 import { MoreVert, CalendarToday, Place, Category, Edit, Delete, Groups, Public, Drafts, Event as EventIcon } from '@mui/icons-material';
-import Image from 'next/image';
+
 import { useTranslation } from 'react-i18next';
 import { EventListResponse, EventResponse, EventStatus } from '@/src/stores/types';
 import { formatDate, formatTime } from '@/src/utils/dateFormatters';
@@ -162,7 +162,13 @@ const EventCard: React.FC<EventCardProps> = ({
         {/* Event Cover Image */}
         <Box sx={{ position: 'relative', width: '100%', height: 180, backgroundColor: '#E4E6F5' }}>
           {coverUrl ? (
-            <Image src={coverUrl} alt={event.title} fill sizes="320px" style={{ objectFit: 'cover' }} />
+            <Box
+              component="img"
+              src={coverUrl}
+              alt={event.title}
+              sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }}
+            />
           ) : (
             <Box
               sx={{
