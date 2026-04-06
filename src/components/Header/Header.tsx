@@ -371,7 +371,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
         <MenuItem
           onClick={() => {
             handleAccountMenuClose();
-            handleNavigate('/dashboard');
+            handleNavigate('/dashboard/customer/profile');
           }}
           sx={{
             py: 1.5,
@@ -381,7 +381,7 @@ export default function Header({ cartItemCount }: HeaderProps) {
           }}
         >
           <AccountCircle sx={{ mr: 1.5, color: '#2A3363' }} />
-          <Typography variant="body2">My Account</Typography>
+          <Typography variant="body2">My Profile</Typography>
         </MenuItem>
         <MenuItem
           onClick={() => {

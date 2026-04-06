@@ -59,6 +59,8 @@ export default function OrganizerDashboard() {
               title={t('common.navigation.dashboard')}
               breadcrumbs={[{ label: t('common.navigation.dashboard') }]}
               userName={auth.user?.name ?? 'User'}
+              userAvatar={auth.user?.avatarUrl ?? undefined}
+              onProfileClick={() => router.push('/dashboard/organizer/profile')}
             />
           </Box>
 

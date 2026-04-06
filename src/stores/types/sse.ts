@@ -47,6 +47,7 @@ export enum SSEAction {
   ORDER_CONFIRM = 'order:confirm',
   ORDER_CANCEL  = 'order:cancel',
   ORDER_EXPIRE  = 'order:expire',
+  ORDER_REFUND  = 'order:refund',
 
   // Ticket (private user channel)
   TICKET_ISSUE   = 'ticket:issue',
@@ -99,6 +100,7 @@ export enum SSENormalizedType {
   ORDER_CONFIRMED = 'ORDER_CONFIRMED',
   ORDER_CANCELLED = 'ORDER_CANCELLED',
   ORDER_EXPIRED   = 'ORDER_EXPIRED',
+  ORDER_REFUNDED  = 'ORDER_REFUNDED',
 
   // Ticket (private user channel)
   TICKET_ISSUED     = 'TICKET_ISSUED',
@@ -152,6 +154,13 @@ export interface OrderEventData {
   ticketCount?: number;
 }
 
+export interface OrderRefundEventData {
+  orderId: number;
+  eventId: string;
+  eventName: string;
+  refundAmount?: number; // declared exception per spec §7.2 — allowed only on user:{id} channel
+}
+
 export interface TicketEventData {
   ticketId: number;
   orderId?: number;
@@ -191,6 +200,7 @@ export type SSEEventData =
   | { type: SSENormalizedType.ORDER_CONFIRMED; data: OrderEventData }
   | { type: SSENormalizedType.ORDER_CANCELLED; data: OrderEventData }
   | { type: SSENormalizedType.ORDER_EXPIRED;   data: OrderEventData }
+  | { type: SSENormalizedType.ORDER_REFUNDED;  data: OrderRefundEventData }
   | { type: SSENormalizedType.TICKET_ISSUED;     data: TicketEventData }
   | { type: SSENormalizedType.TICKET_CHECKED_IN; data: TicketEventData };
 

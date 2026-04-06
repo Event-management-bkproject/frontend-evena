@@ -2,10 +2,12 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReAuth } from './baseQuery';
 import {
   CreateEventRequest,
+  EventFileDTO,
   EventListResponse,
   EventResponse,
   EventSearchRequest,
   UpdateEventRequest,
+  UploadResponse,
 } from '../types/event';
 import { ApiResponse, PaginatedResponse } from '../types';
 
@@ -139,6 +141,56 @@ export const EventAPI = createApi({
       }),
       providesTags: ['Event'],
     }),
+
+    // Image upload endpoints
+    uploadEventCover: builder.mutation<UploadResponse, { eventId: string; file: FormData }>({
+      query: ({ eventId, file }) => ({
+        url: `/events/${eventId}/images/cover`,
+        method: 'POST',
+        body: file,
+      }),
+      invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
+    }),
+    uploadGalleryImage: builder.mutation<UploadResponse, { eventId: string; file: FormData }>({
+      query: ({ eventId, file }) => ({
+        url: `/events/${eventId}/images/gallery`,
+        method: 'POST',
+        body: file,
+      }),
+      invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
+    }),
+    deleteGalleryImage: builder.mutation<ApiResponse<string>, { eventId: string; url: string }>({
+      query: ({ eventId, url }) => ({
+        url: `/events/${eventId}/images/gallery`,
+        method: 'DELETE',
+        params: { url },
+      }),
+      invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
+    }),
+
+    // File attachment endpoints
+    uploadEventFile: builder.mutation<EventFileDTO, { eventId: string; file: FormData }>({
+      query: ({ eventId, file }) => ({
+        url: `/events/${eventId}/files`,
+        method: 'POST',
+        body: file,
+      }),
+      invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
+    }),
+    listEventFiles: builder.query<ApiResponse<EventFileDTO[]>, string>({
+      query: (eventId) => ({
+        url: `/events/${eventId}/files`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, eventId) => [{ type: 'Event', id: eventId }],
+    }),
+    deleteEventFile: builder.mutation<ApiResponse<string>, { eventId: string; fileId: number }>({
+      query: ({ eventId, fileId }) => ({
+        url: `/events/${eventId}/files/${fileId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
+    }),
   }),
 });
 export const {
@@ -153,4 +205,10 @@ export const {
   useGetMyEventsQuery,
   useGetPublicEventsQuery,
   useGetEventsByOrganizerQuery,
+  useUploadEventCoverMutation,
+  useUploadGalleryImageMutation,
+  useDeleteGalleryImageMutation,
+  useUploadEventFileMutation,
+  useListEventFilesQuery,
+  useDeleteEventFileMutation,
 } = EventAPI;

@@ -293,6 +293,20 @@ export interface TicketTypeListResponse {
   visible: boolean;
 }
 
+// Upload DTOs
+export interface UploadResponse {
+  url: string;
+}
+
+export interface EventFileDTO {
+  id: number;
+  fileName: string;
+  url: string;
+  contentType: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
 // OrganizationMember DTOs
 export interface InviteMemberRequest {
   email: string;

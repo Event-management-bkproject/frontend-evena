@@ -151,6 +151,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       on(SSEAction.ORDER_CONFIRM, SSENormalizedType.ORDER_CONFIRMED);
       on(SSEAction.ORDER_CANCEL,  SSENormalizedType.ORDER_CANCELLED);
       on(SSEAction.ORDER_EXPIRE,  SSENormalizedType.ORDER_EXPIRED);
+      on(SSEAction.ORDER_REFUND,  SSENormalizedType.ORDER_REFUNDED);
 
       // Ticket events (private user channel)
       on(SSEAction.TICKET_ISSUE,   SSENormalizedType.TICKET_ISSUED);
@@ -292,11 +293,20 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
         break;
 
-      // TicketType events - targeted by eventId
+      // TicketType events — CREATED/UPDATED/DELETED: only invalidate TicketType (spec §8)
+      // ACTIVATED/DEACTIVATED: also invalidate Event because availability visible to public
       case SSENormalizedType.TICKET_TYPE_CREATED:
-      case SSENormalizedType.TICKET_TYPE_ACTIVATED:
       case SSENormalizedType.TICKET_TYPE_UPDATED:
-      case SSENormalizedType.TICKET_TYPE_DELETED:
+      case SSENormalizedType.TICKET_TYPE_DELETED: {
+        const ttEventId = data?.eventId;
+        if (ttEventId) {
+          dispatch(TicketTypeAPI.util.invalidateTags([{ type: 'TicketType', id: ttEventId }]));
+        } else {
+          dispatch(TicketTypeAPI.util.invalidateTags(['TicketType']));
+        }
+        break;
+      }
+      case SSENormalizedType.TICKET_TYPE_ACTIVATED:
       case SSENormalizedType.TICKET_TYPE_DEACTIVATED: {
         const ttEventId = data?.eventId;
         if (ttEventId) {
@@ -322,6 +332,20 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         }
         if (type === SSENormalizedType.ORDER_CONFIRMED) {
           dispatch(OrderAPI.util.invalidateTags(['Ticket']));
+        }
+        break;
+      }
+
+      // order:refund — invalidate Order only (spec §8 ORDER_REFUNDED)
+      case SSENormalizedType.ORDER_REFUNDED: {
+        dispatch(OrderAPI.util.invalidateTags(['Order']));
+        const refundAmount = data?.refundAmount;
+        const eventName = data?.eventName as string | undefined;
+        if (isPersonalChannel && refundAmount != null && eventName) {
+          setNotification({
+            message: `Refund of ${refundAmount.toLocaleString()} has been processed for "${eventName}"`,
+            severity: 'info',
+          });
         }
         break;
       }

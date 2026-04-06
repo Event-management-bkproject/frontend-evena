@@ -29,7 +29,11 @@ export const eventSchema = yup.object({
   organizerId: yup.number().moreThan(0, 'Please select an organizer').required('Organizer is required'),
   categoryId: yup.number().moreThan(0, 'Please select a category').required('Category is required'),
   venueId: yup.number().moreThan(0, 'Please select a venue').required('Venue is required'),
-  coverUrl: yup.string().optional().nullable().url('Please enter a valid URL'),
+  coverUrl: yup.string().optional().nullable()
+    .test('is-url', 'Please enter a valid URL', (value) => {
+      if (!value) return true;
+      try { new URL(value); return true; } catch { return false; }
+    }),
 });
 
 // For update: contractual fields are disabled in the form when PUBLISHED (spec §3.3)
@@ -61,5 +65,9 @@ export const updateEventSchema = yup.object({
     }),
   categoryId: yup.number().optional().moreThan(0, 'Please select a category'),
   venueId: yup.number().optional().moreThan(0, 'Please select a venue'),
-  coverUrl: yup.string().optional().nullable().url('Please enter a valid URL'),
+  coverUrl: yup.string().optional().nullable()
+    .test('is-url', 'Please enter a valid URL', (value) => {
+      if (!value) return true;
+      try { new URL(value); return true; } catch { return false; }
+    }),
 });

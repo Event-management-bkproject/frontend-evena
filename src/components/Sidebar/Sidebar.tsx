@@ -15,7 +15,7 @@ import {
   Button,
 } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
-import { Logout as LogoutIcon } from '@mui/icons-material';
+import { Logout as LogoutIcon, Person as PersonIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import Image from 'next/image';
@@ -85,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
     { text: t('common.navigation.events'), path: '/dashboard/organizer/events', renderIcon: (a: boolean) => <EventsSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
     { text: t('common.navigation.orders') || 'Orders', path: '/dashboard/organizer/orders', renderIcon: (a: boolean) => <OrdersSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
     { text: 'FlexPass', path: '/dashboard/organizer/flexpass', renderIcon: (a: boolean) => <FlexPassSvgIcon color={a ? '#F36BF9' : '#2A3363'} />, exact: false },
+    { text: 'Profile', path: '/dashboard/organizer/profile', renderIcon: (a: boolean) => <PersonIcon sx={{ color: a ? '#F36BF9' : '#2A3363', fontSize: 20 }} />, exact: false },
   ];
 
   const isActiveRoute = (itemPath: string, exact: boolean = false) => {

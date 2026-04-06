@@ -12,6 +12,7 @@ import { TicketTypeAPI } from './services/TicketTypeApi';
 import { OrganizationMemberAPI } from './services/OrganizationMemberApi';
 import { OrderAPI } from './services/OrderApi';
 import { PaymentAPI } from './services/PaymentApi';
+import { UserAPI } from './services/UserApi';
 
 // Redux Persist configuration for auth slice
 // Security: Only persist user info, NOT accessToken (stored in memory only)
@@ -47,6 +48,7 @@ export const store = configureStore({
     [OrganizationMemberAPI.reducerPath]: OrganizationMemberAPI.reducer,
     [OrderAPI.reducerPath]: OrderAPI.reducer,
     [PaymentAPI.reducerPath]: PaymentAPI.reducer,
+    [UserAPI.reducerPath]: UserAPI.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -62,7 +64,8 @@ export const store = configureStore({
       .concat(TicketTypeAPI.middleware)
       .concat(OrganizationMemberAPI.middleware)
       .concat(OrderAPI.middleware)
-      .concat(PaymentAPI.middleware),
+      .concat(PaymentAPI.middleware)
+      .concat(UserAPI.middleware),
 });
 
 export const persistor = persistStore(store);

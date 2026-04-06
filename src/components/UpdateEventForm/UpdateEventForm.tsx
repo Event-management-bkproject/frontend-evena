@@ -114,6 +114,7 @@ export function UpdateEventForm({
         initialValues={initialValues}
         isEdit={true}
         isPublished={event.status === 'PUBLISHED'}
+        eventId={event.id}
       />
     </Box>
   );

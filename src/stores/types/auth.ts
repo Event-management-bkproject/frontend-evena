@@ -46,6 +46,7 @@ export interface UserResponse {
   status: UserStatus;
   emailVerified: boolean;
   roles: string[];
+  avatarUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
