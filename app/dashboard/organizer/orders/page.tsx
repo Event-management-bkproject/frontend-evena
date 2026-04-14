@@ -13,6 +13,8 @@ import {
   CircularProgress,
   Alert,
   Tooltip,
+  IconButton,
+  Snackbar,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { BRAND } from '@/src/utils/constants/constant';
@@ -21,6 +23,7 @@ import {
   ConfirmationNumber as TicketIcon,
   CheckCircle as SoldIcon,
   AttachMoney as EarningsIcon,
+  MoneyOff as RefundIcon,
 } from '@mui/icons-material';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
@@ -28,11 +31,12 @@ import DashboardHeader from '@/src/components/DashboardHeader/DashboardHeader';
 import { OrdersOverviewChart } from '@/src/components/charts/OrdersOverviewChart';
 import { OrdersCategoryChart } from '@/src/components/charts/OrdersCategoryChart';
 import { useGetOrganizerOrdersQuery } from '@/src/stores/services/OrderApi';
-import { OrderStatus, OrderResponse } from '@/src/stores/types/order';
+import { OrderStatus, OrderResponse, PaymentStatus } from '@/src/stores/types/order';
 import { StatCard } from '@/src/components/common/StatCard/StatCard';
 import { formatCurrency, formatTableDate } from '@/src/utils/format';
 import { ORDER_STATUS_CONFIG, ORDER_STATUSES, TABLE_PER_PAGE, OrderStatusFilter } from '@/src/utils/constants/constant';
 import { SAMPLE_ORDERS } from './sample.data';
+import { RefundDialog } from '@/src/components/RefundDialog/RefundDialog';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -48,6 +52,8 @@ function OrdersContent() {
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(0);
+  const [refundOrder, setRefundOrder] = useState<OrderResponse | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useGetOrganizerOrdersQuery({
     page: 0,
@@ -268,6 +274,7 @@ function OrdersContent() {
                       { label: t('common.labels.quantity'),    key: null,                                              width: '90px',  align: 'center' },
                       { label: t('common.labels.amount'),      key: 'totalAmount' as SortKey,                         width: '90px',  align: 'center' },
                       { label: t('common.labels.status'),      key: 'status' as SortKey,       pr: '15px',            width: '110px' },
+                      { label: 'Actions',                      key: null,                       pr: '15px',            width: '80px',  align: 'center' },
                     ] as Array<{ label: string; key: SortKey; pl?: string; pr?: string; width?: string; align?: 'center' | 'left' }>).map(({ label, key, pl, pr, width, align }) => (
                       <TableCell
                         key={label}
@@ -293,7 +300,7 @@ function OrdersContent() {
                 <TableBody>
                   {paged.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} sx={{ textAlign: 'center', py: '30px', color: '#ADACAE', fontSize: 12, borderBottom: 'none' }}>
+                      <TableCell colSpan={10} sx={{ textAlign: 'center', py: '30px', color: '#ADACAE', fontSize: 12, borderBottom: 'none' }}>
                         {t('organizer.noOrdersFound')}
                       </TableCell>
                     </TableRow>
@@ -385,6 +392,21 @@ function OrdersContent() {
                               {sc.label}
                             </Box>
                           </TableCell>
+                          {/* Actions: refund button for CONFIRMED orders with a SUCCESS payment */}
+                          <TableCell sx={{ py: '10px', px: '8px', border: 'none', width: '80px', textAlign: 'center' }}>
+                            {order.status === OrderStatus.CONFIRMED &&
+                              order.payments?.some((p) => p.status === PaymentStatus.SUCCESS) && (
+                              <Tooltip title="Process Refund">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => setRefundOrder(order)}
+                                  sx={{ color: '#F36BF9', '&:hover': { bgcolor: 'rgba(243,107,249,0.08)' } }}
+                                >
+                                  <RefundIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </TableCell>
                         </TableRow>
                       );
                     })
@@ -434,6 +456,35 @@ function OrdersContent() {
           </Box>
         </Box>
       </Box>
+
+      {/* Refund Dialog */}
+      {refundOrder && (() => {
+        const successPayment = refundOrder.payments?.find((p) => p.status === PaymentStatus.SUCCESS);
+        if (!successPayment) return null;
+        return (
+          <RefundDialog
+            open={!!refundOrder}
+            onClose={() => setRefundOrder(null)}
+            paymentId={successPayment.paymentId}
+            orderId={refundOrder.id}
+            orderAmount={refundOrder.totalAmount}
+            eventTitle={refundOrder.eventSnapshot?.title ?? '—'}
+            onSuccess={() => setSuccessMsg(`Refund for order #${refundOrder.id} processed successfully.`)}
+          />
+        );
+      })()}
+
+      {/* Success snackbar */}
+      <Snackbar
+        open={!!successMsg}
+        autoHideDuration={5000}
+        onClose={() => setSuccessMsg(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMsg(null)} severity="success" variant="filled">
+          {successMsg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

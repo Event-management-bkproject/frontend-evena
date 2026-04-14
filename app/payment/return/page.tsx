@@ -30,7 +30,9 @@ export default function PaymentReturnPage() {
 
   const [result, setResult] = useState<PaymentResult>('pending');
 
-  const orderId = searchParams.get('orderId');
+  // 'ref' is our internal order ID embedded in the redirect URL before MoMo appends its own params.
+  // MoMo also appends orderId=PAY_xxx so we must not use that for navigation.
+  const orderId = searchParams.get('ref');
   // MoMo resultCode: 0 = success, anything else = failure
   const resultCode = searchParams.get('resultCode');
   const momoMessage = searchParams.get('message');
