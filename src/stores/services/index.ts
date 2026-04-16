@@ -9,3 +9,4 @@ export * from './PaymentApi';
 export * from './TicketTypeApi';
 export * from './VenueApi';
 export * from './UserApi';
+export * from './RefundRequestApi';
