@@ -10,6 +10,7 @@ import { VenueAPI } from '../stores/services/VenueApi';
 import { OrganizationMemberAPI } from '../stores/services/OrganizationMemberApi';
 import { TicketTypeAPI } from '../stores/services/TicketTypeApi';
 import { OrderAPI } from '../stores/services/OrderApi';
+import { RefundRequestAPI } from '../stores/services/RefundRequestApi';
 import { SSEAction, SSENormalizedType } from '../stores/types/sse';
 import type { SSEContextType, SSEEvent, SSENotification } from '../stores/types/sse';
 
@@ -156,6 +157,12 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       // Ticket events (private user channel)
       on(SSEAction.TICKET_ISSUE,   SSENormalizedType.TICKET_ISSUED);
       on(SSEAction.TICKET_CHECKIN, SSENormalizedType.TICKET_CHECKED_IN);
+
+      // Refund Request events (private user channel)
+      on(SSEAction.REFUND_REQUEST_CREATED,   SSENormalizedType.REFUND_REQUEST_CREATED);
+      on(SSEAction.REFUND_REQUEST_REJECTED,  SSENormalizedType.REFUND_REQUEST_REJECTED);
+      on(SSEAction.REFUND_REQUEST_COMPLETED, SSENormalizedType.REFUND_REQUEST_COMPLETED);
+      on(SSEAction.REFUND_REQUEST_FAILED,    SSENormalizedType.REFUND_REQUEST_FAILED);
 
       eventSource.addEventListener('heartbeat', () => {
         // Heartbeat received — connection alive
@@ -319,31 +326,53 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         break;
       }
 
-      // Order events (private user channel)
-      case SSENormalizedType.ORDER_CREATED:
-      case SSENormalizedType.ORDER_CONFIRMED:
-      case SSENormalizedType.ORDER_CANCELLED:
-      case SSENormalizedType.ORDER_EXPIRED: {
-        const orderEventId = data?.eventId;
-        dispatch(OrderAPI.util.invalidateTags(['Order']));
-        if (orderEventId) {
-          dispatch(TicketTypeAPI.util.invalidateTags([{ type: 'TicketType', id: orderEventId }]));
-          dispatch(EventAPI.util.invalidateTags([{ type: 'Event', id: orderEventId }]));
-        }
-        if (type === SSENormalizedType.ORDER_CONFIRMED) {
-          dispatch(OrderAPI.util.invalidateTags(['Ticket']));
+      // ORDER_CONFIRMED — SSE-009: MUST invalidate Order + Ticket ONLY.
+      // MUST NOT invalidate Event or TicketType (snapshot isolation).
+      case SSENormalizedType.ORDER_CONFIRMED: {
+        dispatch(OrderAPI.util.invalidateTags(['Order', 'Ticket']));
+        // Only show customer toast. Organizer notifications (organizerNotification:true)
+        // are handled by OrganizerOrdersTable to avoid "Your tickets are confirmed" on organizer side.
+        if (isPersonalChannel && !data?.organizerNotification) {
+          const eventName = data?.eventName as string | undefined;
+          setNotification({
+            message: eventName
+              ? `Payment successful! Your tickets for "${eventName}" are confirmed.`
+              : 'Payment successful! Your tickets are confirmed.',
+            severity: 'success',
+          });
         }
         break;
       }
 
-      // order:refund — invalidate Order only (spec §8 ORDER_REFUNDED)
+      // ORDER_CREATED — invalidate Order only (no capacity change committed yet)
+      case SSENormalizedType.ORDER_CREATED:
+        dispatch(OrderAPI.util.invalidateTags(['Order']));
+        break;
+
+      // ORDER_CANCELLED / ORDER_EXPIRED — capacity freed, so refresh TicketType + Event
+      case SSENormalizedType.ORDER_CANCELLED:
+      case SSENormalizedType.ORDER_EXPIRED: {
+        dispatch(OrderAPI.util.invalidateTags(['Order']));
+        const orderEventId = data?.eventId;
+        if (orderEventId) {
+          dispatch(TicketTypeAPI.util.invalidateTags([{ type: 'TicketType', id: orderEventId }]));
+          dispatch(EventAPI.util.invalidateTags([{ type: 'Event', id: orderEventId }]));
+        }
+        break;
+      }
+
+      // ORDER_REFUNDED — SSE-010: invalidate Order only.
+      // refundAmount is the declared §7.2 exception — display in customer private toast only.
+      // Organizer notifications (organizerNotification:true) are handled by OrganizerOrdersTable.
       case SSENormalizedType.ORDER_REFUNDED: {
         dispatch(OrderAPI.util.invalidateTags(['Order']));
-        const refundAmount = data?.refundAmount;
-        const eventName = data?.eventName as string | undefined;
-        if (isPersonalChannel && refundAmount != null && eventName) {
+        if (isPersonalChannel && !data?.organizerNotification) {
+          const refundAmount = data?.refundAmount as number | undefined;
+          const eventName = data?.eventName as string | undefined;
           setNotification({
-            message: `Refund of ${refundAmount.toLocaleString()} has been processed for "${eventName}"`,
+            message: refundAmount != null && eventName
+              ? `Refund of ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(refundAmount)} has been processed for "${eventName}".`
+              : 'Your refund has been processed.',
             severity: 'info',
           });
         }
@@ -355,6 +384,69 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       case SSENormalizedType.TICKET_CHECKED_IN:
         dispatch(OrderAPI.util.invalidateTags(['Ticket']));
         break;
+
+      // Refund Request created — notify organizer on their private channel
+      case SSENormalizedType.REFUND_REQUEST_CREATED: {
+        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
+        if (isPersonalChannel) {
+          const eventName = data?.eventName as string | undefined;
+          const requesterName = data?.requesterName as string | undefined;
+          setNotification({
+            message: requesterName && eventName
+              ? `${requesterName} requested a refund for "${eventName}".`
+              : 'A new refund request has been submitted.',
+            severity: 'info',
+          });
+        }
+        break;
+      }
+
+      // Refund Request completed — invalidate cache; notify customer (not organizer toast)
+      case SSENormalizedType.REFUND_REQUEST_COMPLETED: {
+        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
+        if (isPersonalChannel && !data?.organizerNotification) {
+          const eventName = data?.eventName as string | undefined;
+          setNotification({
+            message: eventName
+              ? `Your refund request for "${eventName}" has been completed.`
+              : 'Your refund request has been completed.',
+            severity: 'success',
+          });
+        }
+        break;
+      }
+
+      // Refund Request failed — invalidate organizer cache + show warning
+      case SSENormalizedType.REFUND_REQUEST_FAILED: {
+        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
+        if (isPersonalChannel && data?.organizerNotification) {
+          const eventName = data?.eventName as string | undefined;
+          const orderId = data?.orderId as number | undefined;
+          setNotification({
+            message: orderId && eventName
+              ? `Refund processing failed for order #${orderId} — "${eventName}". Please review.`
+              : 'A refund processing request has failed.',
+            severity: 'error',
+          });
+        }
+        break;
+      }
+
+      // Refund Request rejected — notify customer with reviewNote
+      case SSENormalizedType.REFUND_REQUEST_REJECTED: {
+        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
+        if (isPersonalChannel) {
+          const eventName = data?.eventName as string | undefined;
+          const reviewNote = data?.reviewNote as string | undefined;
+          setNotification({
+            message: reviewNote
+              ? `Your refund request for "${eventName ?? 'event'}" was rejected: ${reviewNote}`
+              : `Your refund request for "${eventName ?? 'event'}" was rejected.`,
+            severity: 'warning',
+          });
+        }
+        break;
+      }
 
       default:
         break;

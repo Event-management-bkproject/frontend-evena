@@ -52,6 +52,12 @@ export enum SSEAction {
   // Ticket (private user channel)
   TICKET_ISSUE   = 'ticket:issue',
   TICKET_CHECKIN = 'ticket:checkin',
+
+  // Refund Request (private user channel)
+  REFUND_REQUEST_CREATED   = 'refund:created',
+  REFUND_REQUEST_REJECTED  = 'refund:reject',
+  REFUND_REQUEST_COMPLETED = 'refund:completed',
+  REFUND_REQUEST_FAILED    = 'refund:failed',
 }
 
 // ============= SSE NORMALIZED TYPE ENUM (used in frontend cache invalidation) =============
@@ -105,6 +111,12 @@ export enum SSENormalizedType {
   // Ticket (private user channel)
   TICKET_ISSUED     = 'TICKET_ISSUED',
   TICKET_CHECKED_IN = 'TICKET_CHECKED_IN',
+
+  // Refund Request (private user channel)
+  REFUND_REQUEST_CREATED   = 'REFUND_REQUEST_CREATED',
+  REFUND_REQUEST_REJECTED  = 'REFUND_REQUEST_REJECTED',
+  REFUND_REQUEST_COMPLETED = 'REFUND_REQUEST_COMPLETED',
+  REFUND_REQUEST_FAILED    = 'REFUND_REQUEST_FAILED',
 }
 
 // ============= SSE EVENT DATA SHAPES =============
@@ -169,6 +181,46 @@ export interface TicketEventData {
   ticketTypeName?: string;
 }
 
+export interface RefundRequestCreatedEventData {
+  refundRequestId: number;
+  orderId: number;
+  eventId: string;
+  eventName: string;
+  requesterName: string;
+}
+
+export interface RefundRequestRejectedEventData {
+  refundRequestId: number;
+  orderId: number;
+  eventId: string;
+  eventName: string;
+  reviewNote?: string;
+}
+
+export interface RefundRequestCompletedEventData {
+  refundRequestId: number;
+  orderId: number;
+  eventId: string;
+  eventName: string;
+  organizerNotification?: boolean;
+}
+
+export interface RefundRequestFailedEventData {
+  refundRequestId: number;
+  orderId: number;
+  eventId: string;
+  eventName: string;
+  organizerNotification?: boolean;
+}
+
+/** @deprecated use RefundRequestCreatedEventData or RefundRequestRejectedEventData */
+export interface RefundRequestEventData {
+  refundRequestId: number;
+  orderId: number;
+  eventName: string;
+  reviewNote?: string;
+}
+
 // ============= DISCRIMINATED UNION =============
 
 export type SSEEventData =
@@ -202,7 +254,11 @@ export type SSEEventData =
   | { type: SSENormalizedType.ORDER_EXPIRED;   data: OrderEventData }
   | { type: SSENormalizedType.ORDER_REFUNDED;  data: OrderRefundEventData }
   | { type: SSENormalizedType.TICKET_ISSUED;     data: TicketEventData }
-  | { type: SSENormalizedType.TICKET_CHECKED_IN; data: TicketEventData };
+  | { type: SSENormalizedType.TICKET_CHECKED_IN; data: TicketEventData }
+  | { type: SSENormalizedType.REFUND_REQUEST_CREATED;   data: RefundRequestCreatedEventData }
+  | { type: SSENormalizedType.REFUND_REQUEST_REJECTED;  data: RefundRequestRejectedEventData }
+  | { type: SSENormalizedType.REFUND_REQUEST_COMPLETED; data: RefundRequestCompletedEventData }
+  | { type: SSENormalizedType.REFUND_REQUEST_FAILED;    data: RefundRequestFailedEventData };
 
 // ============= SSE EVENT INTERFACE =============
 
