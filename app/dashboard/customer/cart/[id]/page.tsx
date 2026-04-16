@@ -24,13 +24,16 @@ import {
   FormControl,
   FormLabel,
 } from '@mui/material';
-import { ArrowBack, CheckCircle, Payment } from '@mui/icons-material';
+import { ArrowBack, AssignmentReturn, CheckCircle, Payment } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGetMyOrdersQuery, useCheckoutOrderMutation } from '@/src/stores/services/OrderApi';
 import { OrderStatus, PaymentProvider } from '@/src/stores/types/order';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useTranslation } from 'react-i18next';
+import { CreateRefundRequestDialog } from '@/src/components/CreateRefundRequestDialog/CreateRefundRequestDialog';
+import { useGetMyRefundRequestsQuery } from '@/src/stores/services/RefundRequestApi';
+import { RefundRequestStatus } from '@/src/stores/types/refundRequest';
 
 // SSE cache invalidation is handled globally by SSEProvider.
 // useGetMyOrdersQuery (provides ['Order']) auto-refetches on order:confirm/cancel/expire events.
@@ -48,9 +51,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(PaymentProvider.MOMO);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
 
   const { data, isLoading, error } = useGetMyOrdersQuery({ page: 0, size: 100 });
   const [checkoutOrder, { isLoading: isCheckingOut }] = useCheckoutOrderMutation();
+
+  // Check if a pending refund request already exists for this order
+  const { data: myRefundRequests } = useGetMyRefundRequestsQuery({ page: 0, size: 50 });
+  const hasExistingRequest = useMemo(() => {
+    const requests = myRefundRequests?.data?.content ?? [];
+    return requests.some(
+      (r) => r.orderId === orderId && r.status === RefundRequestStatus.PENDING,
+    );
+  }, [myRefundRequests, orderId]);
 
   const order = useMemo(() => {
     if (!data?.data?.content) return null;
@@ -353,22 +366,45 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               </Card>
             )}
 
-            {/* View tickets button after confirmation */}
+            {/* View tickets + refund request for CONFIRMED orders */}
             {order.status === OrderStatus.CONFIRMED && (
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={() => router.push('/dashboard/customer/my-tickets')}
-                sx={{
-                  backgroundColor: '#F36BF9',
-                  py: 1.5,
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  '&:hover': { backgroundColor: '#e55ae0' },
-                }}
-              >
-                {t('customer.viewMyTickets')}
-              </Button>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => router.push('/dashboard/customer/my-tickets')}
+                  sx={{
+                    backgroundColor: '#F36BF9',
+                    py: 1.5,
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    '&:hover': { backgroundColor: '#e55ae0' },
+                  }}
+                >
+                  {t('customer.viewMyTickets')}
+                </Button>
+
+                {order.totalAmount > 0 && (
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<AssignmentReturn />}
+                    disabled={hasExistingRequest}
+                    onClick={() => setRefundDialogOpen(true)}
+                    sx={{
+                      py: 1.5,
+                      borderRadius: '12px',
+                      fontWeight: 600,
+                      borderColor: '#F36BF9',
+                      color: '#F36BF9',
+                      '&:hover': { borderColor: '#d94ee0', color: '#d94ee0', backgroundColor: 'rgba(243,107,249,0.04)' },
+                      '&.Mui-disabled': { opacity: 0.5 },
+                    }}
+                  >
+                    {hasExistingRequest ? 'Refund Request Pending' : 'Request Refund'}
+                  </Button>
+                )}
+              </Box>
             )}
 
             {/* Processing state — allow user to continue payment */}
@@ -400,6 +436,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       </Container>
 
       <Footer />
+
+      {/* Refund request dialog */}
+      <CreateRefundRequestDialog
+        open={refundDialogOpen}
+        onClose={() => setRefundDialogOpen(false)}
+        orderId={order.id}
+        eventTitle={order.eventTitle}
+        refundAmount={order.totalAmount}
+      />
     </Box>
   );
 }
