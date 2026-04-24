@@ -205,6 +205,7 @@ export interface OrderListResponse {
   ticketCount: number;
   createdAt: string;
   updatedAt: string;
+  payments?: PaymentResponse[];
   items?: Array<{
     id: number;
     ticketTypeId: number;

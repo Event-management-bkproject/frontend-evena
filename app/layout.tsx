@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next';
+import { Roboto } from 'next/font/google';
 import AuthInitializer from '@/src/components/AuthInitializer';
+
+const roboto = Roboto({
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin', 'vietnamese'],
+  display: 'swap',
+  variable: '--font-roboto',
+});
 import { Providers } from './providers';
 import { QueryProvider } from '@/src/providers/QueryProvider';
 import { SSEProvider } from '@/src/providers/SSEProvider';
@@ -70,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           referrerPolicy="no-referrer"
         />
       </head>
-      <body style={{ margin: 0, padding: 0 }} suppressHydrationWarning>
+      <body className={roboto.className} style={{ margin: 0, padding: 0 }} suppressHydrationWarning>
         <QueryProvider>
           <Providers>
             <I18nProvider>

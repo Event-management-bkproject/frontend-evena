@@ -21,7 +21,7 @@ import {
   Avatar,
   Divider,
 } from '@mui/material';
-import { ShoppingCart, Menu as MenuIcon, Close, Logout, AccountCircle, ConfirmationNumber } from '@mui/icons-material';
+import { ShoppingCart, Menu as MenuIcon, Close, Logout, AccountCircle, ConfirmationNumber, NotificationsOutlined } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
@@ -84,12 +84,20 @@ export default function Header({ cartItemCount }: HeaderProps) {
     setAccountMenuAnchor(null);
   };
 
-  const menuItems = [
-    { label: 'Home', path: homePath },
-    { label: 'About Us', path: '/about' },
-    { label: 'Services', path: '/services' },
-    { label: 'Contact', path: '/contact' },
-  ];
+  const roles = auth.user?.roles ?? [];
+  const isOrganizerOrAdmin = roles.includes('ADMIN') || roles.includes('ORGANIZER');
+
+  const menuItems = isOrganizerOrAdmin
+    ? [
+        { label: 'Home', path: '/dashboard/customer' },
+        { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
+      ]
+    : [
+        { label: 'Home', path: '/dashboard/customer' },
+        { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
+        { label: 'My Tickets', path: '/dashboard/customer/my-tickets' },
+        { label: 'My Orders', path: '/dashboard/customer/cart' },
+      ];
 
   return (
     <AppBar
@@ -171,11 +179,23 @@ export default function Header({ cartItemCount }: HeaderProps) {
             </IconButton>
           )}
 
-          {/* Buy Ticket Button - Desktop */}
-          {!isMobile && (
+          {/* Notification Bell */}
+          {auth?.accessToken && (
+            <IconButton
+              sx={{
+                color: 'white',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
+              }}
+            >
+              <NotificationsOutlined />
+            </IconButton>
+          )}
+
+          {/* Login button for unauthenticated users */}
+          {!auth?.accessToken && !isMobile && (
             <Button
               variant="contained"
-              onClick={handleBuyTicket}
+              onClick={() => handleNavigate('/login')}
               sx={{
                 backgroundColor: 'white',
                 color: '#ED4690',
@@ -184,14 +204,11 @@ export default function Header({ cartItemCount }: HeaderProps) {
                 px: 3,
                 py: 1,
                 borderRadius: '25px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.3)',
-                },
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.9)' },
               }}
             >
-              {auth?.accessToken ? 'Buy Ticket' : 'Login'}
+              Login
             </Button>
           )}
 
@@ -290,29 +307,27 @@ export default function Header({ cartItemCount }: HeaderProps) {
             </List>
           )}
 
-          {/* Buy Ticket Button - Mobile */}
-          <Box sx={{ mt: 3, px: 2 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={handleBuyTicket}
-              sx={{
-                backgroundColor: '#F36BF9',
-                color: 'white',
-                textTransform: 'none',
-                fontWeight: 600,
-                py: 1.5,
-                borderRadius: '25px',
-                boxShadow: '0 4px 12px rgba(243, 107, 249, 0.3)',
-                '&:hover': {
-                  backgroundColor: '#e55ae0',
-                  boxShadow: '0 6px 16px rgba(243, 107, 249, 0.4)',
-                },
-              }}
-            >
-              {auth?.accessToken ? 'Buy Ticket' : 'Login'}
-            </Button>
-          </Box>
+          {/* Login Button - Mobile (unauthenticated only) */}
+          {!auth?.accessToken && (
+            <Box sx={{ mt: 3, px: 2 }}>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => handleNavigate('/login')}
+                sx={{
+                  backgroundColor: '#F36BF9',
+                  color: 'white',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  py: 1.5,
+                  borderRadius: '25px',
+                  '&:hover': { backgroundColor: '#e55ae0' },
+                }}
+              >
+                Login
+              </Button>
+            </Box>
+          )}
 
           {/* Logout Button - Mobile */}
           {auth?.user && (
