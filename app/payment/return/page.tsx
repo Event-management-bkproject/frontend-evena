@@ -7,7 +7,6 @@ import {
   Typography,
   Button,
   Card,
-  CircularProgress,
 } from '@mui/material';
 import { CheckCircle, Cancel, HourglassEmpty } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,13 +14,29 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { useTranslation } from 'react-i18next';
 
-// MoMo redirects back here with query params:
-//   orderId    — our internal order ID (set in returnUrl when initiating checkout)
-//   resultCode — MoMo result code (0 = success)
-//   message    — MoMo message
-//   (other MoMo params: partnerCode, requestId, amount, etc.)
+// Payment return page — handles both MoMo and VNPay redirects.
+//
+// MoMo params:  resultCode (0 = success), message
+// VNPay params: vnp_ResponseCode ("00" = success), vnp_OrderInfo
+//
+// Our internal order ID is always in the 'ref' query param, which we append
+// to the returnUrl before the gateway adds its own params.
 
 type PaymentResult = 'success' | 'failed' | 'pending';
+
+function resolveResult(searchParams: URLSearchParams): PaymentResult {
+  // VNPay
+  const vnpCode = searchParams.get('vnp_ResponseCode');
+  if (vnpCode !== null) {
+    return vnpCode === '00' ? 'success' : 'failed';
+  }
+  // MoMo
+  const resultCode = searchParams.get('resultCode');
+  if (resultCode !== null) {
+    return resultCode === '0' ? 'success' : 'failed';
+  }
+  return 'pending';
+}
 
 export default function PaymentReturnPage() {
   const router = useRouter();
@@ -30,49 +45,41 @@ export default function PaymentReturnPage() {
 
   const [result, setResult] = useState<PaymentResult>('pending');
 
-  // 'ref' is our internal order ID embedded in the redirect URL before MoMo appends its own params.
-  // MoMo also appends orderId=PAY_xxx so we must not use that for navigation.
+  // 'ref' carries our internal order ID for both gateways
   const orderId = searchParams.get('ref');
-  // MoMo resultCode: 0 = success, anything else = failure
-  const resultCode = searchParams.get('resultCode');
-  const momoMessage = searchParams.get('message');
+  const errorMessage =
+    searchParams.get('message') ||
+    (searchParams.get('vnp_ResponseCode') && searchParams.get('vnp_ResponseCode') !== '00'
+      ? `VNPay error: ${searchParams.get('vnp_ResponseCode')}`
+      : null);
 
   useEffect(() => {
-    if (resultCode === null) {
-      // No resultCode — may have navigated here directly, treat as pending
-      setResult('pending');
-      return;
-    }
-    setResult(resultCode === '0' ? 'success' : 'failed');
-  }, [resultCode]);
+    setResult(resolveResult(searchParams));
+  }, [searchParams]);
 
   const config: Record<PaymentResult, {
     icon: React.ReactNode;
-    color: string;
     titleKey: string;
     descKey: string;
   }> = {
     success: {
       icon: <CheckCircle sx={{ fontSize: 80, color: '#4CAF50' }} />,
-      color: '#4CAF50',
       titleKey: 'payment.successTitle',
       descKey: 'payment.successDesc',
     },
     failed: {
       icon: <Cancel sx={{ fontSize: 80, color: '#F44336' }} />,
-      color: '#F44336',
       titleKey: 'payment.failedTitle',
       descKey: 'payment.failedDesc',
     },
     pending: {
       icon: <HourglassEmpty sx={{ fontSize: 80, color: '#FF9800' }} />,
-      color: '#FF9800',
       titleKey: 'payment.pendingTitle',
       descKey: 'payment.pendingDesc',
     },
   };
 
-  const { icon, color, titleKey, descKey } = config[result];
+  const { icon, titleKey, descKey } = config[result];
 
   return (
     <Box sx={{ backgroundColor: '#FAFAFA', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -98,9 +105,9 @@ export default function PaymentReturnPage() {
             {t(descKey)}
           </Typography>
 
-          {momoMessage && result === 'failed' && (
+          {errorMessage && result === 'failed' && (
             <Typography variant="body2" color="error" sx={{ mb: 2 }}>
-              {momoMessage}
+              {errorMessage}
             </Typography>
           )}
 

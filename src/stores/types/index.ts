@@ -10,3 +10,4 @@ export * from './api';
 export * from './order';
 export * from './payment';
 export * from './errors';
+export * from './flexpass';

@@ -8,5 +8,6 @@ export * from './OrderApi';
 export * from './PaymentApi';
 export * from './TicketTypeApi';
 export * from './VenueApi';
-export * from './UserApi';
+export { UserAPI, useUploadAvatarMutation, useDeleteAvatarMutation } from './UserApi';
 export * from './RefundRequestApi';
+export * from './FlexPassApi';

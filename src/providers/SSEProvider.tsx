@@ -11,6 +11,7 @@ import { OrganizationMemberAPI } from '../stores/services/OrganizationMemberApi'
 import { TicketTypeAPI } from '../stores/services/TicketTypeApi';
 import { OrderAPI } from '../stores/services/OrderApi';
 import { RefundRequestAPI } from '../stores/services/RefundRequestApi';
+import { FlexPassAPI } from '../stores/services/FlexPassApi';
 import { SSEAction, SSENormalizedType } from '../stores/types/sse';
 import type { SSEContextType, SSEEvent, SSENotification } from '../stores/types/sse';
 
@@ -163,6 +164,26 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       on(SSEAction.REFUND_REQUEST_REJECTED,  SSENormalizedType.REFUND_REQUEST_REJECTED);
       on(SSEAction.REFUND_REQUEST_COMPLETED, SSENormalizedType.REFUND_REQUEST_COMPLETED);
       on(SSEAction.REFUND_REQUEST_FAILED,    SSENormalizedType.REFUND_REQUEST_FAILED);
+
+      // FlexPass listing events — organizer,admin channel (SSE-018)
+      on(SSEAction.FLEXPASS_LISTING_CREATED,   SSENormalizedType.FLEXPASS_LISTING_CREATED);
+      on(SSEAction.FLEXPASS_LISTING_CANCELLED, SSENormalizedType.FLEXPASS_LISTING_CANCELLED);
+      // FlexPass listing events — user:{sellerId} channel (SSE-019)
+      on(SSEAction.FLEXPASS_LISTING_APPROVED, SSENormalizedType.FLEXPASS_LISTING_APPROVED);
+      on(SSEAction.FLEXPASS_LISTING_REJECTED, SSENormalizedType.FLEXPASS_LISTING_REJECTED);
+      on(SSEAction.FLEXPASS_LISTING_EXPIRED,  SSENormalizedType.FLEXPASS_LISTING_EXPIRED);
+      on(SSEAction.FLEXPASS_PRICE_LOCKED,     SSENormalizedType.FLEXPASS_PRICE_LOCKED);
+      // FlexPass sale window events — organizer,admin channel (SSE-018)
+      on(SSEAction.FLEXPASS_SALE_WINDOW_CREATED,   SSENormalizedType.FLEXPASS_SALE_WINDOW_CREATED);
+      on(SSEAction.FLEXPASS_SALE_WINDOW_CANCELLED, SSENormalizedType.FLEXPASS_SALE_WINDOW_CANCELLED);
+      on(SSEAction.FLEXPASS_SALE_WINDOW_OPENED,    SSENormalizedType.FLEXPASS_SALE_WINDOW_OPENED);
+      on(SSEAction.FLEXPASS_SALE_WINDOW_CLOSED,    SSENormalizedType.FLEXPASS_SALE_WINDOW_CLOSED);
+      // FlexPass purchase events — user:{buyerId} + user:{sellerId} channels (SSE-019)
+      on(SSEAction.FLEXPASS_TRANSFER_COMPLETED, SSENormalizedType.FLEXPASS_TRANSFER_COMPLETED);
+      on(SSEAction.FLEXPASS_TRANSFER_FAILED,    SSENormalizedType.FLEXPASS_TRANSFER_FAILED);
+      on(SSEAction.FLEXPASS_REFUND_PENDING,     SSENormalizedType.FLEXPASS_REFUND_PENDING);
+      on(SSEAction.FLEXPASS_REFUND_COMPLETED,   SSENormalizedType.FLEXPASS_REFUND_COMPLETED);
+      on(SSEAction.FLEXPASS_REFUND_FAILED,      SSENormalizedType.FLEXPASS_REFUND_FAILED);
 
       eventSource.addEventListener('heartbeat', () => {
         // Heartbeat received — connection alive
@@ -447,6 +468,61 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         }
         break;
       }
+
+      // FlexPass listing events — invalidate listings cache
+      case SSENormalizedType.FLEXPASS_LISTING_CREATED:
+      case SSENormalizedType.FLEXPASS_LISTING_CANCELLED:
+      case SSENormalizedType.FLEXPASS_LISTING_APPROVED:
+      case SSENormalizedType.FLEXPASS_LISTING_REJECTED:
+      case SSENormalizedType.FLEXPASS_LISTING_EXPIRED:
+      case SSENormalizedType.FLEXPASS_PRICE_LOCKED:
+        dispatch(FlexPassAPI.util.invalidateTags(['FlexPassListing']));
+        if (isPersonalChannel) {
+          const eventName = data?.eventName as string | undefined;
+          const status = data?.status as string | undefined;
+          if (lastEvent?.type === SSENormalizedType.FLEXPASS_LISTING_APPROVED && eventName) {
+            setNotification({ message: `Your listing for "${eventName}" was approved.`, severity: 'success' });
+          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_LISTING_REJECTED && eventName) {
+            const reason = data?.rejectionReason as string | undefined;
+            setNotification({ message: reason ? `Listing rejected: ${reason}` : `Your listing for "${eventName}" was rejected.`, severity: 'warning' });
+          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_LISTING_EXPIRED && eventName) {
+            setNotification({ message: `Your FlexPass listing for "${eventName}" has expired.`, severity: 'info' });
+          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_PRICE_LOCKED && eventName) {
+            setNotification({ message: `Price locked for your FlexPass listing — "${eventName}".`, severity: 'info' });
+          } else if (status) {
+            void status; // suppress unused warning
+          }
+        }
+        break;
+
+      // FlexPass sale window events — invalidate listings + sale window cache
+      case SSENormalizedType.FLEXPASS_SALE_WINDOW_CREATED:
+      case SSENormalizedType.FLEXPASS_SALE_WINDOW_CANCELLED:
+      case SSENormalizedType.FLEXPASS_SALE_WINDOW_OPENED:
+      case SSENormalizedType.FLEXPASS_SALE_WINDOW_CLOSED:
+        dispatch(FlexPassAPI.util.invalidateTags(['FlexPassListing', 'FlexPassSaleWindow']));
+        break;
+
+      // FlexPass purchase events — invalidate listings cache; notify buyer/seller
+      case SSENormalizedType.FLEXPASS_TRANSFER_COMPLETED:
+      case SSENormalizedType.FLEXPASS_TRANSFER_FAILED:
+      case SSENormalizedType.FLEXPASS_REFUND_PENDING:
+      case SSENormalizedType.FLEXPASS_REFUND_COMPLETED:
+      case SSENormalizedType.FLEXPASS_REFUND_FAILED:
+        dispatch(FlexPassAPI.util.invalidateTags(['FlexPassListing']));
+        if (isPersonalChannel) {
+          const eventName = data?.eventName as string | undefined;
+          if (lastEvent?.type === SSENormalizedType.FLEXPASS_TRANSFER_COMPLETED && eventName) {
+            setNotification({ message: `FlexPass transfer completed for "${eventName}".`, severity: 'success' });
+          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_TRANSFER_FAILED && eventName) {
+            setNotification({ message: `FlexPass transfer failed for "${eventName}". Refund will be processed.`, severity: 'error' });
+          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_REFUND_COMPLETED && eventName) {
+            setNotification({ message: `FlexPass refund completed for "${eventName}".`, severity: 'success' });
+          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_REFUND_FAILED && eventName) {
+            setNotification({ message: `FlexPass refund failed for "${eventName}". Please contact support.`, severity: 'error' });
+          }
+        }
+        break;
 
       default:
         break;

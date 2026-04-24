@@ -58,6 +58,26 @@ export enum SSEAction {
   REFUND_REQUEST_REJECTED  = 'refund:reject',
   REFUND_REQUEST_COMPLETED = 'refund:completed',
   REFUND_REQUEST_FAILED    = 'refund:failed',
+
+  // FlexPass listing — organizer,admin channel (SSE-018)
+  FLEXPASS_LISTING_CREATED   = 'flexpass:listing_created',
+  FLEXPASS_LISTING_CANCELLED = 'flexpass:listing_cancelled',
+  // FlexPass listing — user:{sellerId} channel (SSE-019)
+  FLEXPASS_LISTING_APPROVED  = 'flexpass:listing_approved',
+  FLEXPASS_LISTING_REJECTED  = 'flexpass:listing_rejected',
+  FLEXPASS_LISTING_EXPIRED   = 'flexpass:listing_expired',
+  FLEXPASS_PRICE_LOCKED      = 'flexpass:price_locked',
+  // FlexPass sale window — organizer,admin channel (SSE-018)
+  FLEXPASS_SALE_WINDOW_CREATED   = 'flexpass:sale_window_created',
+  FLEXPASS_SALE_WINDOW_CANCELLED = 'flexpass:sale_window_cancelled',
+  FLEXPASS_SALE_WINDOW_OPENED    = 'flexpass:sale_window_opened',
+  FLEXPASS_SALE_WINDOW_CLOSED    = 'flexpass:sale_window_closed',
+  // FlexPass purchase — user:{buyerId} + user:{sellerId} channels (SSE-019)
+  FLEXPASS_TRANSFER_COMPLETED = 'flexpass:transfer_completed',
+  FLEXPASS_TRANSFER_FAILED    = 'flexpass:transfer_failed',
+  FLEXPASS_REFUND_PENDING     = 'flexpass:refund_pending',
+  FLEXPASS_REFUND_COMPLETED   = 'flexpass:refund_completed',
+  FLEXPASS_REFUND_FAILED      = 'flexpass:refund_failed',
 }
 
 // ============= SSE NORMALIZED TYPE ENUM (used in frontend cache invalidation) =============
@@ -117,6 +137,26 @@ export enum SSENormalizedType {
   REFUND_REQUEST_REJECTED  = 'REFUND_REQUEST_REJECTED',
   REFUND_REQUEST_COMPLETED = 'REFUND_REQUEST_COMPLETED',
   REFUND_REQUEST_FAILED    = 'REFUND_REQUEST_FAILED',
+
+  // FlexPass listing — organizer,admin channel (SSE-018)
+  FLEXPASS_LISTING_CREATED   = 'FLEXPASS_LISTING_CREATED',
+  FLEXPASS_LISTING_CANCELLED = 'FLEXPASS_LISTING_CANCELLED',
+  // FlexPass listing — user:{sellerId} channel (SSE-019)
+  FLEXPASS_LISTING_APPROVED = 'FLEXPASS_LISTING_APPROVED',
+  FLEXPASS_LISTING_REJECTED = 'FLEXPASS_LISTING_REJECTED',
+  FLEXPASS_LISTING_EXPIRED  = 'FLEXPASS_LISTING_EXPIRED',
+  FLEXPASS_PRICE_LOCKED     = 'FLEXPASS_PRICE_LOCKED',
+  // FlexPass sale window — organizer,admin channel (SSE-018)
+  FLEXPASS_SALE_WINDOW_CREATED   = 'FLEXPASS_SALE_WINDOW_CREATED',
+  FLEXPASS_SALE_WINDOW_CANCELLED = 'FLEXPASS_SALE_WINDOW_CANCELLED',
+  FLEXPASS_SALE_WINDOW_OPENED    = 'FLEXPASS_SALE_WINDOW_OPENED',
+  FLEXPASS_SALE_WINDOW_CLOSED    = 'FLEXPASS_SALE_WINDOW_CLOSED',
+  // FlexPass purchase — user:{buyerId} + user:{sellerId} channels (SSE-019)
+  FLEXPASS_TRANSFER_COMPLETED = 'FLEXPASS_TRANSFER_COMPLETED',
+  FLEXPASS_TRANSFER_FAILED    = 'FLEXPASS_TRANSFER_FAILED',
+  FLEXPASS_REFUND_PENDING     = 'FLEXPASS_REFUND_PENDING',
+  FLEXPASS_REFUND_COMPLETED   = 'FLEXPASS_REFUND_COMPLETED',
+  FLEXPASS_REFUND_FAILED      = 'FLEXPASS_REFUND_FAILED',
 }
 
 // ============= SSE EVENT DATA SHAPES =============
@@ -213,6 +253,33 @@ export interface RefundRequestFailedEventData {
   organizerNotification?: boolean;
 }
 
+export interface FlexPassListingEventData {
+  listingId: number;
+  ticketId: number;
+  eventId: string;
+  eventName: string;
+  sellerId: string;
+  status: string;
+  rejectionReason?: string;
+}
+
+export interface FlexPassSaleWindowEventData {
+  saleWindowId: number;
+  eventId: string;
+  eventName: string;
+  status: string;
+}
+
+export interface FlexPassPurchaseEventData {
+  purchaseId?: number;
+  listingId: number;
+  eventId: string;
+  eventName: string;
+  buyerId: string;
+  sellerId: string;
+  status?: string;
+}
+
 /** @deprecated use RefundRequestCreatedEventData or RefundRequestRejectedEventData */
 export interface RefundRequestEventData {
   refundRequestId: number;
@@ -258,7 +325,22 @@ export type SSEEventData =
   | { type: SSENormalizedType.REFUND_REQUEST_CREATED;   data: RefundRequestCreatedEventData }
   | { type: SSENormalizedType.REFUND_REQUEST_REJECTED;  data: RefundRequestRejectedEventData }
   | { type: SSENormalizedType.REFUND_REQUEST_COMPLETED; data: RefundRequestCompletedEventData }
-  | { type: SSENormalizedType.REFUND_REQUEST_FAILED;    data: RefundRequestFailedEventData };
+  | { type: SSENormalizedType.REFUND_REQUEST_FAILED;    data: RefundRequestFailedEventData }
+  | { type: SSENormalizedType.FLEXPASS_LISTING_CREATED;   data: FlexPassListingEventData }
+  | { type: SSENormalizedType.FLEXPASS_LISTING_CANCELLED; data: FlexPassListingEventData }
+  | { type: SSENormalizedType.FLEXPASS_LISTING_APPROVED;  data: FlexPassListingEventData }
+  | { type: SSENormalizedType.FLEXPASS_LISTING_REJECTED;  data: FlexPassListingEventData }
+  | { type: SSENormalizedType.FLEXPASS_LISTING_EXPIRED;   data: FlexPassListingEventData }
+  | { type: SSENormalizedType.FLEXPASS_PRICE_LOCKED;      data: FlexPassListingEventData }
+  | { type: SSENormalizedType.FLEXPASS_SALE_WINDOW_CREATED;   data: FlexPassSaleWindowEventData }
+  | { type: SSENormalizedType.FLEXPASS_SALE_WINDOW_CANCELLED; data: FlexPassSaleWindowEventData }
+  | { type: SSENormalizedType.FLEXPASS_SALE_WINDOW_OPENED;    data: FlexPassSaleWindowEventData }
+  | { type: SSENormalizedType.FLEXPASS_SALE_WINDOW_CLOSED;    data: FlexPassSaleWindowEventData }
+  | { type: SSENormalizedType.FLEXPASS_TRANSFER_COMPLETED; data: FlexPassPurchaseEventData }
+  | { type: SSENormalizedType.FLEXPASS_TRANSFER_FAILED;    data: FlexPassPurchaseEventData }
+  | { type: SSENormalizedType.FLEXPASS_REFUND_PENDING;     data: FlexPassPurchaseEventData }
+  | { type: SSENormalizedType.FLEXPASS_REFUND_COMPLETED;   data: FlexPassPurchaseEventData }
+  | { type: SSENormalizedType.FLEXPASS_REFUND_FAILED;      data: FlexPassPurchaseEventData };
 
 // ============= SSE EVENT INTERFACE =============
 

@@ -2,13 +2,58 @@
 // Single source of truth for Evena brand palette.
 // Use these instead of hardcoding hex strings in component sx props.
 export const BRAND = {
-  primary: '#F36BF9',
+  // ── Primary ────────────────────────────────────────────────────────────────
+  primary:      '#F36BF9',
   primaryHover: '#e55ae0',
   primaryLight: '#FDE3FE',
-  dark: '#2A3363',
-  darkSecondary: '#36437C',
-  bgPage: '#FAFAFA',
-  bgSection: '#F7F7F7',
+
+  // ── Dark / navy ────────────────────────────────────────────────────────────
+  dark:          '#2A3363',   // main heading / strong text
+  darkSecondary: '#36437C',   // secondary dark
+  darkTertiary:  '#37437D',   // tab/button dark variant
+
+  // ── Text ───────────────────────────────────────────────────────────────────
+  textSecondary: '#717182',   // body secondary text
+  textMuted:     '#94A3B8',   // placeholder / muted
+  textDisabled:  '#ADACAE',   // disabled / inactive label
+  link:          '#B0B8D4',   // footer links
+
+  // ── Backgrounds ────────────────────────────────────────────────────────────
+  bgPage:    '#FAFAFA',   // full-page background
+  bgSection: '#F7F7F7',   // card / section background
+  bgSurface: '#F8FAFC',   // hover / raised surface
+
+  // ── Borders ────────────────────────────────────────────────────────────────
+  border:      '#E2E8F0',   // default border
+  borderLight: '#CBD5E1',   // subtle / dashed border
+
+  // ── Status — success ───────────────────────────────────────────────────────
+  success:     '#10b981',
+  successBg:   '#ecfdf5',
+  successText: '#065f46',
+
+  // ── Status — warning ───────────────────────────────────────────────────────
+  warning:     '#f59e0b',
+  warningBg:   '#fffbeb',
+  warningText: '#92400e',
+
+  // ── Status — error ─────────────────────────────────────────────────────────
+  error:     '#ef4444',
+  errorBg:   '#fef2f2',
+  errorText: '#991b1b',
+
+  // ── Status — info ──────────────────────────────────────────────────────────
+  info:     '#3b82f6',
+  infoBg:   '#eff6ff',
+  infoText: '#1e40af',
+
+  // ── File-type icon colors ──────────────────────────────────────────────────
+  iconPdf:  '#E53935',
+  iconWord: '#1565C0',
+  iconFile: '#546E7A',
+
+  // ── Chart / accent ─────────────────────────────────────────────────────────
+  accentPurple: '#8979FF',
 } as const;
 
 // ─── Currency Minimums ────────────────────────────────────────────────────────

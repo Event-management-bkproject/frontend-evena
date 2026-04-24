@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useMemo, useState } from 'react';
+import React, { use, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Container,
@@ -69,6 +69,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     if (!data?.data?.content) return null;
     return data.data.content.find((o: any) => o.id === orderId);
   }, [data, orderId]);
+
+  // Pre-select the provider the user originally chose (from existing payment record)
+  useEffect(() => {
+    const existingProvider = order?.payments?.[0]?.provider;
+    if (existingProvider && existingProvider !== PaymentProvider.CASH) {
+      setSelectedProvider(existingProvider as PaymentProvider);
+    }
+  }, [order]);
 
   const isFreeOrder = order?.totalAmount === 0;
 
@@ -337,8 +345,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                           control={<Radio sx={{ color: '#A50064', '&.Mui-checked': { color: '#A50064' } }} />}
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Payment fontSize="small" />
+                              <Payment fontSize="small" sx={{ color: '#A50064' }} />
                               <Typography variant="body2" fontWeight={600}>MoMo</Typography>
+                            </Box>
+                          }
+                        />
+                        <FormControlLabel
+                          value={PaymentProvider.VNPAY}
+                          control={<Radio sx={{ color: '#005BAC', '&.Mui-checked': { color: '#005BAC' } }} />}
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Payment fontSize="small" sx={{ color: '#005BAC' }} />
+                              <Typography variant="body2" fontWeight={600}>VNPay</Typography>
                             </Box>
                           }
                         />
@@ -413,6 +431,36 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <Alert severity="info" sx={{ mb: 2, borderRadius: '8px' }}>
                   {t('customer.processingPayment')}
                 </Alert>
+                <FormControl component="fieldset" sx={{ mb: 2, width: '100%' }}>
+                  <FormLabel component="legend" sx={{ fontWeight: 600, color: '#2A3363', mb: 1 }}>
+                    {t('customer.selectPaymentMethod')}
+                  </FormLabel>
+                  <RadioGroup
+                    value={selectedProvider}
+                    onChange={(e) => setSelectedProvider(e.target.value as PaymentProvider)}
+                  >
+                    <FormControlLabel
+                      value={PaymentProvider.MOMO}
+                      control={<Radio sx={{ color: '#A50064', '&.Mui-checked': { color: '#A50064' } }} />}
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Payment fontSize="small" sx={{ color: '#A50064' }} />
+                          <Typography variant="body2" fontWeight={600}>MoMo</Typography>
+                        </Box>
+                      }
+                    />
+                    <FormControlLabel
+                      value={PaymentProvider.VNPAY}
+                      control={<Radio sx={{ color: '#005BAC', '&.Mui-checked': { color: '#005BAC' } }} />}
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Payment fontSize="small" sx={{ color: '#005BAC' }} />
+                          <Typography variant="body2" fontWeight={600}>VNPay</Typography>
+                        </Box>
+                      }
+                    />
+                  </RadioGroup>
+                </FormControl>
                 <Button
                   fullWidth
                   variant="contained"

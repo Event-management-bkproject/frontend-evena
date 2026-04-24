@@ -28,11 +28,12 @@ interface OrderRowProps {
 }
 
 const STATUS_COLOR: Record<OrderStatus, 'success' | 'warning' | 'error' | 'info' | 'default'> = {
-  [OrderStatus.CONFIRMED]: 'success',
-  [OrderStatus.PENDING]: 'warning',
-  [OrderStatus.CANCELLED]: 'error',
-  [OrderStatus.EXPIRED]: 'error',
-  [OrderStatus.REFUNDED]: 'info',
+  [OrderStatus.CONFIRMED]:  'success',
+  [OrderStatus.PENDING]:    'warning',
+  [OrderStatus.CANCELLED]:  'error',
+  [OrderStatus.EXPIRED]:    'error',
+  [OrderStatus.REFUNDED]:   'info',
+  [OrderStatus.PROCESSING]: 'default',
 };
 
 export function OrderRow({ order, isExpanded, onToggleExpand, onCancel, isCancelling }: OrderRowProps) {
