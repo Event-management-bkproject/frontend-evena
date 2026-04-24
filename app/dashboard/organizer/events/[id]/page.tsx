@@ -8,6 +8,7 @@ import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
 import DashboardHeader from '@/src/components/DashboardHeader';
 import EventContent from '@/src/components/EventContent';
 import TicketTypeManagement from '@/src/components/TicketTypeManagement';
+import FileUploadManager from '@/src/components/FileUploadManager/FileUploadManager';
 import BaseModal from '@/src/components/BaseModal';
 import UpdateEventForm from '@/src/components/UpdateEventForm';
 import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
@@ -183,9 +184,12 @@ export default function EventDetailsPage() {
               <EventContent event={event} onRefresh={refetch} onEdit={handleEdit} onDelete={handleDelete} />
             </Box>
 
-            {/* Right Side - Ticket Type Management - Fixed Width */}
-            <Box sx={{ width: { xs: '100%', lg: '550px' }, flexShrink: 0 }}>
+            {/* Right Side - Ticket Type Management + File Manager */}
+            <Box sx={{ width: { xs: '100%', lg: '550px' }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <TicketTypeManagement eventId={eventId} event={event} />
+              <Box sx={{ backgroundColor: '#fff', borderRadius: '16px', p: 3, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <FileUploadManager mode={{ type: 'event', eventId }} title="Event Documents" />
+              </Box>
             </Box>
           </Box>
         </Box>

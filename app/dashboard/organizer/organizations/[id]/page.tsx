@@ -30,6 +30,7 @@ import {
   Edit,
 } from '@mui/icons-material';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
+import FileUploadManager from '@/src/components/FileUploadManager/FileUploadManager';
 import DashboardHeader from '@/src/components/DashboardHeader';
 import EventCard from '@/src/components/EventCard/EventCard';
 import { OrganizationRole } from '@/src/stores/types/enums';
@@ -170,7 +171,7 @@ export default function OrganizationDetailPage() {
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
               {/* Organization Info Card */}
-              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 66%' }, minWidth: 0 }}>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 66%' }, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -273,7 +274,7 @@ export default function OrganizationDetailPage() {
                 </Card>
 
                 {/* Events Section */}
-                <Card sx={{ p: 3, borderRadius: '16px' }}>
+                <Card sx={{ p: 3, borderRadius: '16px', flex: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                     <EventIcon sx={{ color: '#F36BF9' }} />
                     <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363' }}>
@@ -319,7 +320,7 @@ export default function OrganizationDetailPage() {
               </Box>
 
               {/* Stats & Members Sidebar */}
-              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 33%' } }}>
+              <Box sx={{ flex: { xs: '1 1 100%', lg: '1 1 33%' }, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Stats Card */}
                 <Card sx={{ p: 3, borderRadius: '16px', mb: 3 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363', mb: 2 }}>
@@ -410,6 +411,14 @@ export default function OrganizationDetailPage() {
                       </Box>
                     ))}
                   </Box>
+                </Card>
+
+                {/* File Manager */}
+                <Card sx={{ p: 3, borderRadius: '16px' }}>
+                  <FileUploadManager
+                    mode={{ type: 'organization', organizationId }}
+                    title="Organization Documents"
+                  />
                 </Card>
               </Box>
             </Box>

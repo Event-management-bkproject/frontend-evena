@@ -177,7 +177,7 @@ export const EventAPI = createApi({
       }),
       invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
     }),
-    listEventFiles: builder.query<ApiResponse<EventFileDTO[]>, string>({
+    listEventFiles: builder.query<EventFileDTO[], string>({
       query: (eventId) => ({
         url: `/events/${eventId}/files`,
         method: 'GET',
