@@ -1,38 +1,72 @@
-import { Fragment } from 'react';
+'use client';
+
 import { Box, Typography } from '@mui/material';
 import { HOW_IT_WORKS } from './types';
+import { BRAND } from '@/src/utils/constants/constant';
+
+const STEP_ICONS = ['🛒', '📝', '✅', '💸'];
 
 export function HowItWorks() {
   return (
     <Box>
-      <Typography sx={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#717182', mb: '10px' }}>
-        How it works
-      </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <Box sx={{ mb: '18px' }}>
+        <Typography sx={{ fontSize: 15, fontWeight: 700, color: BRAND.dark }}>
+          How FlexPass Works
+        </Typography>
+        <Typography sx={{ fontSize: 12, color: '#94a3b8', mt: '3px' }}>
+          Safe, verified, responsible ticket resale
+        </Typography>
+      </Box>
+
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: '10px',
+      }}>
         {HOW_IT_WORKS.map((step, i) => (
-          <Fragment key={i}>
-            <Box sx={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <Box
-                sx={{
-                  width: 22, height: 22, borderRadius: '50%',
-                  bgcolor: '#eff6ff', color: '#3b82f6',
-                  fontSize: 11, fontWeight: 600,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, mt: '1px',
-                }}
-              >
-                {i + 1}
-              </Box>
-              <Typography sx={{ pt: '2px', fontSize: 13, color: '#030213' }}>
+          <Box
+            key={i}
+            sx={{
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'flex-start',
+              bgcolor: '#f8fafc',
+              border: '1px solid rgba(0,0,0,0.06)',
+              borderRadius: '12px',
+              p: '14px',
+            }}
+          >
+            <Box sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '10px',
+              bgcolor: BRAND.primaryLight,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 18,
+              flexShrink: 0,
+            }}>
+              {STEP_ICONS[i] ?? '🔹'}
+            </Box>
+            <Box>
+              <Typography sx={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: BRAND.primary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                mb: '3px',
+              }}>
+                Step {i + 1}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: '#475569', lineHeight: 1.55 }}>
                 {i === 0 ? (
-                  <>Buyer selects <strong>FlexPass</strong> at checkout — ticket is linked to eKYC identity</>
+                  <>Select <strong>FlexPass</strong> at checkout — ticket is linked to eKYC identity</>
                 ) : step}
               </Typography>
             </Box>
-            {i < HOW_IT_WORKS.length - 1 && (
-              <Box sx={{ width: 1, height: 22, bgcolor: '#e9ebef', ml: '10px' }} />
-            )}
-          </Fragment>
+          </Box>
         ))}
       </Box>
     </Box>
