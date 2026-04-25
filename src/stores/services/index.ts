@@ -12,3 +12,4 @@ export { UserAPI, useUploadAvatarMutation, useDeleteAvatarMutation } from './Use
 export * from './RefundRequestApi';
 export * from './FlexPassApi';
 export * from './FileApi';
+export * from './ActivityLogApi';

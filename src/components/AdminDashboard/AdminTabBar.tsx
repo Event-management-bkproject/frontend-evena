@@ -1,7 +1,8 @@
 import React from 'react';
 import { Box, Button, TextField, Paper } from '@mui/material';
-import { Add as AddIcon, Category as CategoryIcon, Place as PlaceIcon, Search as SearchIcon, Business as BusinessIcon } from '@mui/icons-material';
+import { Add as AddIcon, Category as CategoryIcon, Place as PlaceIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { ADMIN } from '@/src/utils/constants/adminBrand';
 
 interface AdminTabBarProps {
   activeTab: number;
@@ -22,93 +23,102 @@ export const AdminTabBar: React.FC<AdminTabBarProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const getTabLabel = () => {
-    switch (activeTab) {
-      case 0: return t('common.entities.category');
-      case 1: return t('common.entities.venue');
-      case 2: return t('common.entities.organization');
-      default: return '';
-    }
-  };
+  const getTabLabel = () =>
+    activeTab === 0 ? t('common.entities.category') : t('common.entities.venue');
 
   return (
-    <Paper sx={{ mb: 3, p: 2 }}>
+    <Paper
+      elevation={0}
+      sx={{
+        mb: 3,
+        p: 2,
+        borderRadius: '12px',
+        border: `1px solid ${ADMIN.border}`,
+        backgroundColor: ADMIN.cardBg,
+      }}
+    >
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 2,
           flexWrap: 'wrap',
           gap: 2,
         }}
       >
-        <Box>
+        {/* Tab buttons */}
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant={activeTab === 0 ? 'contained' : 'text'}
             onClick={() => onTabChange(0)}
+            startIcon={<CategoryIcon />}
+            size="small"
             sx={{
-              mr: 2,
-              bgcolor: activeTab === 0 ? '#F36BF9' : undefined,
-              color: activeTab === 0 ? '#FFFFFF' : '#2A3363',
+              textTransform: 'none',
+              fontWeight: activeTab === 0 ? 600 : 400,
+              fontSize: 13,
+              borderRadius: '8px',
+              bgcolor: activeTab === 0 ? ADMIN.primary : 'transparent',
+              color: activeTab === 0 ? '#fff' : ADMIN.textSecondary,
+              boxShadow: 'none',
               '&:hover': {
-                bgcolor: activeTab === 0 ? '#F36BF9' : 'rgba(0,0,0,0.04)',
+                bgcolor: activeTab === 0 ? ADMIN.primaryHover : ADMIN.pageBg,
+                boxShadow: 'none',
               },
             }}
-            startIcon={<CategoryIcon />}
           >
             {t('admin.tabs.categories')}
           </Button>
           <Button
             variant={activeTab === 1 ? 'contained' : 'text'}
             onClick={() => onTabChange(1)}
+            startIcon={<PlaceIcon />}
+            size="small"
             sx={{
-              mr: 2,
-              bgcolor: activeTab === 1 ? '#F36BF9' : undefined,
-              color: activeTab === 1 ? '#FFFFFF' : '#2A3363',
+              textTransform: 'none',
+              fontWeight: activeTab === 1 ? 600 : 400,
+              fontSize: 13,
+              borderRadius: '8px',
+              bgcolor: activeTab === 1 ? ADMIN.primary : 'transparent',
+              color: activeTab === 1 ? '#fff' : ADMIN.textSecondary,
+              boxShadow: 'none',
               '&:hover': {
-                bgcolor: activeTab === 1 ? '#F36BF9' : 'rgba(0,0,0,0.04)',
+                bgcolor: activeTab === 1 ? ADMIN.primaryHover : ADMIN.pageBg,
+                boxShadow: 'none',
               },
             }}
-            startIcon={<PlaceIcon />}
           >
             {t('admin.tabs.venues')}
           </Button>
-          <Button
-            variant={activeTab === 2 ? 'contained' : 'text'}
-            onClick={() => onTabChange(2)}
-            sx={{
-              bgcolor: activeTab === 2 ? '#F36BF9' : undefined,
-              color: activeTab === 2 ? '#FFFFFF' : '#2A3363',
-              '&:hover': {
-                bgcolor: activeTab === 2 ? '#F36BF9' : 'rgba(0,0,0,0.04)',
-              },
-            }}
-            startIcon={<BusinessIcon />}
-          >
-            {t('admin.tabs.organizations')}
-          </Button>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        {/* Search + Add */}
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
             size="small"
             placeholder={t('common.labels.search')}
             value={searchTerm}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
-            InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
+            InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: ADMIN.textMuted, fontSize: 18 }} /> }}
+            sx={{
+              width: { xs: '100%', sm: 220 },
+              '& .MuiOutlinedInput-root': { borderRadius: '8px', fontSize: 13 },
             }}
-            sx={{ width: { xs: '100%', sm: 250 } }}
           />
           {showAddButton && onAddClick && (
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={onAddClick}
+              size="small"
               sx={{
-                bgcolor: '#F36BF9',
-                '&:hover': { bgcolor: '#e055e9' },
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: 13,
+                borderRadius: '8px',
+                bgcolor: ADMIN.primary,
+                boxShadow: 'none',
+                '&:hover': { bgcolor: ADMIN.primaryHover, boxShadow: 'none' },
               }}
             >
               {t('admin.tabs.add', { item: getTabLabel() })}

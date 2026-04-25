@@ -16,6 +16,7 @@ import { UserAPI } from './services/UserApi';
 import { RefundRequestAPI } from './services/RefundRequestApi';
 import { FlexPassAPI } from './services/FlexPassApi';
 import { FileAPI } from './services/FileApi';
+import { ActivityLogAPI } from './services/ActivityLogApi';
 
 // Redux Persist configuration for auth slice
 // Security: Only persist user info, NOT accessToken (stored in memory only)
@@ -55,6 +56,7 @@ export const store = configureStore({
     [RefundRequestAPI.reducerPath]: RefundRequestAPI.reducer,
     [FlexPassAPI.reducerPath]: FlexPassAPI.reducer,
     [FileAPI.reducerPath]: FileAPI.reducer,
+    [ActivityLogAPI.reducerPath]: ActivityLogAPI.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -74,7 +76,8 @@ export const store = configureStore({
       .concat(UserAPI.middleware)
       .concat(RefundRequestAPI.middleware)
       .concat(FlexPassAPI.middleware)
-      .concat(FileAPI.middleware),
+      .concat(FileAPI.middleware)
+      .concat(ActivityLogAPI.middleware),
 });
 
 export const persistor = persistStore(store);

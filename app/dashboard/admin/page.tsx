@@ -1,411 +1,256 @@
-// app/dashboard/admin/page.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { Box } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
+import { useMemo } from 'react';
+import {
+  Box,
+  Card,
+  Typography,
+  Chip,
+  CircularProgress,
+  Avatar,
+  Divider,
+} from '@mui/material';
+import {
+  Business as BusinessIcon,
+  Event as EventIcon,
+  ShoppingCart as OrdersIcon,
+  AssignmentReturn as RefundIcon,
+  ConfirmationNumber as TicketsIcon,
+  Category as ContentIcon,
+  CheckCircle as VerifiedIcon,
+  PendingActions as PendingIcon,
+  TrendingUp as TrendingIcon,
+} from '@mui/icons-material';
+import AdminLayout from '@/src/components/layout/AdminLayout';
+import AdminPageShell from '@/src/components/AdminSidebar/AdminPageShell';
 import RoleGuard from '@/src/components/RoleGuard';
+import { useGetOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
+import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
+import { useGetOrganizerOrdersQuery } from '@/src/stores/services/OrderApi';
+import { useGetOrganizerRefundRequestsQuery } from '@/src/stores/services/RefundRequestApi';
+import { useGetCategoriesQuery } from '@/src/stores/services/CategoryApi';
+import { useGetVenuesQuery } from '@/src/stores/services/VenueApi';
+import { useGetActivityLogsQuery } from '@/src/stores/services/ActivityLogApi';
+import { ADMIN } from '@/src/utils/constants/adminBrand';
+import { LAYOUT } from '@/src/utils/constants/layout';
+import { OrderStatus } from '@/src/stores/types/order';
+import { RefundRequestStatus } from '@/src/stores/types/refundRequest';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { CreateCategoryRequest, CreateVenueRequest } from '@/src/stores/types';
-import { CategoryResponse, VenueResponse } from '@/src/stores/types/event';
-import {
-  useCreateCategoryMutation,
-  useCreateVenueMutation,
-  useDeleteCategoryMutation,
-  useDeleteVenueMutation,
-  useGetCategoriesQuery,
-  useGetVenuesQuery,
-  useUpdateCategoryMutation,
-  useUpdateVenueMutation,
-  useGetOrganizationsQuery,
-  useVerifyOrganizationMutation,
-  useDeleteOrganizationMutation,
-} from '@/src/stores/services';
+dayjs.extend(relativeTime);
 
-import CreateCategoryForm from '@/src/components/CreateCategoryForm/CreateCategoryForm';
-import CreateVenueFormWithMap from '@/src/components/CreateVenueForm/CreateVenueFormWithMap';
-import { useAuth } from '@/src/hooks/auth/useAuth';
-import CategoryTable from '@/src/components/CategoryTable';
-import VenueTable from '@/src/components/VenueTable';
-import { AdminOrganizationTable } from '@/src/components/AdminOrganizationTable';
-import {
-  AdminHeader,
-  AdminStatsCards,
-  AdminTabBar,
-} from '@/src/components/AdminDashboard';
-import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
-import SnackbarNotification from '@/src/components/SnackbarNotification';
-import { useSnackbar } from '@/src/hooks/useSnackbar';
+interface KpiCardProps {
+  label: string;
+  value: number | string;
+  sub?: string;
+  icon: React.ReactNode;
+  gradient: string;
+  loading?: boolean;
+}
 
-export default function AdminPage() {
-  const { t } = useTranslation();
-  const router = useRouter();
-  const { logout } = useAuth();
-  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+function KpiCard({ label, value, sub, icon, gradient, loading }: KpiCardProps) {
+  return (
+    <Card
+      sx={{
+        p: 2.5,
+        borderRadius: '12px',
+        border: `1px solid ${ADMIN.border}`,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 2,
+      }}
+    >
+      <Box
+        sx={{
+          width: 44,
+          height: 44,
+          borderRadius: '10px',
+          background: gradient,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          color: '#fff',
+          fontSize: 20,
+        }}
+      >
+        {icon}
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="caption" sx={{ color: ADMIN.textSecondary, fontSize: 12, fontWeight: 500 }}>
+          {label}
+        </Typography>
+        {loading ? (
+          <CircularProgress size={18} sx={{ color: ADMIN.primary, display: 'block', mt: 0.5 }} />
+        ) : (
+          <Typography variant="h5" sx={{ fontWeight: 700, color: ADMIN.heading, lineHeight: 1.2, mt: 0.25 }}>
+            {value}
+          </Typography>
+        )}
+        {sub && (
+          <Typography variant="caption" sx={{ color: ADMIN.textMuted, fontSize: 11 }}>
+            {sub}
+          </Typography>
+        )}
+      </Box>
+    </Card>
+  );
+}
 
-  // State
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+function getActionColor(action: string): string {
+  if (/CREATE|ISSUED|SUCCESS|COMPLET|VERIF|APPROV|PUBLISH/.test(action)) return ADMIN.success;
+  if (/DELET|CANCEL|FAIL|REJECT/.test(action)) return ADMIN.error;
+  if (/UPDATE|PENDING|INITIAT|OPEN/.test(action)) return ADMIN.primary;
+  if (/REFUND|REQUEST/.test(action)) return ADMIN.warning;
+  return ADMIN.textMuted;
+}
 
-  // Category Modal state
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryResponse | undefined>(undefined);
-  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+export default function AdminOverviewPage() {
+  const { data: orgsData, isLoading: orgsLoading } = useGetOrganizationsQuery({ page: 0, size: 200 });
+  const { data: eventsData, isLoading: eventsLoading } = useGetMyEventsQuery({ page: 0, size: 200 });
+  const { data: ordersData, isLoading: ordersLoading } = useGetOrganizerOrdersQuery({ page: 0, size: 200 });
+  const { data: refundsData, isLoading: refundsLoading } = useGetOrganizerRefundRequestsQuery({ page: 0, size: 200 });
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const { data: venuesData } = useGetVenuesQuery({ page: 0, size: 100 });
+  const { data: logsData, isLoading: logsLoading } = useGetActivityLogsQuery({ page: 0, size: 12 });
 
-  // Venue Modal state
-  const [venueModalOpen, setVenueModalOpen] = useState(false);
-  const [editingVenue, setEditingVenue] = useState<VenueResponse | undefined>(undefined);
-  const [deleteVenueDialogOpen, setDeleteVenueDialogOpen] = useState(false);
-  const [venueToDelete, setVenueToDelete] = useState<number | null>(null);
+  const totalOrgs = orgsData?.data?.totalElements ?? 0;
+  const pendingOrgs = useMemo(() => (orgsData?.data?.content ?? []).filter((o) => !o.verified).length, [orgsData]);
+  const totalEvents = eventsData?.data?.totalElements ?? 0;
+  const totalOrders = ordersData?.data?.totalElements ?? 0;
+  const confirmedOrders = useMemo(() => (ordersData?.data?.content ?? []).filter((o) => o.status === OrderStatus.CONFIRMED).length, [ordersData]);
+  const totalRevenue = useMemo(() => (ordersData?.data?.content ?? []).filter((o) => o.status === OrderStatus.CONFIRMED).reduce((s, o) => s + o.totalAmount, 0), [ordersData]);
+  const pendingRefunds = useMemo(() => (refundsData?.data?.content ?? []).filter((r) => r.status === RefundRequestStatus.PENDING).length, [refundsData]);
+  const totalRefunds = refundsData?.data?.totalElements ?? 0;
 
-  // Organization Modal state
-  const [deleteOrganizationDialogOpen, setDeleteOrganizationDialogOpen] = useState(false);
-  const [organizationToDelete, setOrganizationToDelete] = useState<number | null>(null);
+  const fmt = (n: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+  const recentLogs = logsData?.content ?? [];
 
-  // RTK Queries
-  const { data: categoriesData, isLoading: isLoadingCategories } = useGetCategoriesQuery();
-  const {
-    data: venuesData,
-    isLoading: isLoadingVenues,
-  } = useGetVenuesQuery({ page: 0, size: 100 });
-  const {
-    data: organizationsData,
-    isLoading: isLoadingOrganizations,
-  } = useGetOrganizationsQuery({ page: 0, size: 100 });
+  const kpiRow1 = [
+    { label: 'Organizations', value: totalOrgs, sub: pendingOrgs > 0 ? `${pendingOrgs} pending` : 'All verified', icon: <BusinessIcon fontSize="small" />, gradient: `linear-gradient(135deg, #3B82F6, #1D4ED8)`, loading: orgsLoading },
+    { label: 'Events', value: totalEvents, sub: 'all statuses', icon: <EventIcon fontSize="small" />, gradient: `linear-gradient(135deg, #8B5CF6, #6D28D9)`, loading: eventsLoading },
+    { label: 'Confirmed Orders', value: confirmedOrders, sub: fmt(totalRevenue), icon: <OrdersIcon fontSize="small" />, gradient: `linear-gradient(135deg, #10B981, #059669)`, loading: ordersLoading },
+    { label: 'Pending Refunds', value: pendingRefunds, sub: `${totalRefunds} total requests`, icon: <RefundIcon fontSize="small" />, gradient: `linear-gradient(135deg, #F59E0B, #D97706)`, loading: refundsLoading },
+  ];
 
-  // Mutations
-  const [createCategory, { isLoading: isCreatingCategory }] = useCreateCategoryMutation();
-  const [updateCategory, { isLoading: isUpdatingCategory }] = useUpdateCategoryMutation();
-  const [deleteCategory, { isLoading: isDeletingCategory }] = useDeleteCategoryMutation();
-
-  const [createVenue, { isLoading: isCreatingVenue }] = useCreateVenueMutation();
-  const [updateVenue, { isLoading: isUpdatingVenue }] = useUpdateVenueMutation();
-  const [deleteVenue, { isLoading: isDeletingVenue }] = useDeleteVenueMutation();
-
-  const [verifyOrganization, { isLoading: isVerifying }] = useVerifyOrganizationMutation();
-  const [deleteOrganization, { isLoading: isDeletingOrganization }] = useDeleteOrganizationMutation();
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
-  };
-
-  // Category Handlers (follows Organization pattern: conditional rendering + clear state on close)
-  const openCreateCategory = () => {
-    setEditingCategory(undefined);
-    setCategoryModalOpen(true);
-  };
-
-  const openEditCategory = (cat: CategoryResponse) => {
-    setEditingCategory(cat);
-    setCategoryModalOpen(true);
-  };
-
-  const closeCategoryModal = () => {
-    setCategoryModalOpen(false);
-    setEditingCategory(undefined);
-  };
-
-  const handleSubmitCategory = async (values: CreateCategoryRequest) => {
-    try {
-      if (editingCategory) {
-        await updateCategory({ id: editingCategory.id, data: values }).unwrap();
-        showSnackbar(t('messages.success.updated', { item: t('common.entities.category') }), 'success');
-      } else {
-        await createCategory(values).unwrap();
-        showSnackbar(t('messages.success.created', { item: t('common.entities.category') }), 'success');
-      }
-      closeCategoryModal();
-    } catch (error: unknown) {
-      const err = error as { data?: { message?: string } };
-      showSnackbar(err?.data?.message ?? t('messages.error.operationFailed'), 'error');
-    }
-  };
-
-  const handleDeleteCategoryClick = (id: number) => {
-    setCategoryToDelete(id);
-    setDeleteCategoryDialogOpen(true);
-  };
-
-  const handleDeleteCategoryConfirm = async () => {
-    if (!categoryToDelete) return;
-
-    try {
-      await deleteCategory(categoryToDelete).unwrap();
-      showSnackbar(t('messages.success.deleted', { item: t('common.entities.category') }), 'success');
-    } catch (error: unknown) {
-      const err = error as { data?: { message?: string } };
-      showSnackbar(err?.data?.message ?? t('messages.error.deleteFailed'), 'error');
-    } finally {
-      setDeleteCategoryDialogOpen(false);
-      setCategoryToDelete(null);
-    }
-  };
-
-  // Venue Handlers (follows Organization pattern: conditional rendering + clear state on close)
-  const openCreateVenue = () => {
-    setEditingVenue(undefined);
-    setVenueModalOpen(true);
-  };
-
-  const openEditVenue = (v: VenueResponse) => {
-    setEditingVenue(v);
-    setVenueModalOpen(true);
-  };
-
-  const closeVenueModal = () => {
-    setVenueModalOpen(false);
-    setEditingVenue(undefined);
-  };
-
-  const handleSubmitVenue = async (values: CreateVenueRequest) => {
-    try {
-      if (editingVenue) {
-        await updateVenue({ id: editingVenue.id, data: values }).unwrap();
-        showSnackbar(t('messages.success.updated', { item: t('common.entities.venue') }), 'success');
-      } else {
-        await createVenue(values).unwrap();
-        showSnackbar(t('messages.success.created', { item: t('common.entities.venue') }), 'success');
-      }
-      closeVenueModal();
-    } catch (error: unknown) {
-      const err = error as { data?: { message?: string } };
-      showSnackbar(err?.data?.message ?? t('messages.error.operationFailed'), 'error');
-    }
-  };
-
-  const handleDeleteVenueClick = (id: number) => {
-    setVenueToDelete(id);
-    setDeleteVenueDialogOpen(true);
-  };
-
-  const handleDeleteVenueConfirm = async () => {
-    if (!venueToDelete) return;
-
-    try {
-      await deleteVenue(venueToDelete).unwrap();
-      showSnackbar(t('messages.success.deleted', { item: t('common.entities.venue') }), 'success');
-    } catch (error: unknown) {
-      const err = error as { data?: { message?: string } };
-      showSnackbar(err?.data?.message ?? t('messages.error.deleteFailed'), 'error');
-    } finally {
-      setDeleteVenueDialogOpen(false);
-      setVenueToDelete(null);
-    }
-  };
-
-  // Organization Handlers
-  const handleVerifyOrganization = async (id: number) => {
-    try {
-      await verifyOrganization(id).unwrap();
-      showSnackbar(t('messages.success.verified', { item: t('common.entities.organization') }), 'success');
-    } catch (error: unknown) {
-      const err = error as { data?: { message?: string } };
-      showSnackbar(err?.data?.message ?? t('messages.error.verificationFailed'), 'error');
-    }
-  };
-
-  const handleDeleteOrganizationClick = (id: number) => {
-    setOrganizationToDelete(id);
-    setDeleteOrganizationDialogOpen(true);
-  };
-
-  const handleDeleteOrganizationConfirm = async () => {
-    if (!organizationToDelete) return;
-
-    try {
-      await deleteOrganization(organizationToDelete).unwrap();
-      showSnackbar(t('messages.success.deleted', { item: t('common.entities.organization') }), 'success');
-    } catch (error: unknown) {
-      const err = error as { data?: { message?: string } };
-      showSnackbar(err?.data?.message ?? t('messages.error.deleteFailed'), 'error');
-    } finally {
-      setDeleteOrganizationDialogOpen(false);
-      setOrganizationToDelete(null);
-    }
-  };
-
-  const handleTabChange = (tab: number) => {
-    setActiveTab(tab);
-    setSearchTerm('');
-  };
-
-  const handleAddClick = () => {
-    if (activeTab === 0) {
-      openCreateCategory();
-    } else if (activeTab === 1) {
-      openCreateVenue();
-    }
-    // No add action for organizations (tab 2)
-  };
-
+  const kpiRow2 = [
+    { label: 'Categories', value: categoriesData?.data?.length ?? 0, sub: '', icon: <ContentIcon fontSize="small" />, gradient: `linear-gradient(135deg, #EC4899, #BE185D)`, loading: false },
+    { label: 'Venues', value: venuesData?.data?.totalElements ?? 0, sub: '', icon: <TicketsIcon fontSize="small" />, gradient: `linear-gradient(135deg, #14B8A6, #0D9488)`, loading: false },
+    { label: 'Total Orders', value: totalOrders, sub: 'all statuses', icon: <TrendingIcon fontSize="small" />, gradient: `linear-gradient(135deg, #0EA5E9, #0284C7)`, loading: ordersLoading },
+    { label: 'Verified Orgs', value: totalOrgs - pendingOrgs, sub: `of ${totalOrgs} total`, icon: <VerifiedIcon fontSize="small" />, gradient: `linear-gradient(135deg, #22C55E, #16A34A)`, loading: orgsLoading },
+  ];
 
   return (
     <RoleGuard allowedRoles={['ADMIN']}>
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5', p: 3 }}>
-        {/* Header */}
-        <AdminHeader onLogout={handleLogout} />
+      <AdminLayout>
+        <AdminPageShell
+          title="Overview"
+          breadcrumbs={[{ label: 'Admin', href: '/dashboard/admin' }, { label: 'Overview' }]}
+        >
+          {/* KPI rows */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2, mb: 2 }}>
+            {kpiRow1.map((k) => <KpiCard key={k.label} {...k} />)}
+          </Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2, mb: 3 }}>
+            {kpiRow2.map((k) => <KpiCard key={k.label} {...k} />)}
+          </Box>
 
-        {/* Stats Cards */}
-        <AdminStatsCards
-          categoriesCount={categoriesData?.data?.length ?? 0}
-          venuesCount={venuesData?.data?.totalElements ?? 0}
-          organizationsCount={organizationsData?.data?.totalElements ?? 0}
-        />
+          {/* Bottom row: alerts + activity */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '320px 1fr' }, gap: 3 }}>
+            {/* Action required */}
+            <Card sx={{ borderRadius: '12px', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <PendingIcon sx={{ color: ADMIN.warning, fontSize: 20 }} />
+                <Typography sx={{ fontWeight: 700, color: ADMIN.heading, fontSize: 15 }}>Action Required</Typography>
+              </Box>
 
-        {/* Tabs and Search Bar */}
-        <AdminTabBar
-          activeTab={activeTab}
-          searchTerm={searchTerm}
-          onTabChange={handleTabChange}
-          onSearchChange={setSearchTerm}
-          onAddClick={handleAddClick}
-          showAddButton={activeTab !== 2}
-        />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {pendingOrgs > 0 && (
+                  <Box sx={{ display: 'flex', gap: 1.5, p: 1.5, borderRadius: '8px', bgcolor: ADMIN.warningBg, border: `1px solid ${ADMIN.warning}30` }}>
+                    <BusinessIcon sx={{ color: ADMIN.warning, fontSize: 18, mt: 0.25 }} />
+                    <Typography variant="body2" sx={{ color: ADMIN.body }}>
+                      <strong style={{ color: ADMIN.warning }}>{pendingOrgs}</strong> org{pendingOrgs > 1 ? 's' : ''} awaiting verification
+                    </Typography>
+                  </Box>
+                )}
+                {pendingRefunds > 0 && (
+                  <Box sx={{ display: 'flex', gap: 1.5, p: 1.5, borderRadius: '8px', bgcolor: ADMIN.errorBg, border: `1px solid ${ADMIN.error}30` }}>
+                    <RefundIcon sx={{ color: ADMIN.error, fontSize: 18, mt: 0.25 }} />
+                    <Typography variant="body2" sx={{ color: ADMIN.body }}>
+                      <strong style={{ color: ADMIN.error }}>{pendingRefunds}</strong> refund{pendingRefunds > 1 ? 's' : ''} pending review
+                    </Typography>
+                  </Box>
+                )}
+                {pendingOrgs === 0 && pendingRefunds === 0 && (
+                  <Box sx={{ textAlign: 'center', py: 2 }}>
+                    <VerifiedIcon sx={{ fontSize: 36, color: ADMIN.success, mb: 0.5 }} />
+                    <Typography variant="body2" sx={{ color: ADMIN.textSecondary }}>All clear — no pending actions</Typography>
+                  </Box>
+                )}
+              </Box>
 
-        {/* Category Tab Panel */}
-        {activeTab === 0 && (
-          <CategoryTable
-            categories={categoriesData?.data ?? []}
-            isLoading={isLoadingCategories}
-            searchTerm={searchTerm}
-            isDeletingCategory={isDeletingCategory}
-            onEditCategory={openEditCategory}
-            onDeleteCategory={handleDeleteCategoryClick}
-          />
-        )}
+              <Divider sx={{ my: 2, borderColor: ADMIN.border }} />
 
-        {/* Venue Tab Panel */}
-        {activeTab === 1 && (
-          <VenueTable
-            venues={venuesData?.data?.content ?? []}
-            isLoading={isLoadingVenues}
-            searchTerm={searchTerm}
-            isDeletingVenue={isDeletingVenue}
-            onEditVenue={openEditVenue}
-            onDeleteVenue={handleDeleteVenueClick}
-          />
-        )}
+              <Typography sx={{ fontWeight: 600, color: ADMIN.heading, fontSize: 13, mb: 1.5 }}>Platform Health</Typography>
+              {[
+                { label: 'Verification Rate', value: totalOrgs ? `${Math.round(((totalOrgs - pendingOrgs) / totalOrgs) * 100)}%` : '—', color: ADMIN.success },
+                { label: 'Order Confirmation Rate', value: totalOrders ? `${Math.round((confirmedOrders / totalOrders) * 100)}%` : '—', color: ADMIN.primary },
+                { label: 'Refund Resolution Rate', value: totalRefunds ? `${Math.round(((totalRefunds - pendingRefunds) / totalRefunds) * 100)}%` : '—', color: ADMIN.info },
+              ].map((s) => (
+                <Box key={s.label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: ADMIN.textSecondary, fontSize: 12 }}>{s.label}</Typography>
+                  <Chip label={s.value} size="small" sx={{ bgcolor: s.color + '18', color: s.color, fontWeight: 700, fontSize: 11, height: 20 }} />
+                </Box>
+              ))}
+            </Card>
 
-        {/* Organization Tab Panel */}
-        {activeTab === 2 && (
-          <AdminOrganizationTable
-            organizations={organizationsData?.data?.content ?? []}
-            isLoading={isLoadingOrganizations}
-            searchTerm={searchTerm}
-            isVerifying={isVerifying}
-            onEditOrganization={(org) => {
-              // TODO: Implement edit organization if needed
-              showSnackbar(t('messages.info.featureComingSoon', { item: t('common.entities.venue') }), 'error');
-            }}
-            onDeleteOrganization={handleDeleteOrganizationClick}
-            onVerifyOrganization={handleVerifyOrganization}
-          />
-        )}
+            {/* Activity feed */}
+            <Card sx={{ borderRadius: '12px', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <TrendingIcon sx={{ color: ADMIN.primary, fontSize: 20 }} />
+                <Typography sx={{ fontWeight: 700, color: ADMIN.heading, fontSize: 15 }}>Recent Activity</Typography>
+              </Box>
 
-        {/* Delete Confirmation Dialogs */}
-        <ConfirmationDialog
-          open={deleteCategoryDialogOpen}
-          title={t('dialog.confirmAction')}
-          message={t('admin.confirmDelete', { item: t('common.entities.category') })}
-          variant="error"
-          loading={isDeletingCategory}
-          onClose={() => setDeleteCategoryDialogOpen(false)}
-          onConfirm={handleDeleteCategoryConfirm}
-          confirmText={t('common.buttons.delete')}
-          cancelText={t('common.buttons.cancel')}
-          disableBackdropClose
-        />
-
-        <ConfirmationDialog
-          open={deleteVenueDialogOpen}
-          title={t('dialog.confirmAction')}
-          message={t('admin.confirmDelete', { item: t('common.entities.venue') })}
-          variant="error"
-          loading={isDeletingVenue}
-          onClose={() => setDeleteVenueDialogOpen(false)}
-          onConfirm={handleDeleteVenueConfirm}
-          confirmText={t('common.buttons.delete')}
-          cancelText={t('common.buttons.cancel')}
-          disableBackdropClose
-        />
-
-        <ConfirmationDialog
-          open={deleteOrganizationDialogOpen}
-          title={t('dialog.confirmAction')}
-          message={t('admin.confirmDeleteWithWarning', { item: t('common.entities.organization') })}
-          variant="error"
-          loading={isDeletingOrganization}
-          onClose={() => setDeleteOrganizationDialogOpen(false)}
-          onConfirm={handleDeleteOrganizationConfirm}
-          confirmText={t('common.buttons.delete')}
-          cancelText={t('common.buttons.cancel')}
-          disableBackdropClose
-        />
-
-        {/* Category Create Modal */}
-        <CreateCategoryForm
-          open={categoryModalOpen && !editingCategory}
-          onClose={closeCategoryModal}
-          onSubmit={handleSubmitCategory}
-          loading={isCreatingCategory}
-        />
-
-        {/* Category Edit Modal (conditional rendering - unmounts on close, resets hooks) */}
-        {editingCategory && (
-          <CreateCategoryForm
-            open={categoryModalOpen}
-            onClose={closeCategoryModal}
-            onSubmit={handleSubmitCategory}
-            loading={isUpdatingCategory}
-            category={editingCategory}
-            initialValues={{
-              name: editingCategory.name,
-              description: editingCategory.description ?? '',
-              iconUrl: editingCategory.iconUrl ?? '',
-              version: editingCategory.version,
-            }}
-          />
-        )}
-
-        {/* Venue Create Modal */}
-        <CreateVenueFormWithMap
-          open={venueModalOpen && !editingVenue}
-          onClose={closeVenueModal}
-          onSubmit={handleSubmitVenue}
-          loading={isCreatingVenue}
-        />
-
-        {/* Venue Edit Modal (conditional rendering - unmounts on close, resets hooks) */}
-        {editingVenue && (
-          <CreateVenueFormWithMap
-            open={venueModalOpen}
-            onClose={closeVenueModal}
-            onSubmit={handleSubmitVenue}
-            loading={isUpdatingVenue}
-            venue={editingVenue}
-            initialValues={{
-              name: editingVenue.name,
-              address: editingVenue.address,
-              city: editingVenue.city,
-              capacity: editingVenue.capacity,
-              description: editingVenue.description ?? '',
-              lat: editingVenue.lat,
-              lng: editingVenue.lng,
-              version: editingVenue.version,
-            }}
-          />
-        )}
-
-        <SnackbarNotification
-          open={snackbar.open}
-          message={snackbar.message}
-          severity={snackbar.severity}
-          onClose={closeSnackbar}
-        />
-      </Box>
+              {logsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress size={24} sx={{ color: ADMIN.primary }} />
+                </Box>
+              ) : recentLogs.length === 0 ? (
+                <Typography variant="body2" sx={{ color: ADMIN.textMuted, textAlign: 'center', py: 4 }}>No activity yet</Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: 360, overflowY: 'auto', pr: 0.5, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: ADMIN.borderLight } }}>
+                  {recentLogs.map((log, idx) => {
+                    const c = getActionColor(log.action);
+                    return (
+                      <Box key={log.id}>
+                        <Box sx={{ display: 'flex', gap: 1.5, py: 1.25 }}>
+                          <Avatar sx={{ width: 30, height: 30, bgcolor: c + '18', color: c, fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                            {log.actorRole?.[0] ?? '?'}
+                          </Avatar>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 500, color: ADMIN.body, fontSize: 13, lineHeight: 1.3 }} noWrap>
+                              {log.description}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 0.75, mt: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                              <Chip label={log.action} size="small" sx={{ height: 16, fontSize: 10, bgcolor: c + '15', color: c, fontWeight: 600 }} />
+                              <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>
+                                {dayjs(log.createdAt).fromNow()}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                        {idx < recentLogs.length - 1 && <Divider sx={{ borderColor: ADMIN.border }} />}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
+            </Card>
+          </Box>
+        </AdminPageShell>
+      </AdminLayout>
     </RoleGuard>
   );
 }
