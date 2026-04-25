@@ -1,45 +1,36 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Box,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Badge,
-  Menu,
-  MenuItem,
-  useMediaQuery,
-  useTheme,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Avatar,
-  Divider,
+  AppBar, Box, Toolbar, Typography, Button, IconButton, Badge,
+  Menu, MenuItem, Avatar, Divider, Drawer, List, ListItem,
+  ListItemButton, ListItemText, useMediaQuery, useTheme,
 } from '@mui/material';
-import { ShoppingCart, Menu as MenuIcon, Close, Logout, AccountCircle, ConfirmationNumber, NotificationsOutlined } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
+import {
+  ShoppingCart, Menu as MenuIcon, Close, Logout, AccountCircle,
+  ConfirmationNumber, NotificationsOutlined,
+} from '@mui/icons-material';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
 import { OrderStatus } from '@/src/stores/types/order';
 
-interface HeaderProps {
-  cartItemCount?: number; // Deprecated: Now automatically fetched from pending orders
-}
-
-export default function Header({ cartItemCount }: HeaderProps) {
+export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<null | HTMLElement>(null);
+  const [scrolled, setScrolled] = useState(false);
   const { logout, auth } = useAuth();
 
-  // Resolve the correct home path based on role — prevents admin landing on /dashboard/customer
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const homePath = (() => {
     const roles = auth.user?.roles ?? [];
     if (roles.includes('ADMIN')) return '/dashboard/admin';
@@ -47,391 +38,204 @@ export default function Header({ cartItemCount }: HeaderProps) {
     return '/dashboard/customer';
   })();
 
-  // Fetch pending orders count for cart badge
-  const { data: ordersResponse } = useGetMyOrdersQuery({ page: 0, size: 100 }, { skip: !auth?.accessToken });
-
-  // Count only PENDING orders for the badge
+  const { data: ordersResponse } = useGetMyOrdersQuery(
+    { page: 0, size: 100 },
+    { skip: !auth?.accessToken },
+  );
   const pendingOrdersCount =
-    ordersResponse?.data?.content?.filter((order) => order.status === OrderStatus.PENDING).length ?? 0;
+    ordersResponse?.data?.content?.filter((o) => o.status === OrderStatus.PENDING).length ?? 0;
 
   const handleNavigate = (path: string) => {
     router.push(path);
     setMobileMenuOpen(false);
   };
 
-  const handleBuyTicket = () => {
-    if (auth?.accessToken) {
-      handleNavigate('/dashboard');
-    } else {
-      handleNavigate('/login');
-    }
-  };
-
   const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const handleAccountMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAccountMenuAnchor(event.currentTarget);
-  };
-
-  const handleAccountMenuClose = () => {
+    try { await logout(); } catch { /* ignore */ }
+    router.push('/');
     setAccountMenuAnchor(null);
   };
 
   const roles = auth.user?.roles ?? [];
   const isOrganizerOrAdmin = roles.includes('ADMIN') || roles.includes('ORGANIZER');
 
-  const menuItems = isOrganizerOrAdmin
+  const navItems = isOrganizerOrAdmin
     ? [
-        { label: 'Home', path: '/dashboard/customer' },
+        { label: 'Home', path: homePath },
         { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
       ]
     : [
         { label: 'Home', path: '/dashboard/customer' },
         { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
-        { label: 'My Tickets', path: '/dashboard/customer/my-tickets' },
-        { label: 'My Orders', path: '/dashboard/customer/cart' },
+        { label: 'My Bookings', path: '/dashboard/customer/cart' },
       ];
 
+  const isActive = (path: string) => pathname === path.split('?')[0];
+
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        background: 'linear-gradient(135deg, #ED4690 0%, #5522CC 100%)',
-        borderBottom: 'none',
-      }}
-    >
-      <Toolbar sx={{ py: 1, px: { xs: 2, sm: 3, md: 4 } }}>
-        {/* Logo */}
-        <Box
-          onClick={() => handleNavigate(homePath)}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            mr: 4,
-          }}
-        >
-          <Box
-            component="img"
-            src="/logoCus.svg"
-            alt="Evena Logo"
-            sx={{
-              height: { xs: 32, md: 40 },
-              width: 'auto',
-            }}
-          />
-        </Box>
-
-        {/* Desktop Navigation */}
-        {!isMobile && auth?.accessToken && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-            {menuItems.map((item) => (
-              <Button
-                key={item.path}
-                onClick={() => handleNavigate(item.path)}
-                sx={{
-                  color: 'white',
-                  textTransform: 'none',
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  px: 2,
-                  py: 1,
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                  },
-                }}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Box>
-        )}
-
-        {/* Spacer for mobile */}
-        {isMobile && <Box sx={{ flex: 1 }} />}
-
-        {/* Right side buttons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {/* Cart Icon - Only show if logged in */}
-          {auth?.accessToken && (
-            <IconButton
-              onClick={() => handleNavigate('/dashboard/customer/cart')}
-              sx={{
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  color: 'white',
-                },
-              }}
-            >
-              <Badge badgeContent={pendingOrdersCount} color="error">
-                <ShoppingCart />
-              </Badge>
-            </IconButton>
-          )}
-
-          {/* Notification Bell */}
-          {auth?.accessToken && (
-            <IconButton
-              sx={{
-                color: 'white',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' },
-              }}
-            >
-              <NotificationsOutlined />
-            </IconButton>
-          )}
-
-          {/* Login button for unauthenticated users */}
-          {!auth?.accessToken && !isMobile && (
-            <Button
-              variant="contained"
-              onClick={() => handleNavigate('/login')}
-              sx={{
-                backgroundColor: 'white',
-                color: '#ED4690',
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1,
-                borderRadius: '25px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.9)' },
-              }}
-            >
-              Login
-            </Button>
-          )}
-
-          {/* Account Menu - Desktop */}
-          {!isMobile && auth?.user && (
-            <IconButton
-              onClick={handleAccountMenuOpen}
-              sx={{
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                },
-              }}
-            >
-              <Avatar
-                src={auth.user.avatarUrl ?? undefined}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  backgroundColor: 'white',
-                  color: '#ED4690',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                }}
-              >
-                {!auth.user.avatarUrl && (auth.user.name?.[0]?.toUpperCase() || 'U')}
-              </Avatar>
-            </IconButton>
-          )}
-
-          {/* Mobile Menu Button */}
-          {isMobile && (
-            <IconButton
-              onClick={() => setMobileMenuOpen(true)}
-              sx={{
-                color: 'white',
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-        </Box>
-      </Toolbar>
-
-      {/* Mobile Drawer */}
-      <Drawer
-        anchor="right"
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
         sx={{
-          '& .MuiDrawer-paper': {
-            width: 280,
-          },
+          background: 'linear-gradient(135deg, #ED4690 0%, #5522CC 100%)',
+          boxShadow: scrolled ? '0 4px 20px rgba(85,34,204,0.35)' : 'none',
+          transition: 'box-shadow 0.25s',
         }}
       >
-        <Box sx={{ p: 2 }}>
-          {/* Close Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#F36BF9' }}>
-              Menu
-            </Typography>
-            <IconButton onClick={() => setMobileMenuOpen(false)} size="small">
-              <Close />
-            </IconButton>
+        <Toolbar sx={{ py: 0.75, px: { xs: 2, sm: 3, md: 4 }, minHeight: { xs: 56, sm: 64 } }}>
+          {/* Logo */}
+          <Box
+            onClick={() => handleNavigate(homePath)}
+            sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', mr: { xs: 2, md: 5 }, userSelect: 'none', flexShrink: 0 }}
+          >
+            <Box component="img" src="/logoCus.svg" alt="Evena" sx={{ height: { xs: 32, md: 38 }, width: 'auto' }} />
           </Box>
 
-          {/* Menu Items - Only show if logged in */}
+          {/* Desktop nav */}
+          {!isMobile && auth?.accessToken && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
+              {navItems.map((item) => (
+                <Button key={item.path} onClick={() => handleNavigate(item.path)} disableRipple
+                  sx={{
+                    color: isActive(item.path) ? '#fff' : 'rgba(255,255,255,0.75)',
+                    textTransform: 'none', fontSize: 14,
+                    fontWeight: isActive(item.path) ? 700 : 500,
+                    px: 2, py: 0.75, borderRadius: '8px', position: 'relative',
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff' },
+                    '&::after': isActive(item.path)
+                      ? { content: '""', position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 20, height: 2, borderRadius: 1, bgcolor: '#fff' }
+                      : {},
+                  }}>
+                  {item.label}
+                </Button>
+              ))}
+            </Box>
+          )}
+
+          <Box sx={{ flex: isMobile ? 1 : 'unset' }} />
+
+          {/* Right side */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {auth?.accessToken && (
+              <IconButton onClick={() => handleNavigate('/dashboard/customer/cart')} size="small"
+                sx={{ color: 'rgba(255,255,255,0.85)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)', color: '#fff' } }}>
+                <Badge badgeContent={pendingOrdersCount} color="error">
+                  <ShoppingCart sx={{ fontSize: 20 }} />
+                </Badge>
+              </IconButton>
+            )}
+            {auth?.accessToken && (
+              <IconButton size="small" sx={{ color: 'rgba(255,255,255,0.85)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)', color: '#fff' } }}>
+                <NotificationsOutlined sx={{ fontSize: 20 }} />
+              </IconButton>
+            )}
+            {!auth?.accessToken && !isMobile && (
+              <Box sx={{ display: 'flex', gap: 1, ml: 1 }}>
+                <Button onClick={() => handleNavigate('/login')}
+                  sx={{ color: 'rgba(255,255,255,0.9)', textTransform: 'none', fontWeight: 600, fontSize: 14, px: 2, borderRadius: '10px', '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff' } }}>
+                  Sign in
+                </Button>
+                <Button onClick={() => handleNavigate('/register')} variant="contained"
+                  sx={{ bgcolor: '#fff', color: '#ED4690', textTransform: 'none', fontWeight: 700, fontSize: 14, px: 2.5, py: 0.75, borderRadius: '10px', boxShadow: '0 4px 14px rgba(0,0,0,0.15)', '&:hover': { bgcolor: 'rgba(255,255,255,0.92)' } }}>
+                  Get started
+                </Button>
+              </Box>
+            )}
+            {!isMobile && auth?.user && (
+              <IconButton onClick={(e) => setAccountMenuAnchor(e.currentTarget)} size="small" sx={{ ml: 0.5 }}>
+                <Avatar src={auth.user.avatarUrl ?? undefined}
+                  sx={{ width: 34, height: 34, bgcolor: 'rgba(255,255,255,0.25)', fontSize: 13, fontWeight: 700, color: '#fff', border: '2px solid rgba(255,255,255,0.5)' }}>
+                  {!auth.user.avatarUrl && (auth.user.name?.[0]?.toUpperCase() || 'U')}
+                </Avatar>
+              </IconButton>
+            )}
+            {isMobile && (
+              <IconButton onClick={() => setMobileMenuOpen(true)} size="small" sx={{ color: '#fff' }}>
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      {/* Account dropdown */}
+      <Menu anchorEl={accountMenuAnchor} open={Boolean(accountMenuAnchor)} onClose={() => setAccountMenuAnchor(null)}
+        PaperProps={{ sx: { mt: 1.5, borderRadius: '14px', minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', border: '1px solid #F1F5F9' } }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
+        {auth?.user && (
+          <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F1F5F9' }}>
+            <Typography variant="body2" fontWeight={700} color="#0F172A">{auth.user.name}</Typography>
+            <Typography variant="caption" color="#64748B">{auth.user.email}</Typography>
+          </Box>
+        )}
+        <MenuItem onClick={() => { setAccountMenuAnchor(null); handleNavigate('/dashboard/customer/profile'); }}
+          sx={{ py: 1.5, mx: 1, my: 0.5, borderRadius: '8px', '&:hover': { bgcolor: '#F8FAFC' } }}>
+          <AccountCircle sx={{ mr: 1.5, color: '#64748B', fontSize: 20 }} />
+          <Typography variant="body2" fontWeight={500}>My Profile</Typography>
+        </MenuItem>
+        <MenuItem onClick={() => { setAccountMenuAnchor(null); handleNavigate('/dashboard/customer/cart'); }}
+          sx={{ py: 1.5, mx: 1, mb: 0.5, borderRadius: '8px', '&:hover': { bgcolor: '#F8FAFC' } }}>
+          <ConfirmationNumber sx={{ mr: 1.5, color: '#64748B', fontSize: 20 }} />
+          <Typography variant="body2" fontWeight={500}>My Bookings</Typography>
+        </MenuItem>
+        <Divider sx={{ borderColor: '#F1F5F9', mx: 1 }} />
+        <MenuItem onClick={handleLogout} sx={{ py: 1.5, mx: 1, my: 0.5, borderRadius: '8px', color: '#EF4444', '&:hover': { bgcolor: 'rgba(239,68,68,0.06)' } }}>
+          <Logout sx={{ mr: 1.5, fontSize: 20 }} />
+          <Typography variant="body2" fontWeight={500}>Sign out</Typography>
+        </MenuItem>
+      </Menu>
+
+      {/* Mobile drawer */}
+      <Drawer anchor="right" open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}
+        slotProps={{ paper: { sx: { width: 280, borderRadius: '16px 0 0 16px' } } }}>
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ px: 2, py: 1, borderRadius: '10px', background: 'linear-gradient(135deg,#ED4690,#5522CC)', display: 'inline-flex' }}>
+              <Box component="img" src="/logoCus.svg" alt="Evena" sx={{ height: 28, width: 'auto' }} />
+            </Box>
+            <IconButton onClick={() => setMobileMenuOpen(false)} size="small"><Close fontSize="small" /></IconButton>
+          </Box>
+          {auth?.user && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, mb: 2, bgcolor: '#F8FAFC', borderRadius: '12px' }}>
+              <Avatar src={auth.user.avatarUrl ?? undefined} sx={{ width: 38, height: 38, background: 'linear-gradient(135deg,#F36BF9,#e55ae0)', fontSize: 14, fontWeight: 700 }}>
+                {!auth.user.avatarUrl && (auth.user.name?.[0]?.toUpperCase() || 'U')}
+              </Avatar>
+              <Box sx={{ overflow: 'hidden' }}>
+                <Typography variant="body2" fontWeight={700} color="#0F172A" noWrap>{auth.user.name}</Typography>
+                <Typography variant="caption" color="#64748B" noWrap>{auth.user.email}</Typography>
+              </Box>
+            </Box>
+          )}
           {auth?.accessToken && (
-            <List>
-              {menuItems.map((item) => (
-                <ListItem key={item.path} disablePadding>
-                  <ListItemButton
-                    onClick={() => handleNavigate(item.path)}
-                    sx={{
-                      borderRadius: '8px',
-                      '&:hover': {
-                        backgroundColor: 'rgba(243, 107, 249, 0.1)',
-                        '& .MuiListItemText-primary': {
-                          color: '#F36BF9',
-                        },
-                      },
-                    }}
-                  >
-                    <ListItemText
-                      primary={item.label}
-                      sx={{
-                        '& .MuiListItemText-primary': {
-                          fontWeight: 500,
-                          color: '#2A3363',
-                        },
-                      }}
-                    />
+            <List disablePadding>
+              {navItems.map((item) => (
+                <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton onClick={() => handleNavigate(item.path)}
+                    sx={{ borderRadius: '10px', py: 1.25, bgcolor: isActive(item.path) ? 'rgba(243,107,249,0.08)' : 'transparent', '&:hover': { bgcolor: '#F8FAFC' } }}>
+                    <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: isActive(item.path) ? 700 : 500, fontSize: 14, color: isActive(item.path) ? '#F36BF9' : '#0F172A' }} />
                   </ListItemButton>
                 </ListItem>
               ))}
             </List>
           )}
-
-          {/* Login Button - Mobile (unauthenticated only) */}
           {!auth?.accessToken && (
-            <Box sx={{ mt: 3, px: 2 }}>
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={() => handleNavigate('/login')}
-                sx={{
-                  backgroundColor: '#F36BF9',
-                  color: 'white',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  py: 1.5,
-                  borderRadius: '25px',
-                  '&:hover': { backgroundColor: '#e55ae0' },
-                }}
-              >
-                Login
-              </Button>
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Button fullWidth variant="outlined" onClick={() => handleNavigate('/login')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, borderColor: '#E2E8F0', color: '#475569' }}>Sign in</Button>
+              <Button fullWidth variant="contained" onClick={() => handleNavigate('/register')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, background: 'linear-gradient(135deg,#F36BF9,#e55ae0)', boxShadow: 'none' }}>Get started</Button>
             </Box>
           )}
-
-          {/* Logout Button - Mobile */}
           {auth?.user && (
-            <Box sx={{ mt: 2, px: 2 }}>
-              <Divider sx={{ mb: 2 }} />
-              <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<Logout />}
-                onClick={handleLogout}
-                sx={{
-                  borderColor: '#d32f2f',
-                  color: '#d32f2f',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  py: 1.5,
-                  borderRadius: '25px',
-                  '&:hover': {
-                    borderColor: '#b71c1c',
-                    backgroundColor: 'rgba(211, 47, 47, 0.08)',
-                  },
-                }}
-              >
-                Logout
+            <Box sx={{ mt: 3 }}>
+              <Divider sx={{ borderColor: '#F1F5F9', mb: 2 }} />
+              <Button fullWidth startIcon={<Logout fontSize="small" />} onClick={handleLogout}
+                sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, color: '#EF4444', justifyContent: 'flex-start', px: 2, '&:hover': { bgcolor: 'rgba(239,68,68,0.06)' } }}>
+                Sign out
               </Button>
             </Box>
           )}
         </Box>
       </Drawer>
-
-      {/* Account Menu - Desktop Dropdown */}
-      <Menu
-        anchorEl={accountMenuAnchor}
-        open={Boolean(accountMenuAnchor)}
-        onClose={handleAccountMenuClose}
-        PaperProps={{
-          sx: {
-            mt: 1.5,
-            borderRadius: '12px',
-            minWidth: 200,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-          },
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        {auth?.user && (
-          <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #E0E0E0' }}>
-            <Typography variant="body2" fontWeight={600} color="#2A3363">
-              {auth.user.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {auth.user.email}
-            </Typography>
-          </Box>
-        )}
-        <MenuItem
-          onClick={() => {
-            handleAccountMenuClose();
-            handleNavigate('/dashboard/customer/profile');
-          }}
-          sx={{
-            py: 1.5,
-            '&:hover': {
-              backgroundColor: 'rgba(243, 107, 249, 0.1)',
-            },
-          }}
-        >
-          <AccountCircle sx={{ mr: 1.5, color: '#2A3363' }} />
-          <Typography variant="body2">My Profile</Typography>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleAccountMenuClose();
-            handleNavigate('/dashboard/customer/my-tickets');
-          }}
-          sx={{
-            py: 1.5,
-            '&:hover': {
-              backgroundColor: 'rgba(243, 107, 249, 0.1)',
-            },
-          }}
-        >
-          <ConfirmationNumber sx={{ mr: 1.5, color: '#2A3363' }} />
-          <Typography variant="body2">My Tickets</Typography>
-        </MenuItem>
-        <Divider />
-        <MenuItem
-          onClick={() => {
-            handleAccountMenuClose();
-            handleLogout();
-          }}
-          sx={{
-            py: 1.5,
-            color: '#d32f2f',
-            '&:hover': {
-              backgroundColor: 'rgba(211, 47, 47, 0.08)',
-            },
-          }}
-        >
-          <Logout sx={{ mr: 1.5 }} />
-          <Typography variant="body2">Logout</Typography>
-        </MenuItem>
-      </Menu>
-    </AppBar>
+    </>
   );
 }
