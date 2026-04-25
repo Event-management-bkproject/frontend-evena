@@ -107,14 +107,19 @@
       "loggingIn": "Logging in...",
       "dontHaveAccount": "Don't have an account? Register as:",
       "customer": "Customer",
-      "organization": "Organization"
+      "organization": "Organization",
+      "welcomeBack": "Welcome back",
+      "subtitle": "Sign in to your account to continue",
+      "or": "or"
     },
     "register": {
       "customerTitle": "Customer Registration",
       "organizerTitle": "Organizer Registration",
       "registering": "Registering...",
       "alreadyHaveAccount": "Already have an account?",
-      "loginHere": "Login here"
+      "loginHere": "Login here",
+      "customerSubtitle": "Join Evena to discover and book event tickets easily",
+      "organizerSubtitle": "Create your organization and start managing events today"
     },
     "placeholders": {
       "enterEmail": "Enter your email",

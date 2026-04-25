@@ -10,7 +10,7 @@ import { RegisterForm } from '@components/auth/RegisterForm';
 
 export default function OrganizerRegisterPage() {
   return (
-    <AuthLayout>
+    <AuthLayout maxWidth={520}>
       <RegisterForm type="organizer" />
     </AuthLayout>
   );

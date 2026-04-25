@@ -5,7 +5,7 @@ import RoleGuard from '@/src/components/RoleGuard';
 
 export default function CustomerDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <RoleGuard allowedRoles={['USER']}>
+    <RoleGuard allowedRoles={['USER', 'ADMIN', 'ORGANIZER']}>
       <main>{children}</main>
     </RoleGuard>
   );

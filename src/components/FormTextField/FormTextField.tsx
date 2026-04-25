@@ -144,12 +144,7 @@ const FormTextField = ({
                 onMouseDown={handleMouseDownPassword}
                 edge="end"
                 size="small"
-                sx={{
-                  backgroundColor: 'transparent',
-                  '&:hover': {
-                    backgroundColor: 'transparent',
-                  },
-                }}
+                disableRipple
               >
                 {showPassword ? <Visibility /> : <VisibilityOff />}
               </IconButton>

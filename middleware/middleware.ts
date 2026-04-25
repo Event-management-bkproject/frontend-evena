@@ -1,18 +1,17 @@
-// middleware.ts (ở root project)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const token = request.cookies.get('token')?.value;
-  const isAuthenticated = !!token;
-  const protectedRoutes = ['/dashboard/organizer', '/dashboard/customer', '/dashboard'];
-  // Kiểm tra nếu đang truy cập protected route
-  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  // refreshToken httpOnly cookie is the session signal at the edge.
+  // Actual role-based access is enforced client-side by RoleGuard.
+  const hasSession = !!request.cookies.get('refreshToken')?.value;
 
-  // 🚫 Redirect nếu truy cập protected route mà chưa đăng nhập
-  if (isProtectedRoute && !isAuthenticated) {
+  const protectedRoutes = ['/dashboard'];
+  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+
+  if (isProtected && !hasSession) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

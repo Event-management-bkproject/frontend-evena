@@ -1,10 +1,10 @@
-// app/verify-email/page.tsx
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Box, Typography, Paper, Button, CircularProgress, Alert } from '@mui/material';
-import Image from 'next/image';
+import { Box, Typography, Paper, Button, CircularProgress } from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useTranslation } from 'react-i18next';
 
 export default function VerifyEmailPage() {
@@ -18,10 +18,7 @@ export default function VerifyEmailPage() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Prevent double verification (React StrictMode calls useEffect twice)
-    if (hasVerified.current) {
-      return;
-    }
+    if (hasVerified.current) return;
 
     const verifyEmail = async () => {
       if (!token) {
@@ -47,14 +44,14 @@ export default function VerifyEmailPage() {
           setStatus('error');
           setMessage(data.message || t('verifyEmail.failed'));
         }
-      } catch (error) {
+      } catch {
         setStatus('error');
         setMessage(t('verifyEmail.networkError'));
       }
     };
 
     verifyEmail();
-  }, [token]);
+  }, [token, t]);
 
   return (
     <Box
@@ -63,43 +60,84 @@ export default function VerifyEmailPage() {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #EEF0FF 0%, #FCD3FF 100%)',
+        background: 'linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f3460 100%)',
+        px: 2,
       }}
     >
       <Paper
-        elevation={8}
+        elevation={0}
         sx={{
-          p: 4,
-          borderRadius: 2,
-          backgroundColor: '#EEF0FF',
-          maxWidth: 500,
+          p: { xs: 4, sm: 5 },
+          borderRadius: '20px',
+          backgroundColor: '#fff',
+          maxWidth: 460,
           width: '100%',
           textAlign: 'center',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <Image src="/logoOrg.svg" alt="Evena Logo" width={150} height={50} priority />
+        {/* Evena brand */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 4 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '9px',
+              background: 'linear-gradient(135deg, #F36BF9 0%, #6093FC 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <path d="M3 4C1.897 4 1 4.897 1 6V8c0 .275.231.49.491.581C2.078 8.784 2.5 9.344 2.5 10s-.422 1.216-1.009 1.419C1.231 11.51 1 11.725 1 12v2C1 15.103 1.897 16 3 16h14c1.103 0 2-.897 2-2v-2c0-.275-.231-.49-.491-.581C17.922 11.216 17.5 10.656 17.5 10s.422-1.216 1.009-1.419C18.769 8.49 19 8.275 19 8V6c0-1.103-.897-2-2-2H3Z" fill="white"/>
+            </svg>
+          </Box>
+          <Typography sx={{ fontWeight: 800, fontSize: 18, color: '#0F172A' }}>Evena</Typography>
         </Box>
 
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#37437D' }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', mb: 1.5, letterSpacing: '-0.5px' }}>
           {t('verifyEmail.title')}
         </Typography>
 
         {status === 'loading' && (
           <Box sx={{ my: 4 }}>
-            <CircularProgress size={60} sx={{ color: '#37437D', mb: 2 }} />
-            <Typography variant="body1" sx={{ color: '#37437D' }}>
+            <CircularProgress
+              size={52}
+              sx={{
+                mb: 2,
+                '& .MuiCircularProgress-circle': {
+                  stroke: 'url(#grad)',
+                },
+                color: '#6093FC',
+              }}
+            />
+            <Typography variant="body2" sx={{ color: '#64748B' }}>
               {t('verifyEmail.verifying')}
             </Typography>
           </Box>
         )}
 
         {status === 'success' && (
-          <Box sx={{ my: 4 }}>
-            <Alert severity="success" sx={{ mb: 3 }}>
+          <Box sx={{ my: 3 }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                bgcolor: 'rgba(34,197,94,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              <CheckCircleOutlineIcon sx={{ fontSize: 32, color: '#22C55E' }} />
+            </Box>
+            <Typography variant="body2" sx={{ color: '#16A34A', fontWeight: 600, mb: 1 }}>
               {message}
-            </Alert>
-            <Typography variant="body1" sx={{ color: '#37437D', mb: 3 }}>
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748B', mb: 3, lineHeight: 1.7 }}>
               {t('verifyEmail.successMessage')}
             </Typography>
             <Button
@@ -107,10 +145,13 @@ export default function VerifyEmailPage() {
               size="large"
               onClick={() => router.push('/login')}
               sx={{
-                backgroundColor: '#37437D',
-                '&:hover': { backgroundColor: '#2a3361' },
+                borderRadius: '10px',
+                textTransform: 'none',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #F36BF9, #6093FC)',
+                boxShadow: '0 4px 14px rgba(96,147,252,0.35)',
+                '&:hover': { background: 'linear-gradient(135deg, #e055e8, #4a7ef0)' },
                 px: 4,
-                py: 1.5,
               }}
             >
               {t('common.buttons.login')}
@@ -119,41 +160,62 @@ export default function VerifyEmailPage() {
         )}
 
         {status === 'error' && (
-          <Box sx={{ my: 4 }}>
-            <Alert severity="error" sx={{ mb: 3 }}>
+          <Box sx={{ my: 3 }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                bgcolor: 'rgba(239,68,68,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 2,
+              }}
+            >
+              <ErrorOutlineIcon sx={{ fontSize: 32, color: '#EF4444' }} />
+            </Box>
+            <Typography variant="body2" sx={{ color: '#DC2626', fontWeight: 600, mb: 1 }}>
               {message}
-            </Alert>
-            <Typography variant="body1" sx={{ color: '#37437D', mb: 3 }}>
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#64748B', mb: 3, lineHeight: 1.7 }}>
               {t('verifyEmail.errorMessage')}
             </Typography>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => router.push('/register')}
-              sx={{
-                borderColor: '#37437D',
-                color: '#37437D',
-                '&:hover': { backgroundColor: '#37437D', color: 'white' },
-                px: 4,
-                py: 1.5,
-                mr: 2,
-              }}
-            >
-              {t('verifyEmail.registerAgain')}
-            </Button>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => router.push('/login')}
-              sx={{
-                backgroundColor: '#37437D',
-                '&:hover': { backgroundColor: '#2a3361' },
-                px: 4,
-                py: 1.5,
-              }}
-            >
-              {t('common.buttons.login')}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => router.push('/register')}
+                sx={{
+                  borderRadius: '10px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: '#E2E8F0',
+                  color: '#64748B',
+                  '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC' },
+                  px: 3,
+                }}
+              >
+                {t('verifyEmail.registerAgain')}
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => router.push('/login')}
+                sx={{
+                  borderRadius: '10px',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #F36BF9, #6093FC)',
+                  boxShadow: '0 4px 14px rgba(96,147,252,0.35)',
+                  '&:hover': { background: 'linear-gradient(135deg, #e055e8, #4a7ef0)' },
+                  px: 3,
+                }}
+              >
+                {t('common.buttons.login')}
+              </Button>
+            </Box>
           </Box>
         )}
       </Paper>

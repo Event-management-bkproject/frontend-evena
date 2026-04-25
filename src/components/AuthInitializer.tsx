@@ -8,7 +8,6 @@ import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
 import { EventAPI } from '@/src/stores/services/EventApi';
 import { CategoryAPI } from '@/src/stores/services/CategoryApi';
 import { VenueAPI } from '@/src/stores/services/VenueApi';
-import { AuthLoadingPage } from './AuthLoadingPage';
 
 export default function AuthInitializer() {
   const { setAuthFromInit, auth } = useAuth();
@@ -16,110 +15,48 @@ export default function AuthInitializer() {
   const isMountedRef = useRef(true);
 
   useEffect(() => {
-    // Track component mounted state
     isMountedRef.current = true;
 
     const initializeAuth = async () => {
-      // Nếu đã initialized thì không cần check lại
       if (auth.isInitialized) return;
 
-      // Check if we have user in memory (from redux-persist)
-      // If user exists, try to get fresh access token from refresh token (httpOnly cookie)
-      const hasPersistedUser = auth.user !== null;
-
-      const startTime = Date.now();
-      // Show loading screen for first-time visitors
-      const MIN_LOADING_TIME = hasPersistedUser ? 0 : 2500;
-
-      // If no user exists, skip API call and mark as initialized
-      if (!hasPersistedUser) {
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
-        await new Promise((resolve) => setTimeout(resolve, remainingTime));
-
-        // Only update state if component is still mounted
-        if (isMountedRef.current) {
-          setAuthFromInit(null, null);
-        }
-        return;
-      }
-
       try {
-        // Call /api/auth/refresh to get fresh access token
-        // Refresh token is automatically sent via httpOnly cookie
-        const refreshResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+        // Always attempt refresh — httpOnly cookie is sent automatically.
+        // Do not gate on persisted user: cookie is the source of truth.
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
           method: 'POST',
-          credentials: 'include', // Send httpOnly cookie
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         });
 
-        // Calculate remaining time to meet minimum loading time
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
-
-        // Wait for remaining time before setting auth
-        await new Promise((resolve) => setTimeout(resolve, remainingTime));
-
-        // Only update state if component is still mounted
         if (!isMountedRef.current) return;
 
-        if (refreshResponse.ok) {
-          const data = await refreshResponse.json();
-
+        if (response.ok) {
+          const data = await response.json();
           if (data.success && data.data) {
-            // Set new access token (from refresh) and user data
             setAuthFromInit(data.data.accessToken, data.data.user);
-          } else {
-            // Refresh failed
-            setAuthFromInit(null, null);
+            return;
           }
-        } else {
-          // Refresh token expired or invalid - logout
-          setAuthFromInit(null, null);
-
-          // Clear cache
-          dispatch(OrganizerAPI.util.resetApiState());
-          dispatch(EventAPI.util.resetApiState());
-          dispatch(CategoryAPI.util.resetApiState());
-          dispatch(VenueAPI.util.resetApiState());
         }
-      } catch {
-        // Network error or unexpected failure — treat as unauthenticated.
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
-        await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
-        if (!isMountedRef.current) return;
-
+        // Refresh failed — unauthenticated
         setAuthFromInit(null, null);
         dispatch(OrganizerAPI.util.resetApiState());
         dispatch(EventAPI.util.resetApiState());
         dispatch(CategoryAPI.util.resetApiState());
         dispatch(VenueAPI.util.resetApiState());
+      } catch {
+        if (!isMountedRef.current) return;
+        setAuthFromInit(null, null);
       }
     };
 
     initializeAuth();
 
-    // Cleanup function to prevent state updates after unmount
     return () => {
       isMountedRef.current = false;
     };
-  // Only re-run if initialization status changes — NOT on token refresh.
-  // Token refresh is handled by baseQueryWithReAuth independently.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isInitialized]);
-
-  // Only show loading page if:
-  // 1. Not initialized yet AND
-  // 2. No persisted user (first time visitor scenario)
-  const hasPersistedUser = auth.user !== null;
-
-  if (!auth.isInitialized && !hasPersistedUser) {
-    return <AuthLoadingPage message="Verifying authentication..." />;
-  }
 
   return null;
 }

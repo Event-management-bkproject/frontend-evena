@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Box, Container, Typography, Button, Card, CardContent, alpha } from '@mui/material';
 import {
   EventAvailable,
@@ -14,9 +15,19 @@ import {
 import { useRouter } from 'next/navigation';
 import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 
 export default function LandingPage() {
   const router = useRouter();
+  const { auth } = useAuth();
+
+  useEffect(() => {
+    if (!auth.isInitialized || !auth.accessToken) return;
+    const roles = auth.user?.roles ?? [];
+    if (roles.includes('ADMIN')) router.replace('/dashboard/admin');
+    else if (roles.includes('ORGANIZER')) router.replace('/dashboard/organizer');
+    else router.replace('/dashboard/customer');
+  }, [auth.isInitialized, auth.accessToken, auth.user?.roles, router]);
 
   const features = [
     {

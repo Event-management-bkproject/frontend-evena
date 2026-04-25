@@ -10,7 +10,7 @@ import { RegisterForm } from '@components/auth/RegisterForm';
 
 export default function CustomerRegisterPage() {
   return (
-    <AuthLayout>
+    <AuthLayout maxWidth={520}>
       <RegisterForm type="customer" />
     </AuthLayout>
   );

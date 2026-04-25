@@ -1,42 +1,65 @@
 // styles.ts
 import { css, styled } from '@mui/material/styles';
-// Import SCSS file để sử dụng biến
-// import '@styles/setting/colors.scss'; // Commented out - colors are hardcoded below
 
 export const StyledFormTextField = styled('div')(
   () => css`
     .MuiOutlinedInput-root {
-      border-radius: 4px;
-      background-color: #ffffff !important;
+      border-radius: 8px;
+      background-color: #ffffff;
 
       & fieldset {
-        border-radius: 4px;
+        border-radius: 8px;
+        border-color: #E2E8F0;
       }
 
       &:hover fieldset {
-        border-color: #1976d2;
+        border-color: #94A3B8;
       }
 
       &.Mui-focused fieldset {
-        border-color: #1976d2;
+        border-color: #6093FC;
+        border-width: 1.5px;
       }
 
-      /* Khi disabled cũng giữ màu trắng */
       &.Mui-disabled {
-        background-color: #ffffff !important;
+        background-color: #F8FAFC;
         opacity: 0.7;
       }
 
-      /* Đảm bảo màu chữ input trong mọi trạng thái - ĐẶT Ở ĐÂY */
       .MuiInputBase-input {
-        color: #37437d !important; /* Thêm !important để đảm bảo áp dụng */
-        border-radius: 4px;
+        color: #1E293B;
+        border-radius: 8px;
       }
 
-      /* Placeholder */
       .MuiInputBase-input::placeholder {
-        color: #37437d;
-        opacity: 0.7;
+        color: #94A3B8;
+        opacity: 1;
+      }
+
+      /* Fix browser autofill blue background */
+      .MuiInputBase-input:-webkit-autofill,
+      .MuiInputBase-input:-webkit-autofill:hover,
+      .MuiInputBase-input:-webkit-autofill:focus,
+      .MuiInputBase-input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+        -webkit-text-fill-color: #1E293B !important;
+      }
+
+      /* Eye icon button — no background, no ripple highlight */
+      .MuiInputAdornment-root .MuiIconButton-root {
+        color: #94A3B8;
+        padding: 6px;
+        margin-right: -4px;
+        background: transparent !important;
+
+        &:hover {
+          color: #64748B;
+          background: transparent !important;
+        }
+
+        .MuiTouchRipple-root {
+          display: none;
+        }
       }
     }
   `,

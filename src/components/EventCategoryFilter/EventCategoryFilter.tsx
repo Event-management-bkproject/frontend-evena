@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box, Chip, Typography, Select, MenuItem, FormControl } from '@mui/material';
+import { Box, Typography, Chip, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { CalendarToday, TodayOutlined, DateRange, AllInclusive } from '@mui/icons-material';
 import { CategoryResponse } from '@/src/stores/types';
 import { useTranslation } from 'react-i18next';
 
@@ -11,95 +12,126 @@ interface EventCategoryFilterProps {
   onTimePeriodChange: (period: 'today' | 'week' | 'month' | 'all') => void;
 }
 
-export default function EventCategoryFilter({
-  categories,
-  onCategoryChange,
-  onTimePeriodChange,
-}: EventCategoryFilterProps) {
+const TIME_OPTIONS: { value: 'all' | 'today' | 'week' | 'month'; icon: React.ReactNode; labelKey: string }[] = [
+  { value: 'all', icon: <AllInclusive sx={{ fontSize: 16 }} />, labelKey: 'filter.allTime' },
+  { value: 'today', icon: <TodayOutlined sx={{ fontSize: 16 }} />, labelKey: 'filter.today' },
+  { value: 'week', icon: <DateRange sx={{ fontSize: 16 }} />, labelKey: 'filter.thisWeek' },
+  { value: 'month', icon: <CalendarToday sx={{ fontSize: 16 }} />, labelKey: 'filter.thisMonth' },
+];
+
+export default function EventCategoryFilter({ categories, onCategoryChange, onTimePeriodChange }: EventCategoryFilterProps) {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [timePeriod, setTimePeriod] = useState<'today' | 'week' | 'month' | 'all'>('all');
 
-  const handleCategoryClick = (categoryId: number) => {
-    const newCategory = selectedCategory === categoryId ? null : categoryId;
-    setSelectedCategory(newCategory);
-    onCategoryChange(newCategory);
+  const handleCategoryClick = (id: number) => {
+    const next = selectedCategory === id ? null : id;
+    setSelectedCategory(next);
+    onCategoryChange(next);
   };
 
-  const handleTimePeriodChange = (event: any) => {
-    const period = event.target.value;
-    setTimePeriod(period);
-    onTimePeriodChange(period);
+  const handleTimeChange = (_: React.MouseEvent<HTMLElement>, val: 'today' | 'week' | 'month' | 'all') => {
+    if (!val) return;
+    setTimePeriod(val);
+    onTimePeriodChange(val);
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {/* Time Period Filter */}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+      {/* Time filter */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2A3363', minWidth: '100px' }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: 13, minWidth: 70 }}>
           {t('filter.timePeriod')}
         </Typography>
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <Select
-            value={timePeriod}
-            onChange={handleTimePeriodChange}
-            sx={{
-              borderRadius: '20px',
-              backgroundColor: '#F7F7F7',
-              '& fieldset': {
-                borderColor: 'transparent',
-              },
-              '&:hover fieldset': {
-                borderColor: '#F36BF9',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#F36BF9',
-              },
-            }}
-          >
-            <MenuItem value="all">{t('filter.allTime')}</MenuItem>
-            <MenuItem value="today">{t('filter.today')}</MenuItem>
-            <MenuItem value="week">{t('filter.thisWeek')}</MenuItem>
-            <MenuItem value="month">{t('filter.thisMonth')}</MenuItem>
-          </Select>
-        </FormControl>
+        <ToggleButtonGroup
+          value={timePeriod}
+          exclusive
+          onChange={handleTimeChange}
+          size="small"
+          sx={{
+            gap: 0.5,
+            '& .MuiToggleButtonGroup-grouped': { border: 'none', borderRadius: '20px !important', mx: 0 },
+          }}
+        >
+          {TIME_OPTIONS.map((opt) => (
+            <ToggleButton
+              key={opt.value}
+              value={opt.value}
+              disableRipple
+              sx={{
+                px: 2,
+                py: 0.6,
+                fontSize: 13,
+                fontWeight: 600,
+                textTransform: 'none',
+                color: '#64748B',
+                bgcolor: '#F8FAFC',
+                display: 'flex',
+                gap: 0.75,
+                borderRadius: '20px !important',
+                transition: 'all 0.15s',
+                '&.Mui-selected': {
+                  background: 'linear-gradient(135deg,#F36BF9,#6093FC)',
+                  color: '#fff',
+                  boxShadow: '0 3px 10px rgba(96,147,252,0.3)',
+                  '&:hover': { background: 'linear-gradient(135deg,#e055e8,#4a7ef0)' },
+                },
+                '&:hover': { bgcolor: '#F1F5F9' },
+              }}
+            >
+              {opt.icon}
+              {t(opt.labelKey)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
       </Box>
 
-      {/* Category Chips */}
+      {/* Category chips — horizontally scrollable */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2A3363', minWidth: '100px' }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: 13, minWidth: 70 }}>
           {t('filter.categories')}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+          }}
+        >
           <Chip
             label={t('filter.all')}
-            onClick={() => {
-              setSelectedCategory(null);
-              onCategoryChange(null);
-            }}
+            onClick={() => { setSelectedCategory(null); onCategoryChange(null); }}
             sx={{
-              backgroundColor: selectedCategory === null ? '#F36BF9' : '#F7F7F7',
-              color: selectedCategory === null ? 'white' : '#666',
               fontWeight: 600,
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: selectedCategory === null ? '#e55ae0' : '#EFEFEF',
-              },
+              fontSize: 12,
+              height: 30,
+              borderRadius: '20px',
+              bgcolor: selectedCategory === null ? undefined : '#F8FAFC',
+              background: selectedCategory === null ? 'linear-gradient(135deg,#F36BF9,#6093FC)' : undefined,
+              color: selectedCategory === null ? '#fff' : '#64748B',
+              border: 'none',
+              boxShadow: selectedCategory === null ? '0 3px 10px rgba(96,147,252,0.28)' : 'none',
+              transition: 'all 0.15s',
+              '&:hover': { opacity: 0.88 },
             }}
           />
-          {categories.map((category) => (
+          {categories.map((cat) => (
             <Chip
-              key={category.id}
-              label={category.name}
-              onClick={() => handleCategoryClick(category.id)}
+              key={cat.id}
+              label={cat.name}
+              onClick={() => handleCategoryClick(cat.id)}
               sx={{
-                backgroundColor: selectedCategory === category.id ? '#F36BF9' : '#F7F7F7',
-                color: selectedCategory === category.id ? 'white' : '#666',
                 fontWeight: 600,
-                cursor: 'pointer',
-                '&:hover': {
-                  backgroundColor: selectedCategory === category.id ? '#e55ae0' : '#EFEFEF',
-                },
+                fontSize: 12,
+                height: 30,
+                borderRadius: '20px',
+                bgcolor: selectedCategory === cat.id ? undefined : '#F8FAFC',
+                background: selectedCategory === cat.id ? 'linear-gradient(135deg,#F36BF9,#6093FC)' : undefined,
+                color: selectedCategory === cat.id ? '#fff' : '#64748B',
+                border: 'none',
+                boxShadow: selectedCategory === cat.id ? '0 3px 10px rgba(96,147,252,0.28)' : 'none',
+                transition: 'all 0.15s',
+                '&:hover': { opacity: 0.88 },
               }}
             />
           ))}

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Box, Typography, Container, CircularProgress, Alert, Grid } from '@mui/material';
-import { LocalFireDepartment, Event } from '@mui/icons-material';
+import { LocalFireDepartment, EventNote } from '@mui/icons-material';
 import { useGetEventsQuery } from '@/src/stores/services/EventApi';
 import { useGetCategoriesQuery } from '@/src/stores/services/CategoryApi';
 import CustomerEventCard from '@/src/components/EventCard/CustomerEventCard';
@@ -12,14 +12,11 @@ import Header from '@/src/components/Header';
 import Footer from '@/src/components/Footer';
 import { calculateHotEvents, filterUpcomingEvents } from '@/src/utils/hotEventsAlgorithm';
 import { useTranslation } from 'react-i18next';
-import { BRAND } from '@/src/utils/constants/constant';
-
-// SSE cache invalidation is handled globally by SSEProvider.
-// No manual refetch needed here — RTK Query re-fetches automatically
-// when SSEProvider dispatches invalidateTags(['Event']).
+import { useAuth } from '@/src/hooks/auth/useAuth';
 
 export default function CustomerDashboard() {
   const { t } = useTranslation();
+  const { auth } = useAuth();
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchPlace, setSearchPlace] = useState('');
@@ -34,22 +31,17 @@ export default function CustomerDashboard() {
   const categories = categoriesResponse?.data ?? [];
 
   const hotEvents = useMemo(() => calculateHotEvents(events, 6), [events]);
-
   const upcomingEvents = useMemo(
     () => filterUpcomingEvents(events, { categoryId: selectedCategory, timePeriod, searchKeyword, searchPlace, searchDate }),
     [events, selectedCategory, timePeriod, searchKeyword, searchPlace, searchDate],
   );
 
-  const handleSearch = (keyword: string, place: string, date: string) => {
-    setSearchKeyword(keyword);
-    setSearchPlace(place);
-    setSearchDate(date);
-  };
+  const isFiltering = searchKeyword || searchPlace || searchDate || selectedCategory || timePeriod !== 'all';
 
   if (eventsLoading || categoriesLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <CircularProgress sx={{ color: BRAND.primary }} />
+        <CircularProgress sx={{ color: '#6093FC' }} />
       </Box>
     );
   }
@@ -63,48 +55,100 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <Box sx={{ backgroundColor: BRAND.bgPage, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ bgcolor: '#F8FAFC', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
 
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h3" sx={{ fontWeight: 700, color: BRAND.dark, mb: 1 }}>
-              {t('customer.discoverEvents')}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {t('customer.discoverEventsSubtitle')}
-            </Typography>
-          </Box>
+      {/* Hero banner */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+          pt: { xs: 5, md: 7 },
+          pb: { xs: 9, md: 11 },
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Decorative blobs */}
+        <Box sx={{ position: 'absolute', top: -60, right: '10%', width: 320, height: 320, borderRadius: '50%', background: 'rgba(243,107,249,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+        <Box sx={{ position: 'absolute', bottom: -80, left: '5%', width: 280, height: 280, borderRadius: '50%', background: 'rgba(96,147,252,0.1)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
-          <Box sx={{ mb: 4 }}>
-            <EventSearchBar onSearch={handleSearch} />
-          </Box>
-
-          {/* Hot Events */}
-          <Box sx={{ mb: 6 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <LocalFireDepartment sx={{ color: BRAND.primary, fontSize: 32 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, color: BRAND.dark }}>
-                {t('customer.hotEvents')}
-              </Typography>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+          <Typography
+            variant="h4"
+            sx={{
+              color: 'rgba(255,255,255,0.55)',
+              fontSize: { xs: 14, md: 15 },
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              mb: 1.5,
+            }}
+          >
+            {auth?.user?.name ? `Welcome back, ${auth.user.name.split(' ')[0]} 👋` : 'Discover Amazing Events'}
+          </Typography>
+          <Typography
+            variant="h1"
+            sx={{
+              color: '#fff',
+              fontSize: { xs: '2rem', sm: '2.6rem', md: '3.2rem' },
+              fontWeight: 800,
+              letterSpacing: '-1px',
+              lineHeight: 1.2,
+              mb: 1.5,
+            }}
+          >
+            Find your next{' '}
+            <Box component="span" sx={{ background: 'linear-gradient(90deg,#F36BF9,#6093FC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              experience
             </Box>
+          </Typography>
+          <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: { xs: 14, md: 15 }, mb: 4 }}>
+            Concerts, festivals, workshops and more — all in one place
+          </Typography>
+        </Container>
+      </Box>
 
-            {hotEvents.length === 0 ? (
-              <Alert severity="info">{t('customer.noHotEvents')}</Alert>
-            ) : (
+      {/* Search bar — overlapping hero */}
+      <Container maxWidth="lg" sx={{ mt: { xs: -4, md: -5 }, mb: 4, position: 'relative', zIndex: 10 }}>
+        <EventSearchBar onSearch={(kw, pl, dt) => { setSearchKeyword(kw); setSearchPlace(pl); setSearchDate(dt); }} />
+      </Container>
+
+      <Box sx={{ flex: 1 }}>
+        <Container maxWidth="lg" sx={{ pb: 8 }}>
+
+          {/* Hot events — hide when actively filtering */}
+          {!isFiltering && hotEvents.length > 0 && (
+            <Box sx={{ mb: 6 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <LocalFireDepartment sx={{ color: '#FF4D00', fontSize: 26 }} />
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', fontSize: 20 }}>
+                  {t('customer.hotEvents')}
+                </Typography>
+                <Box sx={{ ml: 1, px: 1.5, py: 0.25, borderRadius: '20px', bgcolor: 'rgba(255,77,0,0.1)' }}>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#FF4D00' }}>TRENDING</Typography>
+                </Box>
+              </Box>
               <Grid container spacing={3}>
                 {hotEvents.map((event) => (
                   <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
-                    <CustomerEventCard event={event} />
+                    <CustomerEventCard event={event} hot />
                   </Grid>
                 ))}
               </Grid>
-            )}
-          </Box>
+            </Box>
+          )}
 
-          {/* Category + Time Filters */}
-          <Box sx={{ mb: 3 }}>
+          {/* Filters */}
+          <Box
+            sx={{
+              bgcolor: '#fff',
+              borderRadius: '16px',
+              p: 2.5,
+              mb: 4,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
+              border: '1px solid #F1F5F9',
+            }}
+          >
             <EventCategoryFilter
               categories={categories}
               onCategoryChange={setSelectedCategory}
@@ -112,20 +156,28 @@ export default function CustomerDashboard() {
             />
           </Box>
 
-          {/* Upcoming Events */}
+          {/* Upcoming events */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <Event sx={{ color: BRAND.darkSecondary, fontSize: 32 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700, color: BRAND.dark }}>
-                {t('customer.upcomingEvents')}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+              <EventNote sx={{ color: '#6093FC', fontSize: 26 }} />
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', fontSize: 20 }}>
+                {isFiltering ? 'Search Results' : t('customer.upcomingEvents')}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1, mt: 0.5 }}>
-                {t('customer.eventsCount', { count: upcomingEvents.length })}
-              </Typography>
+              <Box sx={{ ml: 0.5, px: 1.5, py: 0.25, borderRadius: '20px', bgcolor: '#F1F5F9' }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#64748B' }}>{upcomingEvents.length}</Typography>
+              </Box>
             </Box>
 
             {upcomingEvents.length === 0 ? (
-              <Alert severity="info">{t('customer.noEventsFound')}</Alert>
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <EventNote sx={{ fontSize: 56, color: '#E2E8F0', mb: 2 }} />
+                <Typography variant="h6" color="#64748B" sx={{ mb: 1 }}>
+                  {t('customer.noEventsFound')}
+                </Typography>
+                <Typography variant="body2" color="#94A3B8">
+                  Try adjusting your filters or search terms
+                </Typography>
+              </Box>
             ) : (
               <Grid container spacing={3}>
                 {upcomingEvents.map((event) => (

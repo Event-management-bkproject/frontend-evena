@@ -17,10 +17,14 @@ export function AuthLink({ href, children }: AuthLinkProps) {
       component="span"
       variant="body2"
       sx={{
-        color: 'primary.main',
+        background: 'linear-gradient(90deg, #F36BF9, #6093FC)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
         cursor: 'pointer',
+        fontWeight: 600,
         '&:hover': {
-          textDecoration: 'underline',
+          opacity: 0.8,
         },
       }}
       onClick={() => router.push(href)}
