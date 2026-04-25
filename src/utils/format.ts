@@ -27,7 +27,7 @@ export const formatNumber = (n: number): string => n.toLocaleString();
 export const formatTableDate = (iso: string): { date: string; time: string } => {
   const d = new Date(iso);
   return {
-    date: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    time: d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    date: d.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    time: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
   };
 };

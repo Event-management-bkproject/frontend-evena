@@ -1,36 +1,73 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import sampleData from '@/src/data/ordersChartData.json';
+import { OrderResponse, OrderStatus } from '@/src/stores/types/order';
 
-import chartData from '@/src/data/ordersChartData.json';
+const COLORS = ['#F36BF9', '#36437C', '#6093FC', '#F59E0B', '#22C55E', '#EF4444'];
 
-const categories    = chartData.category.categories;
-const breakdown     = chartData.category.topCategoryBreakdown;
-const subCategories = breakdown.events;
-const totalOrders   = categories.reduce((s, c) => s + c.value, 0);
+// ─── Compute ──────────────────────────────────────────────────────────────────
+
+interface CategoryEntry { name: string; value: number; percentage: number; color: string }
+interface BreakdownEntry { name: string; current: number; total: number }
+interface Breakdown { name: string; totalOrders: number; events: BreakdownEntry[] }
+
+function computeFromOrders(orders: OrderResponse[]): { categories: CategoryEntry[]; breakdown: Breakdown | null } {
+  if (!orders.length) return { categories: [], breakdown: null };
+
+  // Group by category name
+  const catMap: Record<string, number> = {};
+  for (const order of orders) {
+    const cat = order.eventSnapshot?.categoryName ?? 'Others';
+    catMap[cat] = (catMap[cat] ?? 0) + 1;
+  }
+
+  const total = orders.length;
+  const categories: CategoryEntry[] = Object.entries(catMap)
+    .sort(([, a], [, b]) => b - a)
+    .map(([name, value], i) => ({
+      name,
+      value,
+      percentage: (value / total) * 100,
+      color: COLORS[i % COLORS.length],
+    }));
+
+  // Top category breakdown by event
+  const top = categories[0];
+  if (!top) return { categories, breakdown: null };
+
+  const topOrders = orders.filter((o) => (o.eventSnapshot?.categoryName ?? 'Others') === top.name);
+
+  const evMap: Record<string, { confirmed: number; total: number }> = {};
+  for (const order of topOrders) {
+    const title = order.eventSnapshot?.title ?? 'Unknown Event';
+    if (!evMap[title]) evMap[title] = { confirmed: 0, total: 0 };
+    evMap[title].total++;
+    if (order.status === OrderStatus.CONFIRMED) evMap[title].confirmed++;
+  }
+
+  const events: BreakdownEntry[] = Object.entries(evMap)
+    .sort(([, a], [, b]) => b.total - a.total)
+    .slice(0, 3)
+    .map(([name, { confirmed, total }]) => ({ name, current: confirmed, total }));
+
+  return { categories, breakdown: { name: top.name, totalOrders: top.value, events } };
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function MiniProgressBar({ current, total }: { current: number; total: number }) {
-  const pct = Math.min((current / total) * 100, 100);
+  const pct = total > 0 ? Math.min((current / total) * 100, 100) : 0;
   return (
     <Box sx={{ position: 'relative', height: '5px', width: '100%', borderRadius: '999px', bgcolor: '#DDD8D8', overflow: 'hidden' }}>
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: '0 auto 0 0',
-          bgcolor: '#36437C',
-          borderRadius: '999px',
-          width: `${pct}%`,
-        }}
-      />
+      <Box sx={{ position: 'absolute', inset: '0 auto 0 0', bgcolor: '#36437C', borderRadius: '999px', width: `${pct}%` }} />
     </Box>
   );
 }
 
-function CategoryBar({ name, percentage, value, color }: typeof categories[0]) {
+function CategoryBar({ name, percentage, value, color }: CategoryEntry) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
       <Box sx={{ display: 'flex', gap: '5px', alignItems: 'baseline' }}>
@@ -38,29 +75,10 @@ function CategoryBar({ name, percentage, value, color }: typeof categories[0]) {
         <Typography sx={{ fontSize: 10, fontWeight: 400, color: '#DDD8D8' }}>({percentage.toFixed(2)}%)</Typography>
       </Box>
       <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center', width: '100%' }}>
-        <Box
-          sx={{
-            position: 'relative',
-            height: '10px',
-            flex: 1,
-            borderRadius: '999px',
-            bgcolor: '#F7F7F7',
-            overflow: 'hidden',
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: '0 auto 0 0',
-              borderRadius: '999px',
-              bgcolor: color,
-              width: `${(percentage / 30) * 100}%`,
-            }}
-          />
+        <Box sx={{ position: 'relative', height: '10px', flex: 1, borderRadius: '999px', bgcolor: '#F7F7F7', overflow: 'hidden' }}>
+          <Box sx={{ position: 'absolute', inset: '0 auto 0 0', borderRadius: '999px', bgcolor: color, width: `${Math.min(percentage * (100 / 35), 100)}%` }} />
         </Box>
-        <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'rgba(0,0,0,0.7)', flexShrink: 0 }}>
-          {value.toLocaleString()}
-        </Typography>
+        <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'rgba(0,0,0,0.7)', flexShrink: 0 }}>{value.toLocaleString()}</Typography>
       </Box>
     </Box>
   );
@@ -68,68 +86,55 @@ function CategoryBar({ name, percentage, value, color }: typeof categories[0]) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function OrdersCategoryChart() {
+interface Props { orders?: OrderResponse[] }
+
+export function OrdersCategoryChart({ orders }: Props) {
+  const { categories, breakdown } = useMemo(() => {
+    if (!orders?.length) return { categories: [], breakdown: null };
+    return computeFromOrders(orders);
+  }, [orders]);
+
+  const hasRealData = categories.length > 0;
+
+  // Fall back to sample data
+  const displayCategories: CategoryEntry[] = hasRealData
+    ? categories
+    : (sampleData.category.categories as CategoryEntry[]);
+
+  const displayBreakdown: Breakdown | null = hasRealData
+    ? breakdown
+    : (sampleData.category.topCategoryBreakdown as Breakdown);
+
+  const totalOrders = displayCategories.reduce((s, c) => s + c.value, 0);
+
   return (
     <Box sx={{ bgcolor: 'white', borderRadius: '25px', display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%', height: '100%', justifyContent: 'space-between' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: '20px', py: '15px' }}>
-        <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'black' }}>
-          Orders Category
-        </Typography>
-        <Box
-          sx={{
-            bgcolor: '#EEF0FF',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            px: '12px',
-            py: '8px',
-            borderRadius: '25px',
-            width: 130,
-          }}
-        >
-          <Typography sx={{ fontWeight: 500, color: '#36437C', fontSize: 12, flex: 1 }}>This Week</Typography>
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M9.29375 13.7063C9.68437 14.0969 10.3188 14.0969 10.7094 13.7063L15.7094 8.70625C16.1 8.31563 16.1 7.68125 15.7094 7.29063C15.3188 6.9 14.6844 6.9 14.2937 7.29063L10 11.5844L5.70625 7.29375C5.31563 6.90312 4.68125 6.90312 4.29063 7.29375C3.9 7.68437 3.9 8.31875 4.29063 8.70938L9.29062 13.7094L9.29375 13.7063Z" fill="#36437C" />
-          </svg>
+        <Box>
+          <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'black' }}>Orders Category</Typography>
+          {!hasRealData && (
+            <Typography sx={{ fontSize: 10, color: '#ADACAE' }}>Sample data</Typography>
+          )}
+        </Box>
+        <Box sx={{ bgcolor: '#EEF0FF', display: 'flex', alignItems: 'center', gap: '6px', px: '12px', py: '8px', borderRadius: '25px', width: 130 }}>
+          <Typography sx={{ fontWeight: 500, color: '#36437C', fontSize: 12, flex: 1 }}>All Time</Typography>
         </Box>
       </Box>
 
       {/* Pie + Bars */}
       <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center', px: '10px', pb: '10px' }}>
-        {/* Donut chart */}
         <Box sx={{ position: 'relative', flexShrink: 0, width: 180, height: 180 }}>
           <ResponsiveContainer width={180} height={180}>
             <PieChart>
-              <Pie
-                data={categories}
-                cx="50%"
-                cy="50%"
-                innerRadius={55}
-                outerRadius={82}
-                paddingAngle={2}
-                dataKey="value"
-                startAngle={90}
-                endAngle={-270}
-              >
-                {categories.map((entry, i) => (
+              <Pie data={displayCategories} cx="50%" cy="50%" innerRadius={55} outerRadius={82} paddingAngle={2} dataKey="value" startAngle={90} endAngle={-270}>
+                {displayCategories.map((entry, i) => (
                   <Cell key={`cell-${i}`} fill={entry.color} stroke="none" />
                 ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>
-          {/* Center label */}
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              pointerEvents: 'none',
-            }}
-          >
+          <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
             <Typography sx={{ fontWeight: 500, color: '#ADACAE', fontSize: 10 }}>Total Orders</Typography>
             <Typography sx={{ fontWeight: 600, color: 'rgba(54,67,124,0.9)', fontSize: 18 }}>
               {totalOrders.toLocaleString()}
@@ -137,57 +142,43 @@ export function OrdersCategoryChart() {
           </Box>
         </Box>
 
-        {/* Category bars */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minWidth: 0 }}>
-          {categories.slice(0, 4).map((cat) => (
+          {displayCategories.slice(0, 4).map((cat) => (
             <CategoryBar key={cat.name} {...cat} />
           ))}
         </Box>
       </Box>
 
-      {/* Music subcategory breakdown */}
-      <Box sx={{ p: '20px' }}>
-        <Box sx={{ bgcolor: '#F7F7F7', display: 'flex', flexDirection: 'column', gap: '10px', p: '10px', borderRadius: '10px' }}>
-          <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-            <Typography sx={{ fontWeight: 600, fontSize: 12, color: 'black' }}>{breakdown.name}</Typography>
-            <Typography sx={{ fontWeight: 500, color: '#ADADAD', fontSize: 10 }}>
-              ({breakdown.totalOrders.toLocaleString()} Orders)
-            </Typography>
-          </Box>
-          {subCategories.map((sub) => (
-            <Box key={sub.name} sx={{ display: 'flex', gap: '10px', alignItems: 'center', width: '100%' }}>
-              <Typography
-                sx={{
-                  fontWeight: 500,
-                  color: '#7D7D7D',
-                  fontSize: 10,
-                  width: 160,
-                  flexShrink: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {sub.name}
+      {/* Top category breakdown */}
+      {displayBreakdown && (
+        <Box sx={{ p: '20px' }}>
+          <Box sx={{ bgcolor: '#F7F7F7', display: 'flex', flexDirection: 'column', gap: '10px', p: '10px', borderRadius: '10px' }}>
+            <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+              <Typography sx={{ fontWeight: 600, fontSize: 12, color: 'black' }}>{displayBreakdown.name}</Typography>
+              <Typography sx={{ fontWeight: 500, color: '#ADADAD', fontSize: 10 }}>
+                ({displayBreakdown.totalOrders.toLocaleString()} Orders)
               </Typography>
-              <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <MiniProgressBar current={sub.current} total={sub.total} />
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', flexShrink: 0, fontSize: 10 }}>
-                  <Typography sx={{ fontWeight: 600, color: 'rgba(0,0,0,0.7)', fontSize: 10 }}>
-                    {sub.current.toLocaleString()}
-                  </Typography>
-                  <Typography sx={{ fontWeight: 600, color: 'black', fontSize: 10 }}>/</Typography>
-                  <Typography sx={{ fontWeight: 500, color: '#ADADAD', fontSize: 10 }}>
-                    {sub.total.toLocaleString()}
-                  </Typography>
+            </Box>
+            {displayBreakdown.events.map((ev) => (
+              <Box key={ev.name} sx={{ display: 'flex', gap: '10px', alignItems: 'center', width: '100%' }}>
+                <Typography sx={{ fontWeight: 500, color: '#7D7D7D', fontSize: 10, width: 160, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {ev.name}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <MiniProgressBar current={ev.current} total={ev.total} />
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', flexShrink: 0 }}>
+                    <Typography sx={{ fontWeight: 600, color: 'rgba(0,0,0,0.7)', fontSize: 10 }}>{ev.current.toLocaleString()}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: 'black', fontSize: 10 }}>/</Typography>
+                    <Typography sx={{ fontWeight: 500, color: '#ADADAD', fontSize: 10 }}>{ev.total.toLocaleString()}</Typography>
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          ))}
+            ))}
+          </Box>
         </Box>
-      </Box>
+      )}
     </Box>
   );
 }

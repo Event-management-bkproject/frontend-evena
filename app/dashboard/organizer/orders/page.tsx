@@ -85,12 +85,12 @@ function OrdersContent() {
                 <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalRevenue')} value={formatCurrency(totalRevenue)} />
               </Box>
             </Box>
-            <OrdersOverviewChart />
+            <OrdersOverviewChart orders={allOrders} />
           </Box>
 
           {/* Right: category chart */}
           <Box sx={{ flex: '0 0 calc(50% - 7.5px)', minWidth: 0, display: 'flex' }}>
-            <OrdersCategoryChart />
+            <OrdersCategoryChart orders={allOrders} />
           </Box>
         </Box>
 
