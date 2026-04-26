@@ -351,9 +351,8 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       // MUST NOT invalidate Event or TicketType (snapshot isolation).
       case SSENormalizedType.ORDER_CONFIRMED: {
         dispatch(OrderAPI.util.invalidateTags(['Order', 'Ticket']));
-        // Only show customer toast. Organizer notifications (organizerNotification:true)
-        // are handled by OrganizerOrdersTable to avoid "Your tickets are confirmed" on organizer side.
-        if (isPersonalChannel && !data?.organizerNotification) {
+        // Only show customer toast. Organizer and admin notifications are silent cache invalidations.
+        if (isPersonalChannel && !data?.organizerNotification && !data?.adminNotification) {
           const eventName = data?.eventName as string | undefined;
           setNotification({
             message: eventName
@@ -384,10 +383,10 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
       // ORDER_REFUNDED — SSE-010: invalidate Order only.
       // refundAmount is the declared §7.2 exception — display in customer private toast only.
-      // Organizer notifications (organizerNotification:true) are handled by OrganizerOrdersTable.
+      // Organizer/admin notifications (organizerNotification/adminNotification:true) are silent.
       case SSENormalizedType.ORDER_REFUNDED: {
         dispatch(OrderAPI.util.invalidateTags(['Order']));
-        if (isPersonalChannel && !data?.organizerNotification) {
+        if (isPersonalChannel && !data?.organizerNotification && !data?.adminNotification) {
           const refundAmount = data?.refundAmount as number | undefined;
           const eventName = data?.eventName as string | undefined;
           setNotification({

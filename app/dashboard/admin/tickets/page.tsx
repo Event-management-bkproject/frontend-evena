@@ -10,7 +10,7 @@ import { Search as SearchIcon, ConfirmationNumber as TicketsIcon } from '@mui/ic
 import AdminLayout from '@/src/components/layout/AdminLayout';
 import AdminPageShell from '@/src/components/AdminSidebar/AdminPageShell';
 import RoleGuard from '@/src/components/RoleGuard';
-import { useGetMyTicketsQuery } from '@/src/stores/services/OrderApi';
+import { useGetAdminTicketsQuery } from '@/src/stores/services/OrderApi';
 import { TicketStatus } from '@/src/stores/types/order';
 import { ADMIN } from '@/src/utils/constants/adminBrand';
 import dayjs from 'dayjs';
@@ -28,8 +28,8 @@ export default function AdminTicketsPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
 
-  const { data, isLoading } = useGetMyTicketsQuery();
-  const allTickets = data?.data ?? [];
+  const { data, isLoading } = useGetAdminTicketsQuery({ page: 0, size: 500 });
+  const allTickets = data?.data?.content ?? [];
 
   const filtered = useMemo(() => {
     let list = filter !== 'all' ? allTickets.filter((t) => t.status === filter) : allTickets;
@@ -102,7 +102,7 @@ export default function AdminTicketsPage() {
                 <Table>
                   <TableHead>
                     <TableRow sx={{ bgcolor: ADMIN.pageBg }}>
-                      {['ID', 'Event', 'Type', 'Venue', 'Event Date', 'Status', 'Issued', 'Used At'].map((h) => (
+                      {['ID', 'Buyer', 'Event', 'Type', 'Venue', 'Event Date', 'Status', 'Issued', 'Used At'].map((h) => (
                         <TableCell key={h} sx={{ fontWeight: 600, color: ADMIN.heading, fontSize: 12, borderBottom: `1px solid ${ADMIN.border}` }}>{h}</TableCell>
                       ))}
                     </TableRow>
@@ -113,7 +113,11 @@ export default function AdminTicketsPage() {
                       return (
                         <TableRow key={t.id} sx={{ '&:hover': { bgcolor: ADMIN.surfaceBg } }}>
                           <TableCell><Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600, color: ADMIN.heading }}>#{t.id}</Typography></TableCell>
-                          <TableCell><Typography variant="body2" sx={{ maxWidth: 180, color: ADMIN.body }} noWrap>{t.eventTitle}</Typography></TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 500, color: ADMIN.body }}>{t.buyerName ?? '—'}</Typography>
+                            <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>{t.buyerEmail}</Typography>
+                          </TableCell>
+                          <TableCell><Typography variant="body2" sx={{ maxWidth: 160, color: ADMIN.body }} noWrap>{t.eventTitle}</Typography></TableCell>
                           <TableCell><Typography variant="body2" sx={{ color: ADMIN.body }}>{t.ticketTypeName}</Typography></TableCell>
                           <TableCell>
                             <Typography variant="body2" sx={{ fontSize: 12, color: ADMIN.body }}>{t.venueName}</Typography>

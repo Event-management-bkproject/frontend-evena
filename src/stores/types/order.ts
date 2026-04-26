@@ -146,6 +146,10 @@ export interface TicketResponse {
   venueAddress: string;
   issuedAt: string;
   usedAt?: string;
+  // Buyer info — populated in admin views
+  buyerId?: string;
+  buyerName?: string;
+  buyerEmail?: string;
 }
 
 // ============= ORDER =============

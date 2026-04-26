@@ -107,6 +107,19 @@ export const OrderAPI = createApi({
       providesTags: ['Ticket'],
     }),
 
+    // Get all tickets (admin only)
+    getAdminTickets: builder.query<ApiResponse<PaginatedResponse<TicketResponse>>, { page?: number; size?: number }>({
+      query: (params = {}) => ({
+        url: '/orders/admin/tickets',
+        method: 'GET',
+        params: {
+          page: params.page ?? 0,
+          size: params.size ?? 200,
+        },
+      }),
+      providesTags: ['Ticket'],
+    }),
+
     // Get ticket details by ID (with QR code)
     getTicketById: builder.query<ApiResponse<TicketResponse>, number>({
       query: (ticketId) => ({
@@ -126,5 +139,6 @@ export const {
   useGetOrganizerOrdersQuery,
   useCancelOrderMutation,
   useGetMyTicketsQuery,
+  useGetAdminTicketsQuery,
   useGetTicketByIdQuery,
 } = OrderAPI;
