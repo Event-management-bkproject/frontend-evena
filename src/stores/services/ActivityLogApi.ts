@@ -26,6 +26,8 @@ export interface ActivityLogPage {
 export interface ActivityLogFilter {
   action?: string;
   entityType?: string;
+  entityId?: string;
+  actorId?: string;
   from?: string;
   to?: string;
   page?: number;
@@ -45,6 +47,8 @@ export const ActivityLogAPI = createApi({
         params: {
           ...(params.action ? { action: params.action } : {}),
           ...(params.entityType ? { entityType: params.entityType } : {}),
+          ...(params.entityId ? { entityId: params.entityId } : {}),
+          ...(params.actorId ? { actorId: params.actorId } : {}),
           ...(params.from ? { from: params.from } : {}),
           ...(params.to ? { to: params.to } : {}),
           page: params.page ?? 0,
@@ -53,7 +57,16 @@ export const ActivityLogAPI = createApi({
       }),
       providesTags: ['ActivityLog'],
     }),
+
+    getEntityTimeline: builder.query<ActivityLogPage, { entityType: string; entityId: string; page?: number; size?: number }>({
+      query: ({ entityType, entityId, page = 0, size = 50 }) => ({
+        url: '/activity-log/timeline',
+        method: 'GET',
+        params: { entityType, entityId, page, size },
+      }),
+      providesTags: (_result, _err, arg) => [{ type: 'ActivityLog', id: `${arg.entityType}-${arg.entityId}` }],
+    }),
   }),
 });
 
-export const { useGetActivityLogsQuery } = ActivityLogAPI;
+export const { useGetActivityLogsQuery, useGetEntityTimelineQuery } = ActivityLogAPI;
