@@ -106,13 +106,11 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, currentPage = '' }) =>
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/');
-      if (isMobile) {
-        onClose();
-      }
     } catch (error) {
       console.error('Logout error:', error);
     }
+    if (isMobile) onClose();
+    window.location.href = '/';
   };
 
   return (

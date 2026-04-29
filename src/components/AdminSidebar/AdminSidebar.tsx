@@ -115,8 +115,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, onClose }) => {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/');
     if (isMobile) onClose();
+    window.location.href = '/';
   };
 
   const renderItem = (item: NavItem) => {

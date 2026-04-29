@@ -52,8 +52,8 @@ export default function Header() {
 
   const handleLogout = async () => {
     try { await logout(); } catch { /* ignore */ }
-    router.push('/');
     setAccountMenuAnchor(null);
+    window.location.href = '/';
   };
 
   const roles = auth.user?.roles ?? [];
