@@ -166,9 +166,6 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
         sx={{
           borderRadius: '16px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          position: 'sticky',
-          top: 0,
-          alignSelf: 'flex-start',
         }}
       >
         <CardContent sx={{ p: 3 }}>
