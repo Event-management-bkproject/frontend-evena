@@ -30,7 +30,7 @@ export default function VerifyEmailPage() {
       hasVerified.current = true;
 
       try {
-        const res = await fetch(`http://localhost:8080/api/auth/verify-email?token=${token}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email?token=${token}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
