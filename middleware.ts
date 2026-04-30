@@ -1,11 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Auth is enforced client-side by RoleGuard.
-// The refreshToken cookie is set by api.evena.id.vn (backend domain) with
-// path=/api/auth — browsers do not send it to evena.id.vn, so edge-level
-// session detection is not possible without a same-domain cookie strategy.
-export function middleware(_request: NextRequest) {
+// refreshToken is set by the backend with path="/" and domain=COOKIE_DOMAIN (.evena.id.vn),
+// so the browser sends it to evena.id.vn and this middleware can read it.
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const hasSession = !!request.cookies.get('refreshToken')?.value;
+
+  const protectedRoutes = ['/dashboard'];
+  const isProtected = protectedRoutes.some((r) => pathname.startsWith(r));
+
+  if (isProtected && !hasSession) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
   return NextResponse.next();
 }
 
