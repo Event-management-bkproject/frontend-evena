@@ -48,10 +48,14 @@ const UpdateOrganizationForm = ({ organization, onSubmit, onCancel, loading = fa
   };
 
   const handleSubmit = (values: OrganizationFormData, actions: any) => {
-    // Include version for optimistic locking
     const updateData: UpdateOrganizationRequest = {
-      ...values,
-      version, // Use the version from hook
+      name: values.name,
+      description: values.description || undefined,
+      logoUrl: values.logoUrl || undefined,
+      website: values.website || undefined,
+      email: values.email || undefined,
+      phone: values.phone || undefined,
+      version,
     };
     onSubmit(updateData);
     actions.setSubmitting(false);

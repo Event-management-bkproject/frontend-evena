@@ -9,11 +9,11 @@ import FormTextareaField from '../FormTextAreaField';
 
 export interface OrganizationFormData {
   name: string;
-  description: string;
-  logoUrl: string;
-  website: string;
-  email: string;
-  phone: string;
+  description?: string;
+  logoUrl?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
 }
 
 interface CreateOrganizationFormProps {
@@ -40,7 +40,10 @@ const CreateOrganizationForm = ({
   };
 
   const handleSubmit = (values: OrganizationFormData, actions: any) => {
-    onSubmit(values);
+    const payload = Object.fromEntries(
+      Object.entries(values).filter(([, v]) => v !== '')
+    ) as OrganizationFormData;
+    onSubmit(payload);
     actions.setSubmitting(false);
   };
 
