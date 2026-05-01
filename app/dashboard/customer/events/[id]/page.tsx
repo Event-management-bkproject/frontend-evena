@@ -34,6 +34,8 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
     new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' });
   const fmtTime = (d: string) =>
     new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const fmtPrice = (p: number) =>
+    p === 0 ? 'Free' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
 
   const minPrice = ticketTypes.length ? Math.min(...ticketTypes.map((t) => t.price)) : 0;
   const totalAvailable = ticketTypes.reduce((s, t) => s + (t.total - t.sold), 0);
@@ -234,7 +236,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                     )}
                   </Box>
                   <Typography sx={{ fontSize: 32, fontWeight: 900, background: 'linear-gradient(135deg,#F36BF9,#8E2DE2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.1 }}>
-                    {minPrice === 0 ? 'Free' : `$${minPrice.toLocaleString()}`}
+                    {minPrice === 0 ? 'Free' : fmtPrice(minPrice)}
                   </Typography>
                   {totalAvailable > 0 && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
@@ -292,7 +294,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                               )}
                             </Box>
                             <Typography sx={{ fontWeight: 900, fontSize: 18, background: 'linear-gradient(135deg,#F36BF9,#8E2DE2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', flexShrink: 0 }}>
-                              {ticket.price === 0 ? 'Free' : `$${ticket.price.toLocaleString()}`}
+                              {fmtPrice(ticket.price)}
                             </Typography>
                           </Box>
 
@@ -388,7 +390,7 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
             <Box>
               <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: 11 }}>From</Typography>
               <Typography sx={{ fontWeight: 900, fontSize: 20, background: 'linear-gradient(135deg,#F36BF9,#8E2DE2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>
-                {minPrice === 0 ? 'Free' : `$${minPrice.toLocaleString()}`}
+                {minPrice === 0 ? 'Free' : fmtPrice(minPrice)}
               </Typography>
             </Box>
             <Button

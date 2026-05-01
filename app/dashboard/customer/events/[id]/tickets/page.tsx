@@ -23,7 +23,8 @@ import { useTranslation } from 'react-i18next';
 const FALLBACK_IMG =
   'https://static.vecteezy.com/system/resources/thumbnails/041/388/388/small/ai-generated-concert-crowd-enjoying-live-music-event-photo.jpg';
 
-const fmtPrice = (p: number) => (p === 0 ? 'Free' : `$${p.toLocaleString()}`);
+const fmtPrice = (p: number) =>
+  p === 0 ? 'Free' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
 
 export default function EventTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
