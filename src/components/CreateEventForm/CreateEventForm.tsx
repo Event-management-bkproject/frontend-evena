@@ -389,7 +389,6 @@ const CreateEventForm = ({
             name="coverUrl"
             label={t('event.form.coverImage')}
             type="url"
-            required={true}
             placeholder={t('event.form.coverImagePlaceholder')}
           />
         )}
@@ -553,7 +552,7 @@ const CreateEventForm = ({
         )}
 
         {/* Description Field */}
-        <FormTextareaField id="event-description" name="description" label={t('event.form.descriptionPlaceholder')} required={true} />
+        <FormTextareaField id="event-description" name="description" label={t('event.form.descriptionPlaceholder')} required={!isEdit} />
 
         {/* Actions */}
         <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>

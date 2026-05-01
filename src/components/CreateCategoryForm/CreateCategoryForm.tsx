@@ -57,8 +57,10 @@ const CreateCategoryForm = ({
 
   // Handle form submission
   const handleSubmit = (values: CategoryFormData, actions: any) => {
-    // Include version for edit mode
-    const submitData = isEditMode ? { ...values, version } : values;
+    const cleaned = Object.fromEntries(
+      Object.entries(values).filter(([, v]) => v !== '')
+    ) as CategoryFormData;
+    const submitData = isEditMode ? { ...cleaned, version } : cleaned;
     onSubmit(submitData);
     actions.setSubmitting(false);
   };
@@ -98,7 +100,6 @@ const CreateCategoryForm = ({
                 name="iconUrl"
                 label={t('category.form.icon')}
                 helperText={t('category.form.iconHelper')}
-                required
               />
 
               {/* Description Field */}
@@ -106,7 +107,6 @@ const CreateCategoryForm = ({
                 id="category-description"
                 name="description"
                 label={t('category.form.descriptionPlaceholder')}
-                required
               />
 
               {/* Actions */}
