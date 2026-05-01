@@ -360,7 +360,9 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
                     fontSize: '24px',
                   }}
                 >
-                  {minPrice > 0 ? `$${minPrice.toFixed(2)}` : 'N/A'}
+                  {minPrice > 0
+                    ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(minPrice)
+                    : 'Free'}
                 </Typography>
               </Box>
             </Box>

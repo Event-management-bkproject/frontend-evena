@@ -248,7 +248,9 @@ const EventCard: React.FC<EventCardProps> = ({
             </Typography>
             {'minPrice' in event && (
               <Typography sx={{ fontSize: '12px', fontWeight: 600, color: '#F36BF9' }}>
-                From ${(event as EventListResponse).minPrice.toLocaleString()}
+                {(event as EventListResponse).minPrice === 0
+                  ? 'Free'
+                  : `From ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format((event as EventListResponse).minPrice)}`}
               </Typography>
             )}
           </Box>
