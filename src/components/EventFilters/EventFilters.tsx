@@ -1,8 +1,9 @@
 'use client';
 
-import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Button, InputAdornment, Typography, Chip, SelectChangeEvent } from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { Box, TextField, Select, MenuItem, FormControl, Button, InputAdornment, Typography, SelectChangeEvent } from '@mui/material';
+import { Add, Search } from '@mui/icons-material';
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EventFiltersProps } from './types';
 import { EventStatus } from '@/src/stores/types/enums';
 
@@ -17,12 +18,12 @@ export function EventFilters({
   loading = false,
   disabled = false,
 }: EventFiltersProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState<number | ''>('');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year' | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<EventStatus | null>(null);
 
-  // Calculate event counts by status
   const statusCounts = useMemo(() => {
     const counts = {
       [EventStatus.DRAFT]: 0,
@@ -31,13 +32,9 @@ export function EventFilters({
       [EventStatus.COMPLETED]: 0,
       [EventStatus.CANCELLED]: 0,
     };
-
     events.forEach((event) => {
-      if (event.status in counts) {
-        counts[event.status]++;
-      }
+      if (event.status in counts) counts[event.status]++;
     });
-
     return counts;
   }, [events]);
 
@@ -50,7 +47,7 @@ export function EventFilters({
   const handleCategoryChange = (event: SelectChangeEvent<number | ''>) => {
     const value = event.target.value;
     setCategory(value);
-    onCategoryChange(value === '' ? null : (value as number));
+    onCategoryChange(value === '' ? null : Number(value));
   };
 
   const handleTimeRangeChange = (event: SelectChangeEvent<string>) => {
@@ -59,231 +56,168 @@ export function EventFilters({
     onTimeRangeChange(value);
   };
 
-  // Status chip styling - all chips use #F36BF9
-  const statusColor = '#F36BF9';
-
   const getStatusLabel = (status: EventStatus): string => {
     switch (status) {
-      case EventStatus.DRAFT:
-        return 'Draft';
-      case EventStatus.PUBLISHED:
-        return 'Published';
-      case EventStatus.ONGOING:
-        return 'Ongoing';
-      case EventStatus.COMPLETED:
-        return 'Completed';
-      case EventStatus.CANCELLED:
-        return 'Cancelled';
-      default:
-        return status;
+      case EventStatus.DRAFT:      return t('common.status.draft');
+      case EventStatus.PUBLISHED:  return t('common.status.published');
+      case EventStatus.ONGOING:    return t('common.status.ongoing');
+      case EventStatus.COMPLETED:  return t('common.status.completed');
+      case EventStatus.CANCELLED:  return t('common.status.cancelled');
+      default:                     return status;
     }
   };
 
   const handleStatusClick = (status: EventStatus) => {
     if (selectedStatus === status) {
-      // If clicking the same status, deselect it
       setSelectedStatus(null);
       onStatusChange(null);
     } else {
-      // Select the new status
       setSelectedStatus(status);
       onStatusChange(status);
     }
   };
 
+  const selectSx = {
+    flex: '0 1 180px',
+    minWidth: 140,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      backgroundColor: '#FFFFFF',
+      '& fieldset': { borderColor: '#E0E0E0' },
+      '&:hover fieldset': { borderColor: '#B0B0B0' },
+      '&.Mui-focused fieldset': { borderColor: '#f36bf9' },
+    },
+    '& .MuiSelect-select': { color: '#36437C' },
+  };
+
   return (
-    <Box>
-      {/* Search and Filter Row */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 2,
-          alignItems: 'center',
-          mb: 2,
-          backgroundColor: 'transparent',
-          borderRadius: 2,
-        }}
-      >
+    <Box sx={{ mb: 2 }}>
+      {/* Top row: Search + Filters + Create */}
+      <Box sx={{ display: 'flex', gap: 1.5, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         {/* Search */}
         <TextField
-          placeholder="Search events..."
+          placeholder={t('searchBar.searchEvents') || 'Tìm kiếm sự kiện...'}
           value={searchTerm}
           onChange={handleSearchChange}
           disabled={disabled || loading}
           sx={{
-            flex: '1 1 300px',
-            minWidth: 200,
+            flex: 1,
+            minWidth: 180,
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
             '& .MuiOutlinedInput-root': {
-              borderRadius: '30px',
-              backgroundColor: 'white',
-              color: '#36437C',
-              '& fieldset': {
-                borderColor: '#E0E0E0',
-              },
-              '&:hover fieldset': {
-                borderColor: '#36437C',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#36437C',
-              },
+              borderRadius: '12px',
+              '& fieldset': { borderColor: '#E0E0E0' },
+              '&:hover fieldset': { borderColor: '#B0B0B0' },
+              '&.Mui-focused fieldset': { borderColor: '#f36bf9' },
             },
-            '& .MuiInputBase-input::placeholder': {
-              color: '#ADACAE',
-              opacity: 1,
-            },
+            '& .MuiInputBase-input::placeholder': { color: '#ADACAE', opacity: 1 },
           }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <Box component="i" className="fa-solid fa-magnifying-glass" sx={{ color: '#575658', fontSize: '14px' }} />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: '#888' }} />
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
-      {/* Category Filter */}
-      <FormControl
-        size="small"
-        sx={{
-          flex: '0 1 200px',
-          minWidth: 150,
-          '& .MuiOutlinedInput-root': {
-            borderRadius: '25px',
-            backgroundColor: '#EEF0FF',
-            color: '#36437C',
-            '& fieldset': {
-              borderColor: '#EEF0FF',
-            },
-            '&:hover fieldset': {
-              borderColor: '#36437C',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#36437C',
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: '#36437C',
-            '&.Mui-focused': {
-              color: '#36437C',
-            },
-          },
-        }}
-      >
-        <InputLabel>Category</InputLabel>
-        <Select value={category} onChange={handleCategoryChange} label="Category" disabled={disabled || loading}>
-          <MenuItem value="">All Categories</MenuItem>
-          {categories.map((cat) => (
-            <MenuItem key={cat.id} value={cat.id}>
-              {cat.name}
+        {/* Category Filter */}
+        <FormControl sx={selectSx}>
+          <Select value={category} onChange={handleCategoryChange} disabled={disabled || loading} displayEmpty>
+            <MenuItem value="">
+              <em style={{ fontStyle: 'normal', color: '#888' }}>{t('event.filter.category')}</em>
             </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+            {categories.map((cat) => (
+              <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-      {/* Time Range Filter */}
-      <FormControl
-        size="small"
-        sx={{
-          flex: '0 1 200px',
-          minWidth: 150,
-          '& .MuiOutlinedInput-root': {
-            borderRadius: '25px',
-            backgroundColor: '#EEF0FF',
-            color: '#36437C',
-            '& fieldset': {
-              borderColor: '#EEF0FF',
-            },
-            '&:hover fieldset': {
-              borderColor: '#36437C',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#36437C',
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: '#36437C',
-            '&.Mui-focused': {
-              color: '#36437C',
-            },
-          },
-        }}
-      >
-        <Select value={timeRange} onChange={handleTimeRangeChange} disabled={disabled || loading} displayEmpty>
-          <MenuItem value="all">All Time</MenuItem>
-          <MenuItem value="week">This Week</MenuItem>
-          <MenuItem value="month">This Month</MenuItem>
-          <MenuItem value="year">This Year</MenuItem>
-        </Select>
-      </FormControl>
+        {/* Time Range Filter */}
+        <FormControl sx={selectSx}>
+          <Select value={timeRange} onChange={handleTimeRangeChange} disabled={disabled || loading} displayEmpty>
+            <MenuItem value="all">{t('event.filter.allTime')}</MenuItem>
+            <MenuItem value="week">{t('event.filter.thisWeek')}</MenuItem>
+            <MenuItem value="month">{t('event.filter.thisMonth')}</MenuItem>
+            <MenuItem value="year">{t('event.filter.thisYear')}</MenuItem>
+          </Select>
+        </FormControl>
 
-      {/* Create Button */}
-      <Button
-        variant="contained"
-        startIcon={<Add sx={{ width: '10px', height: '10px' }} />}
-        onClick={onCreateClick}
-        disabled={disabled || loading}
-        sx={{
-          flex: '0 0 auto',
-          textTransform: 'none',
-          fontWeight: 600,
-          borderRadius: '25px',
-          backgroundColor: '#F36BF9',
-          color: 'white',
-          '&:hover': {
-            backgroundColor: '#e55ae0',
-          },
-          '&:disabled': {
-            backgroundColor: '#cccccc',
-            color: '#666666',
-          },
-        }}
-      >
-        Create Event
-      </Button>
+        {/* Create Button */}
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={onCreateClick}
+          disabled={disabled || loading}
+          sx={{
+            flex: '0 0 auto',
+            textTransform: 'none',
+            fontWeight: 600,
+            fontSize: '16px',
+            borderRadius: '12px',
+            padding: '12px 24px',
+            backgroundColor: '#F36BF9',
+            color: 'white',
+            whiteSpace: 'nowrap',
+            '&:hover': { backgroundColor: '#e55ae0' },
+            '&:disabled': { backgroundColor: '#cccccc', color: '#666666' },
+          }}
+        >
+          + {t('event.create')}
+        </Button>
       </Box>
 
-      {/* Status Count Row */}
+      {/* Status stats row */}
       <Box
         sx={{
           display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1.5,
-          alignItems: 'center',
-          pb: 2,
+          backgroundColor: '#FFFFFF',
+          borderRadius: '12px',
+          border: '1px solid #E0E0E0',
+          overflow: 'hidden',
         }}
       >
-        <Typography variant="body2" sx={{ fontWeight: 600, color: '#2A3363', mr: 1 }}>
-          Events by Status:
-        </Typography>
-        {Object.entries(statusCounts).map(([status, count]) => (
-          <Chip
-            key={status}
-            label={`${getStatusLabel(status as EventStatus)} (${count})`}
-            onClick={() => handleStatusClick(status as EventStatus)}
-            sx={{
-              backgroundColor: selectedStatus === status ? statusColor : 'transparent',
-              color: selectedStatus === status ? '#FFFFFF' : statusColor,
-              fontWeight: 600,
-              fontSize: '14px',
-              border: `2px solid ${statusColor}`,
-              borderRadius: '20px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              height: 'auto',
-              px: 2,
-              py: 0.75,
-              '& .MuiChip-label': {
-                padding: 0,
-              },
-              '&:hover': {
-                backgroundColor: statusColor,
-                color: '#FFFFFF',
-                transform: 'scale(1.05)',
-              },
-            }}
-          />
-        ))}
+        {Object.entries(statusCounts).map(([status, count], idx) => {
+          const active = selectedStatus === status;
+          const statusMeta: Record<string, { color: string; bg: string }> = {
+            DRAFT:     { color: '#888',    bg: '#F5F5F5' },
+            PUBLISHED: { color: '#2E7D32', bg: '#E8F5E9' },
+            ONGOING:   { color: '#283593', bg: '#E8EAF6' },
+            COMPLETED: { color: '#1565C0', bg: '#E3F2FD' },
+            CANCELLED: { color: '#C62828', bg: '#FFEBEE' },
+          };
+          const meta = statusMeta[status] ?? { color: '#36437C', bg: '#EEF0FA' };
+          return (
+            <Box
+              key={status}
+              onClick={() => handleStatusClick(status as EventStatus)}
+              sx={{
+                flex: 1,
+                px: 2,
+                py: 1.5,
+                cursor: 'pointer',
+                borderLeft: idx > 0 ? '1px solid #E0E0E0' : 'none',
+                backgroundColor: active ? meta.bg : 'transparent',
+                transition: 'background-color 0.2s',
+                '&:hover': { backgroundColor: meta.bg },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.25,
+              }}
+            >
+              <Typography variant="h6" fontWeight={700} sx={{ color: active ? meta.color : '#2A3363', lineHeight: 1 }}>
+                {count}
+              </Typography>
+              <Typography variant="caption" sx={{ color: active ? meta.color : '#888', fontWeight: active ? 600 : 400, fontSize: '11px' }}>
+                {getStatusLabel(status as EventStatus)}
+              </Typography>
+            </Box>
+          );
+        })}
       </Box>
     </Box>
   );

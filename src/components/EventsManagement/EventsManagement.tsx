@@ -111,9 +111,12 @@ export default function EventsManagement({
       );
     }
 
-    // Category filter
+    // Category filter — API returns categoryName, not categoryId
     if (selectedCategory) {
-      filtered = filtered.filter((event) => event.categoryId === selectedCategory);
+      const categoryName = initialCategories.find((c) => c.id === selectedCategory)?.name;
+      if (categoryName) {
+        filtered = filtered.filter((event) => event.categoryName === categoryName);
+      }
     }
 
     // Status filter
