@@ -77,13 +77,12 @@ const CreateOrganizationForm = ({
               marginBottom: '8px',
             }}
           >
-            Description *
+            Description
           </Typography>
           <FormTextareaField
             id="organization-description"
             name="description"
             label="Enter organization description"
-            required
           />
         </Box>
 
@@ -93,7 +92,6 @@ const CreateOrganizationForm = ({
           name="logoUrl"
           label="Logo URL"
           type="url"
-          required
           placeholder="https://example.com/logo.png"
         />
 
@@ -103,7 +101,6 @@ const CreateOrganizationForm = ({
           name="website"
           label="Website"
           type="url"
-          required
           placeholder="https://example.com"
         />
 
@@ -113,7 +110,6 @@ const CreateOrganizationForm = ({
           name="email"
           label="Email"
           type="email"
-          required
           placeholder="organization@example.com"
         />
 
@@ -123,7 +119,6 @@ const CreateOrganizationForm = ({
           name="phone"
           label="Phone"
           type="text"
-          required
           disabledNaturalBase
           placeholder="Enter phone number"
         />
