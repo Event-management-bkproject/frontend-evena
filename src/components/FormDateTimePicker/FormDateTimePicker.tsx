@@ -114,6 +114,7 @@ const FormDateTimePicker = ({
 
         {/* Input Field */}
         <Box
+          data-testid={`datepicker-${name}`}
           sx={{
             position: 'relative',
             cursor: disabled ? 'not-allowed' : 'pointer',
