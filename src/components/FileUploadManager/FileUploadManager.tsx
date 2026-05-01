@@ -5,10 +5,6 @@ import {
   Box,
   Typography,
   IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   CircularProgress,
   Chip,
   Tooltip,
@@ -62,6 +58,15 @@ function formatDate(iso: string): string {
     month: '2-digit',
     year: 'numeric',
   });
+}
+
+// Truncate filename preserving extension: "Very Long Name...pdf"
+function truncateFileName(name: string, max = 36): string {
+  if (name.length <= max) return name;
+  const dotIdx = name.lastIndexOf('.');
+  const ext = dotIdx > 0 && name.length - dotIdx <= 6 ? name.slice(dotIdx) : '';
+  const allowedBody = max - ext.length - 3; // 3 = "..."
+  return `${name.slice(0, allowedBody > 0 ? allowedBody : max - 3)}...${ext}`;
 }
 
 function FileIcon({ contentType }: { contentType: string }) {
@@ -121,7 +126,7 @@ export default function FileUploadManager({ mode, title = 'Documents' }: FileUpl
   }
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
       <Typography variant="h6" fontWeight={700} sx={{ mb: 2, color: BRAND.dark }}>
         {title}
       </Typography>
@@ -148,7 +153,7 @@ export default function FileUploadManager({ mode, title = 'Documents' }: FileUpl
           type="file"
           hidden
           accept=".pdf,.doc,.docx"
-          onChange={(e) => handleFiles(e.target.files)}
+          onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
         />
         {isUploading ? (
           <CircularProgress size={32} sx={{ color: BRAND.primary }} />
@@ -183,8 +188,7 @@ export default function FileUploadManager({ mode, title = 'Documents' }: FileUpl
           No documents yet
         </Typography>
       ) : (
-        <List
-          disablePadding
+        <Box
           sx={{
             mt: 2,
             ...(files.length > SCROLL_AFTER && {
@@ -198,10 +202,12 @@ export default function FileUploadManager({ mode, title = 'Documents' }: FileUpl
           }}
         >
           {files.map((f) => (
-            <ListItem
+            <Box
               key={f.id}
-              disablePadding
               sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
                 mb: 1,
                 px: 2,
                 py: 1,
@@ -209,43 +215,49 @@ export default function FileUploadManager({ mode, title = 'Documents' }: FileUpl
                 border: `1px solid ${BRAND.border}`,
                 backgroundColor: '#fff',
                 '&:hover': { backgroundColor: BRAND.bgSurface },
+                minWidth: 0,
               }}
-              secondaryAction={
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  <Tooltip title="Download">
-                    <IconButton size="small" href={f.url} target="_blank" rel="noopener noreferrer">
-                      <Download fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(f.id)}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              }
             >
-              <ListItemIcon sx={{ minWidth: 36 }}>
+              {/* File type icon */}
+              <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                 <FileIcon contentType={f.contentType} />
-              </ListItemIcon>
-              <ListItemText
-                primary={
-                  <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 260 }}>
-                    {f.fileName}
+              </Box>
+
+              {/* File info */}
+              <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <Tooltip title={f.fileName} placement="top" enterDelay={400}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    sx={{ display: 'block', cursor: 'default' }}
+                  >
+                    {truncateFileName(f.fileName)}
                   </Typography>
-                }
-                secondary={
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Chip label={formatBytes(f.fileSize)} size="small" sx={{ height: 18, fontSize: 11 }} />
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDate(f.uploadedAt)}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </ListItem>
+                </Tooltip>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.25 }}>
+                  <Chip label={formatBytes(f.fileSize)} size="small" sx={{ height: 18, fontSize: 11 }} />
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDate(f.uploadedAt)}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Actions — flexShrink: 0 so they never get squeezed */}
+              <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                <Tooltip title="Download">
+                  <IconButton size="small" href={f.url} target="_blank" rel="noopener noreferrer">
+                    <Download fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <IconButton size="small" color="error" onClick={() => handleDelete(f.id)}>
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           ))}
-        </List>
+        </Box>
       )}
     </Box>
   );
