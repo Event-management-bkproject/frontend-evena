@@ -1,7 +1,7 @@
 // components/AuthInitializer.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
@@ -12,10 +12,14 @@ import { VenueAPI } from '@/src/stores/services/VenueApi';
 export default function AuthInitializer() {
   const { setAuthFromInit, auth } = useAuth();
   const dispatch = useDispatch();
-  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    // Closure-scoped flag — unique per effect run. Unlike a shared ref,
+    // the cleanup for THIS run sets its own `isActive = false` without
+    // affecting the flag of the next run. This prevents a stale
+    // /auth/refresh response (which may return 401 for a user who had
+    // no prior session) from wiping credentials set by a concurrent login.
+    let isActive = true;
 
     const initializeAuth = async () => {
       if (auth.isInitialized) return;
@@ -29,7 +33,7 @@ export default function AuthInitializer() {
           headers: { 'Content-Type': 'application/json' },
         });
 
-        if (!isMountedRef.current) return;
+        if (!isActive) return;
 
         if (response.ok) {
           const data = await response.json();
@@ -46,7 +50,7 @@ export default function AuthInitializer() {
         dispatch(CategoryAPI.util.resetApiState());
         dispatch(VenueAPI.util.resetApiState());
       } catch {
-        if (!isMountedRef.current) return;
+        if (!isActive) return;
         setAuthFromInit(null, null);
       }
     };
@@ -54,7 +58,7 @@ export default function AuthInitializer() {
     initializeAuth();
 
     return () => {
-      isMountedRef.current = false;
+      isActive = false;
     };
   }, [auth.isInitialized]);
 
