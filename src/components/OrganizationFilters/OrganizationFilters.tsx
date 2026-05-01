@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Box, Button, TextField, InputAdornment, Typography, IconButton, Badge } from '@mui/material';
-import { Search, Add, Notifications } from '@mui/icons-material';
+import { Search, Add, Notifications, Business, CheckCircle, HourglassEmpty } from '@mui/icons-material';
+
 import { OrganizationResponse } from '@/src/stores/types';
 import { useGetPendingInvitationsQuery } from '@/src/stores/services/OrganizationMemberApi';
 import InvitationNotificationModal from '../InvitationNotificationModal';
@@ -125,37 +126,42 @@ export default function OrganizationFilters({
       <Box
         sx={{
           display: 'flex',
-          gap: 2,
-          p: 2,
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
           border: '1px solid #E0E0E0',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            {t('organizationFilter.totalOrganizations')}
-          </Typography>
-          <Typography variant="h5" fontWeight={600} color="primary">
-            {totalOrganizations}
-          </Typography>
-        </Box>
-        <Box sx={{ flex: 1, borderLeft: '1px solid #E0E0E0', pl: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            {t('organizationFilter.verified')}
-          </Typography>
-          <Typography variant="h5" fontWeight={600} color="success.main">
-            {verifiedOrganizations}
-          </Typography>
-        </Box>
-        <Box sx={{ flex: 1, borderLeft: '1px solid #E0E0E0', pl: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            {t('organizationFilter.pendingVerification')}
-          </Typography>
-          <Typography variant="h5" fontWeight={600} color="warning.main">
-            {totalOrganizations - verifiedOrganizations}
-          </Typography>
-        </Box>
+        {[
+          { icon: <Business sx={{ fontSize: 18, color: '#5C6BC0' }} />, label: t('organizationFilter.totalOrganizations'), value: totalOrganizations, color: '#5C6BC0', bg: '#EEF0FA' },
+          { icon: <CheckCircle sx={{ fontSize: 18, color: '#2E7D32' }} />, label: t('organizationFilter.verified'), value: verifiedOrganizations, color: '#2E7D32', bg: '#E8F5E9' },
+          { icon: <HourglassEmpty sx={{ fontSize: 18, color: '#E65100' }} />, label: t('organizationFilter.pendingVerification'), value: totalOrganizations - verifiedOrganizations, color: '#E65100', bg: '#FFF3E0' },
+        ].map((stat, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              px: 3,
+              py: 1.5,
+              borderLeft: idx > 0 ? '1px solid #E0E0E0' : 'none',
+            }}
+          >
+            <Box sx={{ width: 36, height: 36, borderRadius: '10px', bgcolor: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {stat.icon}
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ color: stat.color, lineHeight: 1, mb: 0.25 }}>
+                {stat.value}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#888', fontSize: '11px' }}>
+                {stat.label}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
       </Box>
     </Box>
   );
