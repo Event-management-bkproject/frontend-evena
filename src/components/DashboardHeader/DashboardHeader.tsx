@@ -7,16 +7,23 @@ import Link from 'next/link';
 import { DashboardHeaderProps } from './types';
 import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
 import { getInitials } from '@/src/utils/common.utils';
+import { useAuth } from '@/src/hooks/auth/useAuth';
+import { useGetMeQuery } from '@/src/stores/services/UserApi';
 
 export function DashboardHeader({
   title,
   breadcrumbs = [],
-  userName = 'User',
+  userName,
   userAvatar,
   onNotificationClick,
   onSettingsClick,
   onProfileClick,
 }: DashboardHeaderProps) {
+  const { auth } = useAuth();
+  const { data: meData } = useGetMeQuery();
+
+  const resolvedName = userName || meData?.data?.name || auth.user?.name || 'User';
+  const resolvedAvatar = userAvatar || meData?.data?.avatarUrl || auth.user?.avatarUrl || undefined;
   const [languageSwitcherOpen, setLanguageSwitcherOpen] = useState(false);
 
   const handleSettingsClick = () => {
@@ -131,7 +138,7 @@ export function DashboardHeader({
           }}
         >
           <Avatar
-            src={userAvatar}
+            src={resolvedAvatar}
             sx={{
               width: 36,
               height: 36,
@@ -139,10 +146,10 @@ export function DashboardHeader({
               fontSize: '0.875rem',
             }}
           >
-            {!userAvatar && getInitials(userName)}
+            {!resolvedAvatar && getInitials(resolvedName)}
           </Avatar>
           <Typography variant="body2" fontWeight={500}>
-            {userName}
+            {resolvedName}
           </Typography>
         </Box>
       </Box>
