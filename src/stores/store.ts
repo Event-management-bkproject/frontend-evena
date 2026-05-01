@@ -18,31 +18,21 @@ import { FlexPassAPI } from './services/FlexPassApi';
 import { FileAPI } from './services/FileApi';
 import { ActivityLogAPI } from './services/ActivityLogApi';
 
-// Redux Persist configuration for auth slice
-// Security: Only persist user info, NOT accessToken (stored in memory only)
-// Refresh token is stored in httpOnly cookie by backend
-const persistConfig = {
-  key: 'auth',
-  storage,
-  whitelist: ['user'], // Only persist user data, accessToken lives in memory
-  // accessToken will be refreshed from httpOnly cookie on app init
-};
-
-const persistedAuthReducer = persistReducer(persistConfig, authReducer);
-
-// UI state persist config - chỉ persist user preferences
+// UI state persist — only sidebar preference, purely cosmetic.
+// Auth is NOT persisted: accessToken lives in memory and is restored from
+// the httpOnly refresh-token cookie by AuthInitializer on every app boot.
 const uiPersistConfig = {
   key: 'ui',
   storage,
-  whitelist: ['sidebarOpen'], // Chỉ lưu sidebar preference
+  whitelist: ['sidebarOpen'],
 };
 
 const persistedUiReducer = persistReducer(uiPersistConfig, uiReducer);
 
 export const store = configureStore({
   reducer: {
-    auth: persistedAuthReducer,
-    ui: persistedUiReducer, // UI state slice
+    auth: authReducer,          // plain reducer — no localStorage, token lives in memory
+    ui: persistedUiReducer,
     [AuthAPI.reducerPath]: AuthAPI.reducer,
     [OrganizerAPI.reducerPath]: OrganizerAPI.reducer,
     [CategoryAPI.reducerPath]: CategoryAPI.reducer,
@@ -82,8 +72,5 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-// Override auth type: persistReducer wraps AuthState in PersistPartial which hides fields.
-// Casting back to AuthState gives correct autocomplete and type safety across all selectors.
-type StoreState = ReturnType<typeof store.getState>;
-export type RootState = Omit<StoreState, 'auth'> & { auth: AuthState };
+export type RootState = ReturnType<typeof store.getState> & { auth: AuthState };
 export type AppDispatch = typeof store.dispatch;

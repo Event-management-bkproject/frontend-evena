@@ -30,8 +30,11 @@ export const useAuth = () => {
   // Security: accessToken stored in memory only (not persisted).
   // Refresh token stored in httpOnly cookie by backend.
   const login = (accessToken: string, user: UserResponse, isInitialized = true) => {
-    resetAllApiCaches(dispatch);
     dispatch(setCredentials({ accessToken, user, isInitialized }));
+    // Clear stale RTK cache AFTER credentials are set so that any in-flight
+    // queries triggered by the new auth state start from a clean slate,
+    // not before (which would clear data that components need mid-render).
+    resetAllApiCaches(dispatch);
   };
 
   // Called by AuthInitializer on app boot to restore session from httpOnly cookie.
