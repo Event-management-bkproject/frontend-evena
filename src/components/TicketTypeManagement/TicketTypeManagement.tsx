@@ -7,18 +7,14 @@ import {
   CardContent,
   Typography,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
   Chip,
   CircularProgress,
   Alert,
-  Stack,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   Add,
@@ -33,8 +29,8 @@ import {
   PowerSettingsNew,
   PlayArrow,
   DraftsOutlined,
+  MoreVert,
 } from '@mui/icons-material';
-import { format } from 'date-fns';
 import {
   useGetTicketTypesQuery,
   useDeleteTicketTypeMutation,
@@ -61,7 +57,20 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
   const [ticketTypeToDelete, setTicketTypeToDelete] = useState<TicketTypeResponse | null>(null);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [ticketTypeToDeactivate, setTicketTypeToDeactivate] = useState<TicketTypeResponse | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuTicketType, setMenuTicketType] = useState<TicketTypeResponse | null>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
+  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, ticketType: TicketTypeResponse) => {
+    e.stopPropagation();
+    setMenuAnchor(e.currentTarget);
+    setMenuTicketType(ticketType);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setMenuTicketType(null);
+  };
 
   const { data: ticketTypesResponse, isLoading, error } = useGetTicketTypesQuery(eventId, {
     refetchOnMountOrArgChange: 120,
@@ -145,19 +154,26 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
     }
   };
 
+  const getStatusLabel = (status: TicketTypeStatus) => {
+  switch (status) {
+    case TicketTypeStatus.DRAFT:
+      return 'Draft';
+    case TicketTypeStatus.ACTIVE:
+      return 'Active';
+    case TicketTypeStatus.SOLD_OUT:
+      return 'Sold out';
+    case TicketTypeStatus.DEACTIVATED:
+      return 'Off';
+    default:
+      return status;
+  }
+};
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
     }).format(price);
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
-    } catch {
-      return dateString;
-    }
   };
 
   return (
@@ -232,197 +248,156 @@ const TicketTypeManagement = ({ eventId, event, onEventUpdate }: TicketTypeManag
             </Box>
           )}
 
-          {/* Ticket Types Table */}
+          {/* Ticket Type List */}
           {!isLoading && !error && ticketTypes.length > 0 && (
-            <TableContainer
-              component={Paper}
-              sx={{
-                borderRadius: '12px',
-                boxShadow: 'none',
-                border: '1px solid #E0E0E0',
-              }}
-            >
-              <Table stickyHeader sx={{ tableLayout: 'fixed', width: '100%' }}>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
-                    <TableCell sx={{ fontWeight: 600, width: '25%' }}>Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: '20%' }}>Price</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: '25%' }}>Tickets</TableCell>
-                    <TableCell sx={{ fontWeight: 600, width: '15%' }}>Status</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 600, width: '15%' }}>
-                      Actions
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {ticketTypes.map((ticketType) => {
-                    const statusStyle = getStatusColor(ticketType.status);
-
-                    return (
-                      <TableRow key={ticketType.id} data-id={ticketType.id} hover>
-                        <TableCell sx={{ overflow: 'hidden' }}>
-                          <Box>
-                            <Typography
-                              variant="body2"
-                              fontWeight={500}
-                              sx={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {ticketType.name}
-                            </Typography>
-                            {ticketType.earlyBird && (
-                              <Chip
-                                label={`-${ticketType.earlyBirdDiscount}%`}
-                                size="small"
-                                sx={{
-                                  mt: 0.5,
-                                  height: 20,
-                                  fontSize: '0.65rem',
-                                  backgroundColor: '#FFE0B2',
-                                  color: '#E65100',
-                                }}
-                              />
-                            )}
-                            {!ticketType.visible && (
-                              <Chip
-                                icon={<VisibilityOff sx={{ fontSize: '0.75rem' }} />}
-                                label="Hidden"
-                                size="small"
-                                sx={{
-                                  mt: 0.5,
-                                  ml: 0.5,
-                                  height: 20,
-                                  fontSize: '0.65rem',
-                                }}
-                              />
-                            )}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ overflow: 'hidden' }}>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            color="#f36bf9"
-                            sx={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {formatPrice(ticketType.price)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Stack spacing={0.5}>
-                            <Typography variant="caption" color="text.secondary">
-                              Sold: <strong>{ticketType.sold}</strong> / {ticketType.total}
-                            </Typography>
-                            <Typography variant="caption" color="success.main">
-                              Available: <strong>{ticketType.available}</strong>
-                            </Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {ticketTypes.map((ticketType) => {
+                const statusStyle = getStatusColor(ticketType.status);
+                return (
+                  <Box
+                    key={ticketType.id}
+                    data-id={ticketType.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      px: 1.5,
+                      py: 1.25,
+                      borderRadius: '10px',
+                      border: '1px solid #F0F0F0',
+                      backgroundColor: '#FAFAFA',
+                      '&:hover': { backgroundColor: '#F5F0FF' },
+                      transition: 'background-color 0.15s',
+                    }}
+                  >
+                    {/* Left: name + price + meta */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}
+                        >
+                          {ticketType.name}
+                        </Typography>
+                        {ticketType.earlyBird && (
                           <Chip
-                            icon={statusStyle.icon}
-                            label={ticketType.status}
+                            label={`-${ticketType.earlyBirdDiscount}%`}
                             size="small"
-                            sx={{
-                              backgroundColor: statusStyle.bg,
-                              color: statusStyle.color,
-                              fontWeight: 600,
-                              '& .MuiChip-icon': {
-                                color: statusStyle.color,
-                              },
-                            }}
+                            sx={{ height: 18, fontSize: '0.6rem', backgroundColor: '#FFE0B2', color: '#E65100' }}
                           />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box display="flex" gap={0.5} justifyContent="center">
-                            {/* Edit: only allowed while DRAFT (spec §4.3) */}
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEdit(ticketType)}
-                              disabled={ticketType.status !== TicketTypeStatus.DRAFT}
-                              title={
-                                ticketType.status !== TicketTypeStatus.DRAFT
-                                  ? 'Cannot edit: ticket type is ' + ticketType.status + ' (contractual fields locked)'
-                                  : 'Edit ticket type'
-                              }
-                              sx={{
-                                color: '#1976d2',
-                                '&:hover': { backgroundColor: 'rgba(25, 118, 210, 0.08)' },
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                            {/* Activate: DRAFT → ACTIVE (spec §4.2) */}
-                            {ticketType.status === TicketTypeStatus.DRAFT && (
-                              <IconButton
-                                size="small"
-                                onClick={() => handleActivate(ticketType)}
-                                disabled={activating}
-                                title="Activate ticket type (makes it publicly available)"
-                                sx={{
-                                  color: '#2e7d32',
-                                  '&:hover': { backgroundColor: 'rgba(46, 125, 50, 0.08)' },
-                                }}
-                              >
-                                <PlayArrow fontSize="small" />
-                              </IconButton>
-                            )}
-                            {/* Deactivate: ACTIVE or SOLD_OUT (spec §4.5) */}
-                            {(ticketType.status === TicketTypeStatus.ACTIVE || ticketType.status === TicketTypeStatus.SOLD_OUT) && (
-                              <IconButton
-                                size="small"
-                                onClick={() => handleDeactivateClick(ticketType)}
-                                disabled={deactivating}
-                                title="Deactivate ticket type (stops sales, preserves existing bookings)"
-                                sx={{
-                                  color: '#ed6c02',
-                                  '&:hover': { backgroundColor: 'rgba(237, 108, 2, 0.08)' },
-                                }}
-                              >
-                                <PowerSettingsNew fontSize="small" />
-                              </IconButton>
-                            )}
-                            {/* Delete: only DRAFT with no sales (spec §4.8) */}
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteClick(ticketType)}
-                              disabled={
-                                deleting ||
-                                ticketType.status !== TicketTypeStatus.DRAFT ||
-                                ticketType.sold > 0
-                              }
-                              title={
-                                ticketType.status !== TicketTypeStatus.DRAFT
-                                  ? 'Cannot delete: use Deactivate instead (spec §4.8)'
-                                  : ticketType.sold > 0
-                                    ? 'Cannot delete: has sold tickets'
-                                    : 'Delete ticket type'
-                              }
-                              sx={{
-                                color: '#d32f2f',
-                                '&:hover': { backgroundColor: 'rgba(211, 47, 47, 0.08)' },
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                        )}
+                        {!ticketType.visible && (
+                          <Chip
+                            icon={<VisibilityOff sx={{ fontSize: '0.7rem' }} />}
+                            label="Hidden"
+                            size="small"
+                            sx={{ height: 18, fontSize: '0.6rem' }}
+                          />
+                        )}
+                      </Box>
+                      <Typography variant="body2" fontWeight={700} sx={{ color: '#f36bf9', fontSize: '0.8rem' }}>
+                        {formatPrice(ticketType.price)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        {ticketType.sold}/{ticketType.total} sold · {ticketType.available} left
+                      </Typography>
+                    </Box>
+
+                    {/* Status chip */}
+                    <Chip
+                      icon={statusStyle.icon}
+                      label={getStatusLabel(ticketType.status)}
+                      size="small"
+                      sx={{
+                        backgroundColor: statusStyle.bg,
+                        color: statusStyle.color,
+                        fontWeight: 600,
+                        fontSize: '0.65rem',
+                        flexShrink: 0,
+                        '& .MuiChip-icon': { color: statusStyle.color, fontSize: '0.85rem' },
+                        '& .MuiChip-label': { px: 0.75 },
+                      }}
+                    />
+
+                    {/* 3-dot menu button */}
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuOpen(e, ticketType)}
+                      sx={{ flexShrink: 0, color: '#9E9E9E', '&:hover': { color: '#f36bf9' } }}
+                    >
+                      <MoreVert fontSize="small" />
+                    </IconButton>
+                  </Box>
+                );
+              })}
+            </Box>
           )}
         </CardContent>
       </Card>
+
+      {/* 3-dot actions menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        onClick={(e) => e.stopPropagation()}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuTicketType) handleEdit(menuTicketType);
+            handleMenuClose();
+          }}
+          disabled={menuTicketType?.status !== TicketTypeStatus.DRAFT}
+        >
+          <ListItemIcon><Edit fontSize="small" sx={{ color: '#1976d2' }} /></ListItemIcon>
+          <ListItemText>Edit</ListItemText>
+        </MenuItem>
+
+        {menuTicketType?.status === TicketTypeStatus.DRAFT && (
+          <MenuItem
+            onClick={() => {
+              if (menuTicketType) handleActivate(menuTicketType);
+              handleMenuClose();
+            }}
+            disabled={activating}
+          >
+            <ListItemIcon><PlayArrow fontSize="small" sx={{ color: '#2e7d32' }} /></ListItemIcon>
+            <ListItemText>Activate</ListItemText>
+          </MenuItem>
+        )}
+
+        {(menuTicketType?.status === TicketTypeStatus.ACTIVE || menuTicketType?.status === TicketTypeStatus.SOLD_OUT) && (
+          <MenuItem
+            onClick={() => {
+              if (menuTicketType) handleDeactivateClick(menuTicketType);
+              handleMenuClose();
+            }}
+            disabled={deactivating}
+          >
+            <ListItemIcon><PowerSettingsNew fontSize="small" sx={{ color: '#ed6c02' }} /></ListItemIcon>
+            <ListItemText>Deactivate</ListItemText>
+          </MenuItem>
+        )}
+
+        <MenuItem
+          onClick={() => {
+            if (menuTicketType) handleDeleteClick(menuTicketType);
+            handleMenuClose();
+          }}
+          disabled={
+            deleting ||
+            menuTicketType?.status !== TicketTypeStatus.DRAFT ||
+            (menuTicketType?.sold ?? 0) > 0
+          }
+          sx={{ color: 'error.main' }}
+        >
+          <ListItemIcon><Delete fontSize="small" sx={{ color: 'error.main' }} /></ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
 
       {/* Create Ticket Type Modal */}
       <TicketTypeFormModal
