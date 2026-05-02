@@ -190,6 +190,7 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
                 {/* Publish/Cancel Buttons */}
                 {event.status === EventStatus.DRAFT && (
                   <IconButton
+                    aria-label="publish-event"
                     onClick={handlePublish}
                     disabled={publishing}
                     sx={{
@@ -205,6 +206,7 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
                 )}
                 {event.status === EventStatus.PUBLISHED && (
                   <IconButton
+                    aria-label="cancel-event"
                     onClick={handleCancelClick}
                     disabled={cancelling}
                     sx={{

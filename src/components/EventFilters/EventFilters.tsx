@@ -126,7 +126,7 @@ export function EventFilters({
 
         {/* Category Filter */}
         <FormControl sx={selectSx}>
-          <Select value={category} onChange={handleCategoryChange} disabled={disabled || loading} displayEmpty>
+          <Select value={category} onChange={handleCategoryChange} disabled={disabled || loading} displayEmpty inputProps={{ 'data-testid': 'filter-category' }}>
             <MenuItem value="">
               <em style={{ fontStyle: 'normal', color: '#888' }}>{t('event.filter.category')}</em>
             </MenuItem>
@@ -193,6 +193,7 @@ export function EventFilters({
           return (
             <Box
               key={status}
+              data-testid={`status-card-${status.toLowerCase()}`}
               onClick={() => handleStatusClick(status as EventStatus)}
               sx={{
                 flex: 1,
