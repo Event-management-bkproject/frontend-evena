@@ -29,8 +29,11 @@ import {
   useUploadGalleryImageMutation,
   useDeleteGalleryImageMutation,
 } from '@/src/stores/services/EventApi';
+import { useUploadOrgFileMutation } from '@/src/stores/services/FileApi';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import Tooltip from '@mui/material/Tooltip';
 
 interface CreateEventFormProps {
   onSubmit: (data: EventFormData) => void;
@@ -259,6 +262,221 @@ const GalleryUpload = ({
   );
 };
 
+// ─── Create-mode: cover image (URL input + file upload via org files API) ────
+const CoverImageCreateUpload = ({ onError }: { onError: (msg: string) => void }) => {
+  const { t } = useTranslation();
+  const { values, setFieldValue } = useFormikContext<EventFormData>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadOrgFile, { isLoading }] = useUploadOrgFileMutation();
+  const organizerId = Number(values.organizerId);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    try {
+      const result = await uploadOrgFile({ organizationId: organizerId, file }).unwrap();
+      if (result.url) setFieldValue('coverUrl', result.url);
+    } catch (err: any) {
+      onError(err?.data?.message || t('messages.error.uploadFailed', { defaultValue: 'Upload failed' }));
+    }
+  };
+
+  const canUpload = organizerId > 0;
+
+  return (
+    <Box sx={{ p: 3, backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E0E0E0' }}>
+      <Typography variant="subtitle1" sx={{ display: 'block', mb: 2, fontWeight: 600, color: '#37437D', fontSize: '1rem' }}>
+        {t('event.form.coverImage')}
+      </Typography>
+
+      {/* Preview */}
+      {values.coverUrl && (
+        <Box sx={{ mb: 2, borderRadius: '10px', overflow: 'hidden', border: '1px solid #E0E0E0', position: 'relative', height: 200 }}>
+          <img src={values.coverUrl} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </Box>
+      )}
+
+      {/* URL input */}
+      <FormTextField
+        id="event-coverUrl"
+        name="coverUrl"
+        label=""
+        type="url"
+        placeholder={t('event.form.coverImagePlaceholder')}
+        sx={{ mb: 2 }}
+      />
+
+      {/* Upload divider */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+        <Box sx={{ flex: 1, height: '1px', bgcolor: '#E0E0E0' }} />
+        <Typography variant="caption" sx={{ color: '#999', whiteSpace: 'nowrap' }}>
+          {t('common.orUploadFile', { defaultValue: 'or upload from device' })}
+        </Typography>
+        <Box sx={{ flex: 1, height: '1px', bgcolor: '#E0E0E0' }} />
+      </Box>
+
+      {/* Upload zone */}
+      <Tooltip title={!canUpload ? t('event.form.selectOrganizerFirst', { defaultValue: 'Select an organizer first' }) : ''} placement="top">
+        <Box
+          onClick={() => canUpload && !isLoading && fileInputRef.current?.click()}
+          sx={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 1, p: 3, borderRadius: '10px', border: '2px dashed',
+            borderColor: canUpload ? '#B0B8D8' : '#D0D0D0',
+            bgcolor: canUpload ? 'rgba(55,67,125,0.03)' : '#FAFAFA',
+            cursor: canUpload && !isLoading ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s',
+            '&:hover': canUpload && !isLoading ? { borderColor: '#37437D', bgcolor: 'rgba(55,67,125,0.06)' } : {},
+          }}
+        >
+          {isLoading ? (
+            <>
+              <CircularProgress size={28} sx={{ color: '#37437D' }} />
+              <Typography variant="body2" sx={{ color: '#37437D', fontWeight: 500 }}>
+                {t('common.uploading', { defaultValue: 'Uploading…' })}
+              </Typography>
+            </>
+          ) : (
+            <>
+              <AddPhotoAlternateIcon sx={{ fontSize: 36, color: canUpload ? '#37437D' : '#BDBDBD' }} />
+              <Typography variant="body2" sx={{ color: canUpload ? '#37437D' : '#BDBDBD', fontWeight: 500 }}>
+                {t('event.form.uploadCover', { defaultValue: 'Upload Cover Image' })}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#9E9E9E' }}>
+                PNG, JPG, WEBP — max 10 MB
+              </Typography>
+            </>
+          )}
+        </Box>
+      </Tooltip>
+
+      <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+    </Box>
+  );
+};
+
+// ─── Create-mode: gallery images (URL list + file upload via org files API) ──
+const GalleryCreateUpload = ({
+  imageUrls,
+  setImageUrls,
+  imageUrlInput,
+  setImageUrlInput,
+  onError,
+}: {
+  imageUrls: string[];
+  setImageUrls: React.Dispatch<React.SetStateAction<string[]>>;
+  imageUrlInput: string;
+  setImageUrlInput: React.Dispatch<React.SetStateAction<string>>;
+  onError: (msg: string) => void;
+}) => {
+  const { t } = useTranslation();
+  const { values } = useFormikContext<EventFormData>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadOrgFile, { isLoading }] = useUploadOrgFileMutation();
+  const organizerId = Number(values.organizerId);
+  const canUpload = organizerId > 0;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    try {
+      const result = await uploadOrgFile({ organizationId: organizerId, file }).unwrap();
+      if (result.url) setImageUrls((prev) => [...prev, result.url]);
+    } catch (err: any) {
+      onError(err?.data?.message || t('messages.error.uploadFailed', { defaultValue: 'Upload failed' }));
+    }
+  };
+
+  const handleAddUrl = () => {
+    if (imageUrlInput && !imageUrls.includes(imageUrlInput)) {
+      setImageUrls((prev) => [...prev, imageUrlInput]);
+      setImageUrlInput('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleAddUrl(); }
+  };
+
+  return (
+    <Box sx={{ p: 3, backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E0E0E0' }}>
+      <Typography variant="subtitle1" component="label" sx={{ display: 'block', mb: 2, fontWeight: 600, color: '#37437D', fontSize: '1rem' }}>
+        {t('event.form.additionalImages')}
+      </Typography>
+
+      {/* URL input row */}
+      <Box display="flex" gap={1.5} mb={2} alignItems="center">
+        <Box sx={{ flex: 1 }}>
+          <FormTextField
+            id="event-imageUrl-input"
+            name="imageUrlInput"
+            label=""
+            type="url"
+            placeholder={t('event.form.imageUrlPlaceholder')}
+            value={imageUrlInput}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImageUrlInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            fullWidth={true}
+            size="medium"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', height: '56px' } }}
+          />
+        </Box>
+        <Button
+          onClick={handleAddUrl}
+          variant="contained"
+          disabled={!imageUrlInput.trim()}
+          sx={{ ...PRIMARY_BUTTON_SX, minWidth: 'auto', px: 3, whiteSpace: 'nowrap', fontSize: '14px', height: '56px' }}
+        >
+          {t('common.buttons.add')}
+        </Button>
+      </Box>
+
+      {/* Upload button row */}
+      <Tooltip title={!canUpload ? t('event.form.selectOrganizerFirst', { defaultValue: 'Select an organizer first' }) : ''} placement="top">
+        <span>
+          <Button
+            variant="outlined"
+            startIcon={isLoading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
+            onClick={() => canUpload && !isLoading && fileInputRef.current?.click()}
+            disabled={!canUpload || isLoading}
+            sx={{ borderRadius: '10px', textTransform: 'none', mb: 2 }}
+          >
+            {isLoading
+              ? t('common.uploading', { defaultValue: 'Uploading…' })
+              : t('event.form.addGalleryImage', { defaultValue: 'Add Gallery Image' })}
+          </Button>
+        </span>
+      </Tooltip>
+
+      <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+
+      {/* Chip list */}
+      {imageUrls.length > 0 && (
+        <Box sx={{ p: 2, backgroundColor: 'white', borderRadius: '10px', border: '1px dashed #D0D0D0' }}>
+          <Typography variant="caption" sx={{ display: 'block', mb: 1.5, color: '#666', fontWeight: 500 }}>
+            {t('event.form.imagesAdded', { count: imageUrls.length })}
+          </Typography>
+          <Box display="flex" flexWrap="wrap" gap={1}>
+            {imageUrls.map((url, index) => (
+              <Chip
+                key={index}
+                label={url.length > 35 ? `${url.substring(0, 35)}...` : url}
+                onDelete={() => setImageUrls((prev) => prev.filter((u) => u !== url))}
+                sx={{
+                  backgroundColor: '#E8F5E9', color: '#2E7D32', fontWeight: 500, fontSize: '13px', borderRadius: '8px',
+                  '& .MuiChip-deleteIcon': { color: '#2E7D32', '&:hover': { color: '#1B5E20' } },
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
 const CreateEventForm = ({
   onSubmit,
   onCancel,
@@ -298,28 +516,6 @@ const CreateEventForm = ({
     };
     onSubmit(submitData);
     actions.setSubmitting(false);
-  };
-
-  const handleAddImageUrl = () => {
-    if (imageUrlInput && !imageUrls.includes(imageUrlInput)) {
-      setImageUrls((prev) => [...prev, imageUrlInput]);
-      setImageUrlInput('');
-    }
-  };
-
-  const handleRemoveImageUrl = (urlToRemove: string) => {
-    setImageUrls((prev) => prev.filter((url) => url !== urlToRemove));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddImageUrl();
-    }
-  };
-
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setImageUrlInput(e.target.value);
   };
 
   const useFileUpload = isEdit && !!eventId;
@@ -380,17 +576,11 @@ const CreateEventForm = ({
           />
         </Box>
 
-        {/* Cover Image — file upload in edit mode, URL input in create mode */}
+        {/* Cover Image — file upload in edit mode, URL+upload in create mode */}
         {useFileUpload ? (
           <CoverImageUpload eventId={eventId} onError={setUploadError} />
         ) : (
-          <FormTextField
-            id="event-coverUrl"
-            name="coverUrl"
-            label={t('event.form.coverImage')}
-            type="url"
-            placeholder={t('event.form.coverImagePlaceholder')}
-          />
+          <CoverImageCreateUpload onError={setUploadError} />
         )}
 
         {/* Dropdown Fields */}
@@ -437,7 +627,7 @@ const CreateEventForm = ({
           ))}
         </FormTextField>
 
-        {/* Gallery Images — file upload in edit mode, URL input in create mode */}
+        {/* Gallery Images — file upload in edit mode, URL+upload in create mode */}
         {useFileUpload ? (
           <GalleryUpload
             eventId={eventId}
@@ -446,109 +636,13 @@ const CreateEventForm = ({
             onError={setUploadError}
           />
         ) : (
-          <Box
-            sx={{
-              p: 3,
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              border: '1px solid #E0E0E0',
-            }}
-          >
-            <Typography
-              variant="subtitle1"
-              component="label"
-              sx={{
-                display: 'block',
-                mb: 2,
-                fontWeight: 600,
-                color: '#37437D',
-                fontSize: '1rem',
-              }}
-            >
-              {t('event.form.additionalImages')}
-            </Typography>
-
-            <Box display="flex" gap={1.5} mb={2} alignItems="center">
-              <Box sx={{ flex: 1 }}>
-                <FormTextField
-                  id="event-imageUrl-input"
-                  name="imageUrlInput"
-                  label=""
-                  type="url"
-                  placeholder={t('event.form.imageUrlPlaceholder')}
-                  value={imageUrlInput}
-                  onChange={handleImageUrlChange}
-                  onKeyPress={handleKeyPress}
-                  fullWidth={true}
-                  size="medium"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: '10px',
-                      height: '56px',
-                    },
-                  }}
-                />
-              </Box>
-              <Button
-                onClick={handleAddImageUrl}
-                variant="contained"
-                disabled={!imageUrlInput.trim()}
-                sx={{
-                  ...PRIMARY_BUTTON_SX,
-                  minWidth: 'auto',
-                  px: 3,
-                  whiteSpace: 'nowrap',
-                  fontSize: '14px',
-                  height: '56px',
-                }}
-              >
-                {t('common.buttons.add')}
-              </Button>
-            </Box>
-
-            {imageUrls.length > 0 && (
-              <Box
-                sx={{
-                  p: 2,
-                  backgroundColor: 'white',
-                  borderRadius: '10px',
-                  border: '1px dashed #D0D0D0',
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: 'block',
-                    mb: 1.5,
-                    color: '#666',
-                    fontWeight: 500,
-                  }}
-                >
-                  {t('event.form.imagesAdded', { count: imageUrls.length })}
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {imageUrls.map((url, index) => (
-                    <Chip
-                      key={index}
-                      label={url.length > 35 ? `${url.substring(0, 35)}...` : url}
-                      onDelete={() => handleRemoveImageUrl(url)}
-                      sx={{
-                        backgroundColor: '#E8F5E9',
-                        color: '#2E7D32',
-                        fontWeight: 500,
-                        fontSize: '13px',
-                        borderRadius: '8px',
-                        '& .MuiChip-deleteIcon': {
-                          color: '#2E7D32',
-                          '&:hover': { color: '#1B5E20' },
-                        },
-                      }}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-          </Box>
+          <GalleryCreateUpload
+            imageUrls={imageUrls}
+            setImageUrls={setImageUrls}
+            imageUrlInput={imageUrlInput}
+            setImageUrlInput={setImageUrlInput}
+            onError={setUploadError}
+          />
         )}
 
         {/* Description Field */}
