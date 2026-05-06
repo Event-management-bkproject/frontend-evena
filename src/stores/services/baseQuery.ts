@@ -20,10 +20,10 @@ const mutex = new Mutex();
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL,
   credentials: 'include', // Send httpOnly cookies
-  prepareHeaders: (headers) => {
-    headers.set('Content-Type', 'application/json');
-    return headers;
-  },
+  // Do NOT set Content-Type here: fetchBaseQuery sets it automatically to
+  // 'application/json' for plain-object bodies and leaves it unset for
+  // FormData (letting the browser inject the multipart boundary). Forcing
+  // 'application/json' globally breaks all multipart file-upload endpoints.
 });
 
 export const baseQueryWithReAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
