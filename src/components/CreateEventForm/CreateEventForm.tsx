@@ -576,14 +576,7 @@ const CreateEventForm = ({
           />
         </Box>
 
-        {/* Cover Image — file upload in edit mode, URL+upload in create mode */}
-        {useFileUpload ? (
-          <CoverImageUpload eventId={eventId} onError={setUploadError} />
-        ) : (
-          <CoverImageCreateUpload onError={setUploadError} />
-        )}
-
-        {/* Dropdown Fields */}
+        {/* Dropdown Fields — Organizer first so upload zones are enabled immediately after selection */}
         <FormTextField
           id="event-organizerId"
           name="organizerId"
@@ -626,6 +619,13 @@ const CreateEventForm = ({
             </MenuItem>
           ))}
         </FormTextField>
+
+        {/* Cover Image — file upload in edit mode, URL+upload in create mode */}
+        {useFileUpload ? (
+          <CoverImageUpload eventId={eventId} onError={setUploadError} />
+        ) : (
+          <CoverImageCreateUpload onError={setUploadError} />
+        )}
 
         {/* Gallery Images — file upload in edit mode, URL+upload in create mode */}
         {useFileUpload ? (

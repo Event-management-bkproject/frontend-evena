@@ -59,16 +59,18 @@ const FormDateTimePicker = ({
     setFieldTouched(name, true);
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (tempDate) {
       const result = new Date(tempDate);
       result.setHours(tempHour, tempMinute, 0, 0);
       // Format as ISO-like string for datetime-local compatibility: "YYYY-MM-DDTHH:mm"
       const isoStr = format(result, "yyyy-MM-dd'T'HH:mm");
-      setFieldValue(name, isoStr);
+      // Await setFieldValue before touching: Formik+React 18 batches state updates,
+      // so touching first causes Yup to validate against the stale empty value.
+      await setFieldValue(name, isoStr, false);
+      setFieldTouched(name, true, true);
     }
     setAnchorEl(null);
-    setFieldTouched(name, true);
   };
 
   const handleClear = () => {
