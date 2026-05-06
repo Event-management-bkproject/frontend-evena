@@ -22,14 +22,25 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/test',
 }));
 
-// Mock localStorage
+// Mock localStorage — simple in-memory store so security tests can read/write keys
+const localStorageStore: Record<string, string> = {};
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn((k: string) => localStorageStore[k] ?? null),
+  setItem: vi.fn((k: string, v: string) => { localStorageStore[k] = v; }),
+  removeItem: vi.fn((k: string) => { delete localStorageStore[k]; }),
+  clear: vi.fn(() => { Object.keys(localStorageStore).forEach((k) => delete localStorageStore[k]); }),
 };
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+// Mock sessionStorage — same in-memory pattern
+const sessionStorageStore: Record<string, string> = {};
+const sessionStorageMock = {
+  getItem: vi.fn((k: string) => sessionStorageStore[k] ?? null),
+  setItem: vi.fn((k: string, v: string) => { sessionStorageStore[k] = v; }),
+  removeItem: vi.fn((k: string) => { delete sessionStorageStore[k]; }),
+  clear: vi.fn(() => { Object.keys(sessionStorageStore).forEach((k) => delete sessionStorageStore[k]); }),
+};
+Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {

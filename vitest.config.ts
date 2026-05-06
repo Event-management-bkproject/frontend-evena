@@ -4,6 +4,10 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Provide API base URL so baseQueryWithReAuth can construct refresh URLs in tests
+    'process.env.NEXT_PUBLIC_API_URL': JSON.stringify('http://localhost:8080/api'),
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -37,6 +41,8 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@stores': path.resolve(__dirname, './src/stores'),
       '@styles': path.resolve(__dirname, './src/styles'),
+      // Allow security tests to import the Next.js middleware module
+      '@@middleware': path.resolve(__dirname, './middleware.ts'),
     },
   },
 });
