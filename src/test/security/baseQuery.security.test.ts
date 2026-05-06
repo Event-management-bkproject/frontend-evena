@@ -93,7 +93,7 @@ describe('baseQueryWithReAuth — security', () => {
       .mockResolvedValueOnce(new Response(null, { status: 401 }));
     await baseQueryWithReAuth({ url: 'http://localhost:8080/api/secure', method: 'GET' }, makeApi(store), {});
     const cleared = dispatchSpy.mock.calls.some(
-      ([action]: [unknown]) =>
+      ([action]: unknown[]) =>
         typeof action === 'object' && action !== null &&
         (action as { type: string }).type === clearCredentials().type,
     );
@@ -108,7 +108,7 @@ describe('baseQueryWithReAuth — security', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ success: false }), { status: 200 }));
     await baseQueryWithReAuth({ url: 'http://localhost:8080/api/secure', method: 'GET' }, makeApi(store), {});
     const cleared = dispatchSpy.mock.calls.some(
-      ([action]: [unknown]) =>
+      ([action]: unknown[]) =>
         typeof action === 'object' && action !== null &&
         (action as { type: string }).type === clearCredentials().type,
     );
