@@ -30,6 +30,12 @@ export const useAuth = () => {
   // Security: accessToken stored in memory only (not persisted).
   // Refresh token stored in httpOnly cookie by backend.
   const login = (accessToken: string, user: UserResponse, isInitialized = true) => {
+    // Clear stale logout flag: if the user logged out then re-logged in without
+    // reloading the page, the flag would still be in sessionStorage. A subsequent
+    // reload would cause AuthInitializer to skip /auth/refresh and force logout.
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('__evena_logout');
+    }
     dispatch(setCredentials({ accessToken, user, isInitialized }));
     // Clear stale RTK cache AFTER credentials are set so that any in-flight
     // queries triggered by the new auth state start from a clean slate,
@@ -50,6 +56,14 @@ export const useAuth = () => {
       });
     } catch {
       // Logout should proceed even if the API call fails (e.g. expired token)
+    }
+
+    // Guard against re-login after page reload: if the backend does not clear
+    // the httpOnly refreshToken cookie (e.g. network error, misconfiguration),
+    // AuthInitializer would call /auth/refresh on the next boot and succeed.
+    // Setting this flag tells AuthInitializer to skip refresh and stay logged out.
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('__evena_logout', '1');
     }
 
     resetAllApiCaches(dispatch);

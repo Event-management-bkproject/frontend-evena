@@ -1,7 +1,7 @@
 // components/AuthInitializer.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
@@ -10,23 +10,30 @@ import { CategoryAPI } from '@/src/stores/services/CategoryApi';
 import { VenueAPI } from '@/src/stores/services/VenueApi';
 
 export default function AuthInitializer() {
-  const { setAuthFromInit, auth } = useAuth();
+  const { setAuthFromInit } = useAuth();
   const dispatch = useDispatch();
+  // Ref guard ensures this runs exactly once per page mount. Unlike putting
+  // auth.isInitialized in the effect deps, this approach never re-runs after
+  // login/logout — those actions only change Redux state, not the page lifecycle.
+  const initialized = useRef(false);
 
   useEffect(() => {
-    // Closure-scoped flag — unique per effect run. Unlike a shared ref,
-    // the cleanup for THIS run sets its own `isActive = false` without
-    // affecting the flag of the next run. This prevents a stale
-    // /auth/refresh response (which may return 401 for a user who had
-    // no prior session) from wiping credentials set by a concurrent login.
+    if (initialized.current) return;
+    initialized.current = true;
     let isActive = true;
 
     const initializeAuth = async () => {
-      if (auth.isInitialized) return;
+      // Defensive guard: if the user explicitly logged out last session, skip
+      // the refresh call even if the httpOnly cookie is still present (e.g.
+      // backend failed to clear it). Flag is set by useAuth.logout() and
+      // cleared here on read — or by useAuth.login() on successful re-login.
+      if (typeof window !== 'undefined' && sessionStorage.getItem('__evena_logout')) {
+        sessionStorage.removeItem('__evena_logout');
+        setAuthFromInit(null, null);
+        return;
+      }
 
       try {
-        // Always attempt refresh — httpOnly cookie is sent automatically.
-        // Do not gate on persisted user: cookie is the source of truth.
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
@@ -43,7 +50,6 @@ export default function AuthInitializer() {
           }
         }
 
-        // Refresh failed — unauthenticated
         setAuthFromInit(null, null);
         dispatch(OrganizerAPI.util.resetApiState());
         dispatch(EventAPI.util.resetApiState());
@@ -59,8 +65,12 @@ export default function AuthInitializer() {
 
     return () => {
       isActive = false;
+      // Reset so React Strict Mode's cleanup+remount cycle can re-run the effect.
+      // In production AuthInitializer never unmounts (root layout), so this only
+      // matters in development double-invoke mode.
+      initialized.current = false;
     };
-  }, [auth.isInitialized]);
+  }, []); // empty deps: tied to page mount, not to auth state changes
 
   return null;
 }
