@@ -1,11 +1,13 @@
 'use client';
 
-import { Box, Typography, Button } from '@mui/material';
-
+import { Box, Button } from '@mui/material';
 import { organizationSchema } from '@/src/utils/validationSchema/organisationValidationSchema';
 import Forms from '../Forms';
 import FormTextField from '../FormTextField';
 import FormTextareaField from '../FormTextAreaField';
+import ImageUploadField from '../ImageUploadField/ImageUploadField';
+import { useUploadImageMutation } from '@/src/stores/services/StorageApi';
+import { useUploadOrgLogoMutation } from '@/src/stores/services/OrganizerApi';
 
 export interface OrganizationFormData {
   name: string;
@@ -21,13 +23,40 @@ interface CreateOrganizationFormProps {
   onCancel?: () => void;
   loading?: boolean;
   initialValues?: Partial<OrganizationFormData>;
+  /** Provided in edit mode so logo upload uses the org-specific endpoint */
+  organizationId?: number;
 }
+
+// Inner wrapper — needs Formik context from <Forms>
+const LogoSection = ({ organizationId }: { organizationId?: number }) => {
+  const [uploadGeneric] = useUploadImageMutation();
+  const [uploadOrgLogo] = useUploadOrgLogoMutation();
+
+  const uploadFn = async (file: File): Promise<string> => {
+    if (organizationId) {
+      const res = await uploadOrgLogo({ organizationId, file }).unwrap();
+      return res.url;
+    }
+    const res = await uploadGeneric(file).unwrap();
+    return res.url;
+  };
+
+  return (
+    <ImageUploadField
+      name="logoUrl"
+      label="Logo"
+      uploadFn={uploadFn}
+      previewHeight={140}
+    />
+  );
+};
 
 const CreateOrganizationForm = ({
   onSubmit,
   onCancel,
   loading = false,
   initialValues,
+  organizationId,
 }: CreateOrganizationFormProps) => {
   const defaultValues: OrganizationFormData = {
     name: '',
@@ -56,7 +85,6 @@ const CreateOrganizationForm = ({
       isRegister={false}
     >
       <Box display="flex" flexDirection="column" gap={3}>
-        {/* Name Field */}
         <FormTextField
           id="organization-name"
           name="name"
@@ -66,39 +94,15 @@ const CreateOrganizationForm = ({
           placeholder="Enter organization name"
         />
 
-        {/* Description Field */}
-        <Box>
-          <Typography
-            variant="body1"
-            component="label"
-            htmlFor="organization-description"
-            sx={{
-              display: 'block',
-              fontWeight: '540',
-              color: '#37437D',
-              fontSize: '16px',
-              marginBottom: '8px',
-            }}
-          >
-            Description
-          </Typography>
-          <FormTextareaField
-            id="organization-description"
-            name="description"
-            label="Enter organization description"
-          />
-        </Box>
-
-        {/* Logo URL Field */}
-        <FormTextField
-          id="organization-logoUrl"
-          name="logoUrl"
-          label="Logo URL"
-          type="url"
-          placeholder="https://example.com/logo.png"
+        <FormTextareaField
+          id="organization-description"
+          name="description"
+          label="Description"
         />
 
-        {/* Website Field */}
+        {/* Logo — upload button + URL preview */}
+        <LogoSection organizationId={organizationId} />
+
         <FormTextField
           id="organization-website"
           name="website"
@@ -107,7 +111,6 @@ const CreateOrganizationForm = ({
           placeholder="https://example.com"
         />
 
-        {/* Email Field */}
         <FormTextField
           id="organization-email"
           name="email"
@@ -116,7 +119,6 @@ const CreateOrganizationForm = ({
           placeholder="organization@example.com"
         />
 
-        {/* Phone Field */}
         <FormTextField
           id="organization-phone"
           name="phone"
@@ -127,19 +129,13 @@ const CreateOrganizationForm = ({
         />
       </Box>
 
-      {/* Actions */}
       <Box display="flex" justifyContent="flex-end" gap={2} mt={4}>
         {onCancel && (
           <Button
             onClick={onCancel}
             variant="outlined"
             disabled={loading}
-            sx={{
-              borderRadius: '10px',
-              padding: '10px 24px',
-              textTransform: 'none',
-              fontSize: '16px',
-            }}
+            sx={{ borderRadius: '10px', padding: '10px 24px', textTransform: 'none', fontSize: '16px' }}
           >
             Cancel
           </Button>
@@ -155,15 +151,11 @@ const CreateOrganizationForm = ({
             textTransform: 'none',
             fontSize: '16px',
             fontWeight: 'bold',
-            '&:hover': {
-              backgroundColor: '#e55ae0',
-            },
-            '&:disabled': {
-              backgroundColor: '#cccccc',
-            },
+            '&:hover': { backgroundColor: '#e55ae0' },
+            '&:disabled': { backgroundColor: '#cccccc' },
           }}
         >
-          {loading ? 'Creating...' : 'Create Organization'}
+          {loading ? (organizationId ? 'Saving...' : 'Creating...') : (organizationId ? 'Save Changes' : 'Create Organization')}
         </Button>
       </Box>
     </Forms>

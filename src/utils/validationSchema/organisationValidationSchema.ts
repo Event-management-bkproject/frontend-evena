@@ -1,5 +1,12 @@
 import * as Yup from 'yup';
 
+// Yup's built-in .url() rejects localhost URLs (no TLD) which breaks dev MinIO uploads.
+// Use browser-native URL constructor instead — it validates structure without TLD restrictions.
+const isValidUrl = (val?: string | null) => {
+  if (!val) return true;
+  try { new URL(val); return true; } catch { return false; }
+};
+
 export const organizationSchema = Yup.object({
   name: Yup.string()
     .required('Organization name is required')
@@ -9,8 +16,10 @@ export const organizationSchema = Yup.object({
     .optional()
     .nullable()
     .min(10, 'Description must be at least 10 characters'),
-  logoUrl: Yup.string().optional().nullable().url('Logo URL must be a valid URL'),
-  website: Yup.string().optional().nullable().url('Website must be a valid URL'),
+  logoUrl: Yup.string().optional().nullable()
+    .test('is-url', 'Logo URL must be a valid URL', isValidUrl),
+  website: Yup.string().optional().nullable()
+    .test('is-url', 'Website must be a valid URL', isValidUrl),
   email: Yup.string().optional().nullable().email('Must be a valid email address'),
   phone: Yup.string()
     .optional()

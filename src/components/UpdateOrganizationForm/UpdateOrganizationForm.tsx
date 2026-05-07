@@ -17,10 +17,12 @@ import { Alert, Box, Button } from '@mui/material';
 import FormTextField from '../FormTextField';
 import Forms from '../Forms';
 import FormTextareaField from '../FormTextAreaField';
+import ImageUploadField from '../ImageUploadField/ImageUploadField';
 import { OrganizationFormData } from '../CreateOrganisationForm/CreateOrganisationForm';
 import { OrganizationResponse, UpdateOrganizationRequest } from '@/src/stores/types';
 import { useOptimisticLocking, ENTITY_EVENT_TYPES } from '@/src/hooks/useOptimisticLocking';
 import { PRIMARY_BUTTON_SX, SECONDARY_BUTTON_SX } from '@/src/theme/buttonStyles';
+import { useUploadOrgLogoMutation } from '@/src/stores/services/OrganizerApi';
 
 interface UpdateOrganizationFormProps {
   organization: OrganizationResponse;
@@ -30,6 +32,13 @@ interface UpdateOrganizationFormProps {
 }
 
 const UpdateOrganizationForm = ({ organization, onSubmit, onCancel, loading = false }: UpdateOrganizationFormProps) => {
+  const [uploadOrgLogo] = useUploadOrgLogoMutation();
+
+  const logoUploadFn = async (file: File): Promise<string> => {
+    const res = await uploadOrgLogo({ organizationId: organization.id, file }).unwrap();
+    return res.url;
+  };
+
   // Use optimistic locking hook for conflict detection
   const { hasConflict, conflictMessage, version } = useOptimisticLocking({
     entityId: organization.id,
@@ -81,13 +90,12 @@ const UpdateOrganizationForm = ({ organization, onSubmit, onCancel, loading = fa
           placeholder="Enter organization name"
         />
 
-        {/* Logo URL Field */}
-        <FormTextField
-          id="org-update-logoUrl"
+        {/* Logo — upload button updates org entity directly, URL stored in form */}
+        <ImageUploadField
           name="logoUrl"
-          label="Logo URL"
-          type="url"
-          placeholder="https://example.com/logo.png"
+          label="Logo"
+          uploadFn={logoUploadFn}
+          previewHeight={140}
         />
 
         {/* Website Field */}

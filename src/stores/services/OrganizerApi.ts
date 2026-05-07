@@ -8,6 +8,7 @@ import {
   OrganizationResponse,
   PaginatedResponse,
 } from '../types';
+import { UploadResponse } from '../types/event';
 
 export const OrganizerAPI = createApi({
   reducerPath: 'OrganizerAPI',
@@ -102,6 +103,15 @@ export const OrganizerAPI = createApi({
       invalidatesTags: ['Organizer'],
     }),
 
+    uploadOrgLogo: builder.mutation<UploadResponse, { organizationId: number; file: File }>({
+      query: ({ organizationId, file }) => {
+        const form = new FormData();
+        form.append('file', file);
+        return { url: `/organizations/${organizationId}/images/logo`, method: 'POST', body: form };
+      },
+      invalidatesTags: (_r, _e, { organizationId }) => [{ type: 'Organizer', id: organizationId }, 'Organizer'],
+    }),
+
     /** GET /api/organizations/user/{userId}/organizations - All orgs a user belongs to */
     getUserOrganizations: builder.query<ApiResponse<OrganizationDetailResponse[]>, string>({
       query: (userId: string) => ({
@@ -125,4 +135,5 @@ export const {
   useVerifyOrganizationMutation,
   useDeleteOrganizationMutation,
   useGetUserOrganizationsQuery,
+  useUploadOrgLogoMutation,
 } = OrganizerAPI;
