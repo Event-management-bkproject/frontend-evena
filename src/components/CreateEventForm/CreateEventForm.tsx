@@ -28,6 +28,7 @@ import {
   useUploadEventCoverMutation,
   useUploadGalleryImageMutation,
   useDeleteGalleryImageMutation,
+  useDeleteEventCoverMutation,
 } from '@/src/stores/services/EventApi';
 import { useUploadImageMutation } from '@/src/stores/services/StorageApi';
 import ImageUploadField from '../ImageUploadField/ImageUploadField';
@@ -62,6 +63,7 @@ const CoverImageUpload = ({
   const { values, setFieldValue } = useFormikContext<EventFormData>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadCover, { isLoading }] = useUploadEventCoverMutation();
+  const [deleteCover, { isLoading: isDeleting }] = useDeleteEventCoverMutation();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,6 +78,15 @@ const CoverImageUpload = ({
       }
     } catch (err: any) {
       onError(err?.data?.message || t('messages.error.uploadFailed', { defaultValue: 'Upload failed' }));
+    }
+  };
+
+  const handleRemoveCover = async () => {
+    try {
+      await deleteCover({ eventId }).unwrap();
+      setFieldValue('coverUrl', '');
+    } catch (err: any) {
+      onError(err?.data?.message || 'Failed to remove cover image');
     }
   };
 
@@ -111,6 +122,21 @@ const CoverImageUpload = ({
             alt="Cover preview"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
+          <IconButton
+            size="small"
+            onClick={handleRemoveCover}
+            disabled={isDeleting}
+            sx={{
+              position: 'absolute',
+              top: 6,
+              right: 6,
+              backgroundColor: 'rgba(0,0,0,0.45)',
+              color: '#fff',
+              '&:hover': { backgroundColor: 'rgba(0,0,0,0.65)' },
+            }}
+          >
+            {isDeleting ? <CircularProgress size={14} color="inherit" /> : <DeleteIcon fontSize="small" />}
+          </IconButton>
         </Box>
       )}
 
@@ -125,7 +151,7 @@ const CoverImageUpload = ({
         variant="outlined"
         startIcon={isLoading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
         onClick={() => fileInputRef.current?.click()}
-        disabled={isLoading}
+        disabled={isLoading || isDeleting}
         sx={{ borderRadius: '10px', textTransform: 'none' }}
       >
         {isLoading

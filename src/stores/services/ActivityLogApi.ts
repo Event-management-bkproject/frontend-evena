@@ -30,6 +30,7 @@ export interface ActivityLogFilter {
   actorId?: string;
   from?: string;
   to?: string;
+  sort?: string;
   page?: number;
   size?: number;
 }
@@ -51,6 +52,7 @@ export const ActivityLogAPI = createApi({
           ...(params.actorId ? { actorId: params.actorId } : {}),
           ...(params.from ? { from: params.from } : {}),
           ...(params.to ? { to: params.to } : {}),
+          ...(params.sort ? { sort: params.sort } : {}),
           page: params.page ?? 0,
           size: params.size ?? 20,
         },

@@ -10,7 +10,7 @@ import {
   Alert,
   Tooltip,
 } from '@mui/material';
-import { CloudUpload, Delete, AddPhotoAlternate } from '@mui/icons-material';
+import { CloudUpload, Close, AddPhotoAlternate } from '@mui/icons-material';
 import {
   useUploadGalleryImageMutation,
   useDeleteGalleryImageMutation,
@@ -136,7 +136,7 @@ export default function GalleryImageManager({ eventId, imageUrls }: GalleryImage
                 borderRadius: LAYOUT.radius.sm,
                 overflow: 'hidden',
                 border: `1px solid ${BRAND.border}`,
-                '&:hover .delete-btn': { opacity: 1 },
+                '&:hover .remove-btn': { opacity: 1 },
               }}
             >
               <Box
@@ -146,7 +146,7 @@ export default function GalleryImageManager({ eventId, imageUrls }: GalleryImage
                 sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
               <IconButton
-                className="delete-btn"
+                className="remove-btn"
                 size="small"
                 onClick={() => handleDelete(url)}
                 disabled={deletingUrl === url}
@@ -164,7 +164,7 @@ export default function GalleryImageManager({ eventId, imageUrls }: GalleryImage
               >
                 {deletingUrl === url
                   ? <CircularProgress size={14} sx={{ color: '#fff' }} />
-                  : <Delete sx={{ fontSize: 16 }} />}
+                  : <Close sx={{ fontSize: 16 }} />}
               </IconButton>
             </Box>
           ))}

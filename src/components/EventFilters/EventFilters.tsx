@@ -166,7 +166,7 @@ export function EventFilters({
             '&:disabled': { backgroundColor: '#cccccc', color: '#666666' },
           }}
         >
-          + {t('event.create')}
+          {t('event.create')}
         </Button>
       </Box>
 

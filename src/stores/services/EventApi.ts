@@ -167,6 +167,13 @@ export const EventAPI = createApi({
       }),
       invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
     }),
+    deleteEventCover: builder.mutation<void, { eventId: string }>({
+      query: ({ eventId }) => ({
+        url: `/events/${eventId}/images/cover`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { eventId }) => [{ type: 'Event', id: eventId }],
+    }),
 
     // File attachment endpoints
     uploadEventFile: builder.mutation<EventFileDTO, { eventId: string; file: FormData }>({
@@ -208,6 +215,7 @@ export const {
   useUploadEventCoverMutation,
   useUploadGalleryImageMutation,
   useDeleteGalleryImageMutation,
+  useDeleteEventCoverMutation,
   useUploadEventFileMutation,
   useListEventFilesQuery,
   useDeleteEventFileMutation,

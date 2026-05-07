@@ -111,6 +111,13 @@ export const OrganizerAPI = createApi({
       },
       invalidatesTags: (_r, _e, { organizationId }) => [{ type: 'Organizer', id: organizationId }, 'Organizer'],
     }),
+    deleteOrgLogo: builder.mutation<void, { organizationId: number }>({
+      query: ({ organizationId }) => ({
+        url: `/organizations/${organizationId}/images/logo`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_r, _e, { organizationId }) => [{ type: 'Organizer', id: organizationId }, 'Organizer'],
+    }),
 
     /** GET /api/organizations/user/{userId}/organizations - All orgs a user belongs to */
     getUserOrganizations: builder.query<ApiResponse<OrganizationDetailResponse[]>, string>({
@@ -136,4 +143,5 @@ export const {
   useDeleteOrganizationMutation,
   useGetUserOrganizationsQuery,
   useUploadOrgLogoMutation,
+  useDeleteOrgLogoMutation,
 } = OrganizerAPI;

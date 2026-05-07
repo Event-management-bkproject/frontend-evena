@@ -12,6 +12,8 @@ interface ImageUploadFieldProps {
   disabled?: boolean;
   /** Called with the selected File; must return a Promise that resolves to the public URL. */
   uploadFn: (file: File) => Promise<string>;
+  /** Optional: called when the user removes the image; fires-and-forgets the backend deletion. */
+  removeFn?: () => Promise<void>;
   previewHeight?: number;
 }
 
@@ -21,6 +23,7 @@ const ImageUploadField = ({
   required = false,
   disabled = false,
   uploadFn,
+  removeFn,
   previewHeight = 180,
 }: ImageUploadFieldProps) => {
   const [field, meta] = useField(name);
@@ -64,6 +67,9 @@ const ImageUploadField = ({
     setFieldValue(name, '');
     setFieldTouched(name, true);
     setUrlDraft('');
+    if (removeFn) {
+      removeFn().catch(() => {});
+    }
   };
 
   return (

@@ -22,7 +22,7 @@ import { OrganizationFormData } from '../CreateOrganisationForm/CreateOrganisati
 import { OrganizationResponse, UpdateOrganizationRequest } from '@/src/stores/types';
 import { useOptimisticLocking, ENTITY_EVENT_TYPES } from '@/src/hooks/useOptimisticLocking';
 import { PRIMARY_BUTTON_SX, SECONDARY_BUTTON_SX } from '@/src/theme/buttonStyles';
-import { useUploadOrgLogoMutation } from '@/src/stores/services/OrganizerApi';
+import { useUploadOrgLogoMutation, useDeleteOrgLogoMutation } from '@/src/stores/services/OrganizerApi';
 
 interface UpdateOrganizationFormProps {
   organization: OrganizationResponse;
@@ -33,10 +33,15 @@ interface UpdateOrganizationFormProps {
 
 const UpdateOrganizationForm = ({ organization, onSubmit, onCancel, loading = false }: UpdateOrganizationFormProps) => {
   const [uploadOrgLogo] = useUploadOrgLogoMutation();
+  const [deleteOrgLogo] = useDeleteOrgLogoMutation();
 
   const logoUploadFn = async (file: File): Promise<string> => {
     const res = await uploadOrgLogo({ organizationId: organization.id, file }).unwrap();
     return res.url;
+  };
+
+  const logoRemoveFn = async (): Promise<void> => {
+    await deleteOrgLogo({ organizationId: organization.id }).unwrap();
   };
 
   // Use optimistic locking hook for conflict detection
@@ -95,6 +100,7 @@ const UpdateOrganizationForm = ({ organization, onSubmit, onCancel, loading = fa
           name="logoUrl"
           label="Logo"
           uploadFn={logoUploadFn}
+          removeFn={logoRemoveFn}
           previewHeight={140}
         />
 

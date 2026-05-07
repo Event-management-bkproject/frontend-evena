@@ -8,6 +8,7 @@ import {
   Typography,
   Chip,
   Button,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -40,6 +41,7 @@ import VenueMap from '../VenueMap';
 import { ConfirmationDialog } from '../ConfirmationDialog';
 import SnackbarNotification from '../SnackbarNotification';
 import { usePublishEventMutation, useCancelEventMutation } from '@/src/stores/services';
+import { useDeleteGalleryImageMutation } from '@/src/stores/services/EventApi';
 import { useSnackbar } from '@/src/hooks/useSnackbar';
 
 interface EventContentProps {
@@ -56,6 +58,8 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [publishEvent, { isLoading: publishing }] = usePublishEventMutation();
   const [cancelEvent, { isLoading: cancelling }] = useCancelEventMutation();
+  const [deleteGalleryImage] = useDeleteGalleryImageMutation();
+  const [deletingImageUrl, setDeletingImageUrl] = useState<string | null>(null);
 
   const getStatusColor = (status: EventStatus) => {
     switch (status) {
@@ -114,6 +118,19 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
     } catch (error: any) {
       console.error('Error cancelling event:', error);
       showSnackbar(error?.data?.message || 'Failed to cancel event', 'error');
+    }
+  };
+
+  const handleDeleteImage = async (imageUrl: string) => {
+    setDeletingImageUrl(imageUrl);
+    try {
+      await deleteGalleryImage({ eventId: event.id, url: imageUrl }).unwrap();
+      showSnackbar('Image removed', 'success');
+      onRefresh?.();
+    } catch (err: any) {
+      showSnackbar(err?.data?.message || 'Failed to remove image', 'error');
+    } finally {
+      setDeletingImageUrl(null);
     }
   };
 
@@ -420,18 +437,47 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
                   {event.imageUrls.map((imageUrl: string, index: number) => (
                     <Box
                       key={index}
-                      component="img"
-                      src={imageUrl}
-                      alt={`Event image ${index + 1}`}
                       sx={{
+                        position: 'relative',
                         flexShrink: 0,
                         width: 160,
                         height: 120,
-                        objectFit: 'cover',
                         borderRadius: '12px',
+                        overflow: 'hidden',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        ...(onEdit && { '&:hover .remove-btn': { opacity: 1 } }),
                       }}
-                    />
+                    >
+                      <Box
+                        component="img"
+                        src={imageUrl}
+                        alt={`Event image ${index + 1}`}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      {onEdit && (
+                        <IconButton
+                          className="remove-btn"
+                          size="small"
+                          onClick={() => handleDeleteImage(imageUrl)}
+                          disabled={deletingImageUrl === imageUrl}
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            opacity: 0,
+                            transition: 'opacity 0.15s',
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            color: '#fff',
+                            p: '4px',
+                            '&:hover': { backgroundColor: 'rgba(200,0,0,0.8)' },
+                          }}
+                        >
+                          {deletingImageUrl === imageUrl
+                            ? <CircularProgress size={14} sx={{ color: '#fff' }} />
+                            : <Close sx={{ fontSize: 16 }} />}
+                        </IconButton>
+                      )}
+                    </Box>
                   ))}
                 </Box>
               </Box>
