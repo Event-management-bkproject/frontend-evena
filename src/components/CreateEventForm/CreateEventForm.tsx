@@ -14,7 +14,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Box, Button, MenuItem, Chip, Typography, Alert, CircularProgress, IconButton } from '@mui/material';
+import { Box, Button, MenuItem, Typography, Alert, CircularProgress, IconButton, Divider } from '@mui/material';
 import { FormikHelpers, useFormikContext } from 'formik';
 import { useTranslation } from 'react-i18next';
 import FormTextField from '../FormTextField';
@@ -29,6 +29,8 @@ import {
   useUploadGalleryImageMutation,
   useDeleteGalleryImageMutation,
 } from '@/src/stores/services/EventApi';
+import { useUploadImageMutation } from '@/src/stores/services/StorageApi';
+import ImageUploadField from '../ImageUploadField/ImageUploadField';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
@@ -259,51 +261,55 @@ const GalleryUpload = ({
   );
 };
 
-// ─── Create-mode: cover image (URL input only — upload available after event is created) ────
+// ─── Create-mode: cover image — upload via generic storage API or paste URL ───
 const CoverImageCreateUpload = () => {
   const { t } = useTranslation();
-  const { values } = useFormikContext<EventFormData>();
+  const [uploadImage] = useUploadImageMutation();
+
+  const uploadFn = async (file: File): Promise<string> => {
+    const res = await uploadImage(file).unwrap();
+    return res.url;
+  };
 
   return (
     <Box sx={{ p: 3, backgroundColor: 'white', borderRadius: '12px', border: '1px solid #E0E0E0' }}>
       <Typography variant="subtitle1" sx={{ display: 'block', mb: 2, fontWeight: 600, color: '#37437D', fontSize: '1rem' }}>
         {t('event.form.coverImage')}
       </Typography>
-
-      {values.coverUrl && (
-        <Box sx={{ mb: 2, borderRadius: '10px', overflow: 'hidden', border: '1px solid #E0E0E0', height: 200 }}>
-          <img src={values.coverUrl} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </Box>
-      )}
-
-      <FormTextField
-        id="event-coverUrl"
-        name="coverUrl"
-        label=""
-        type="url"
-        placeholder={t('event.form.coverImagePlaceholder')}
-      />
-
-      <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#999' }}>
-        {t('event.form.uploadAvailableAfterCreate', { defaultValue: 'File upload available after event is created.' })}
-      </Typography>
+      <ImageUploadField name="coverUrl" label="" uploadFn={uploadFn} previewHeight={200} />
     </Box>
   );
 };
 
-// ─── Create-mode: gallery images (URL-only — upload available after event is created) ──
+// ─── Create-mode: gallery images — upload via generic storage API or paste URL ──
 const GalleryCreateUpload = ({
   imageUrls,
   setImageUrls,
   imageUrlInput,
   setImageUrlInput,
+  onError,
 }: {
   imageUrls: string[];
   setImageUrls: React.Dispatch<React.SetStateAction<string[]>>;
   imageUrlInput: string;
   setImageUrlInput: React.Dispatch<React.SetStateAction<string>>;
+  onError: (msg: string) => void;
 }) => {
   const { t } = useTranslation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadImage, { isLoading }] = useUploadImageMutation();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    try {
+      const res = await uploadImage(file).unwrap();
+      if (res.url) setImageUrls((prev) => [...prev, res.url]);
+    } catch (err: any) {
+      onError(err?.data?.message || t('messages.error.uploadFailed', { defaultValue: 'Upload failed' }));
+    }
+  };
 
   const handleAddUrl = () => {
     if (imageUrlInput && !imageUrls.includes(imageUrlInput)) {
@@ -321,6 +327,25 @@ const GalleryCreateUpload = ({
       <Typography variant="subtitle1" component="label" sx={{ display: 'block', mb: 2, fontWeight: 600, color: '#37437D', fontSize: '1rem' }}>
         {t('event.form.additionalImages')}
       </Typography>
+
+      {/* Upload button */}
+      <input type="file" ref={fileInputRef} accept="image/jpeg,image/png,image/webp" hidden onChange={handleFileChange} />
+      <Button
+        variant="outlined"
+        startIcon={isLoading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isLoading}
+        sx={{ borderRadius: '10px', textTransform: 'none', mb: 2 }}
+      >
+        {isLoading ? t('common.uploading', { defaultValue: 'Uploading…' }) : t('event.form.addGalleryImage', { defaultValue: 'Add Gallery Image' })}
+      </Button>
+
+      {/* Divider */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+        <Divider sx={{ flex: 0, width: 24 }} />
+        <Typography variant="caption" color="text.secondary">or paste URL</Typography>
+        <Divider sx={{ flex: 1 }} />
+      </Box>
 
       {/* URL input row */}
       <Box display="flex" gap={1.5} mb={2} alignItems="center">
@@ -349,29 +374,63 @@ const GalleryCreateUpload = ({
         </Button>
       </Box>
 
-      <Typography variant="caption" sx={{ display: 'block', mb: 2, color: '#999' }}>
-        {t('event.form.uploadAvailableAfterCreate', { defaultValue: 'File upload available after event is created.' })}
-      </Typography>
-
-      {/* Chip list */}
+      {/* Image thumbnail grid */}
       {imageUrls.length > 0 && (
-        <Box sx={{ p: 2, backgroundColor: 'white', borderRadius: '10px', border: '1px dashed #D0D0D0' }}>
-          <Typography variant="caption" sx={{ display: 'block', mb: 1.5, color: '#666', fontWeight: 500 }}>
-            {t('event.form.imagesAdded', { count: imageUrls.length })}
-          </Typography>
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {imageUrls.map((url, index) => (
-              <Chip
-                key={index}
-                label={url.length > 35 ? `${url.substring(0, 35)}...` : url}
-                onDelete={() => setImageUrls((prev) => prev.filter((u) => u !== url))}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+            gap: 1,
+            mt: 1,
+          }}
+        >
+          {imageUrls.map((url, index) => (
+            <Box
+              key={index}
+              sx={{
+                position: 'relative',
+                paddingTop: '100%',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: '1px solid #E0E0E0',
+                '&:hover .del-btn': { opacity: 1 },
+              }}
+            >
+              <Box
+                component="img"
+                src={url}
+                alt={`Gallery ${index + 1}`}
                 sx={{
-                  backgroundColor: '#E8F5E9', color: '#2E7D32', fontWeight: 500, fontSize: '13px', borderRadius: '8px',
-                  '& .MuiChip-deleteIcon': { color: '#2E7D32', '&:hover': { color: '#1B5E20' } },
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
-            ))}
-          </Box>
+              <IconButton
+                className="del-btn"
+                size="small"
+                onClick={() => setImageUrls((prev) => prev.filter((u) => u !== url))}
+                sx={{
+                  position: 'absolute',
+                  top: 3,
+                  right: 3,
+                  opacity: 0,
+                  transition: 'opacity 0.15s',
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  color: '#fff',
+                  p: '3px',
+                  '&:hover': { backgroundColor: 'rgba(200,0,0,0.8)' },
+                }}
+              >
+                <DeleteIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Box>
+          ))}
         </Box>
       )}
     </Box>
@@ -542,6 +601,7 @@ const CreateEventForm = ({
             setImageUrls={setImageUrls}
             imageUrlInput={imageUrlInput}
             setImageUrlInput={setImageUrlInput}
+            onError={setUploadError}
           />
         )}
 

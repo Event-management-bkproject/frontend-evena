@@ -173,9 +173,12 @@ export default function EventsManagement({
   // ========== HANDLERS ==========
   const handleCreateEvent = async (formData: EventFormData) => {
     try {
-      await createEvent(formData).unwrap();
-      showSuccessMessage(t('messages.success.eventCreated'));
+      const result = await createEvent(formData).unwrap();
       dispatch(closeModal('createEvent'));
+      // Redirect to event detail so user can immediately upload images
+      if (result.data?.id) {
+        router.push(`/dashboard/organizer/events/${result.data.id}`);
+      }
     } catch (error: any) {
       showErrorMessage(error?.data?.message || error?.message || t('messages.error.eventCreateFailed'));
     }
