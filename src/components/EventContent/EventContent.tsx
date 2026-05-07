@@ -405,24 +405,35 @@ const EventContent = ({ event, onRefresh, onEdit, onDelete }: EventContentProps)
                 <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: '#36437C' }}>
                   Additional Images
                 </Typography>
-                <Grid container spacing={2}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 1.5,
+                    overflowX: 'auto',
+                    pb: 0.5,
+                    '&::-webkit-scrollbar': { height: 5 },
+                    '&::-webkit-scrollbar-track': { borderRadius: '10px', bgcolor: '#F0EDF6' },
+                    '&::-webkit-scrollbar-thumb': { borderRadius: '10px', bgcolor: '#f36bf9' },
+                  }}
+                >
                   {event.imageUrls.map((imageUrl: string, index: number) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                      <Box
-                        component="img"
-                        src={imageUrl}
-                        alt={`Event image ${index + 1}`}
-                        sx={{
-                          width: '100%',
-                          height: 200,
-                          objectFit: 'cover',
-                          borderRadius: '12px',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        }}
-                      />
-                    </Grid>
+                    <Box
+                      key={index}
+                      component="img"
+                      src={imageUrl}
+                      alt={`Event image ${index + 1}`}
+                      sx={{
+                        flexShrink: 0,
+                        width: 160,
+                        height: 120,
+                        objectFit: 'cover',
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      }}
+                    />
                   ))}
-                </Grid>
+                </Box>
               </Box>
             </>
           )}
