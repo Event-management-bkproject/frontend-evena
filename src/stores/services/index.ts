@@ -13,3 +13,4 @@ export * from './RefundRequestApi';
 export * from './FlexPassApi';
 export * from './FileApi';
 export * from './ActivityLogApi';
+export * from './StorageApi';
