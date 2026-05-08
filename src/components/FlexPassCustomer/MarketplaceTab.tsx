@@ -53,15 +53,9 @@ function PriceBadge({ original, final, submitted }: { original: number; final: n
   const isAbove = pct > 0;
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
-      <Typography sx={{ fontSize: 20, fontWeight: 700, color: BRAND.dark, letterSpacing: '-0.3px' }}>
-        {formatCurrency(price)}
-      </Typography>
-      <Typography sx={{ fontSize: 12, color: '#94a3b8', textDecoration: 'line-through' }}>
-        {formatCurrency(original)}
-      </Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
       <Chip
-        label={pct === 0 ? 'Face value' : `+${pct.toFixed(0)}%`}
+        label={pct === 0 ? 'Face' : `${isAbove ? '+' : ''}${pct.toFixed(0)}%`}
         size="small"
         sx={{
           fontSize: 10,
@@ -73,6 +67,14 @@ function PriceBadge({ original, final, submitted }: { original: number; final: n
           borderRadius: '20px',
         }}
       />
+      <Box sx={{ textAlign: 'right' }}>
+        <Typography sx={{ fontSize: 15, fontWeight: 700, color: BRAND.dark, lineHeight: 1.2 }}>
+          {formatCurrency(price)}
+        </Typography>
+        <Typography sx={{ fontSize: 11, color: '#94a3b8', textDecoration: 'line-through', lineHeight: 1.2 }}>
+          {formatCurrency(original)}
+        </Typography>
+      </Box>
     </Box>
   );
 }
@@ -153,11 +155,7 @@ export function MarketplaceTab() {
         />
       </Box>
 
-      <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-        gap: '16px',
-      }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {listings.map((listing) => {
           const canBuy = listing.status === FlexPassListingStatus.PRICE_LOCKED && listing.finalPrice != null;
 
@@ -165,35 +163,59 @@ export function MarketplaceTab() {
             <Box
               key={listing.id}
               sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
                 border: '1px solid rgba(0,0,0,0.07)',
-                borderRadius: '14px',
-                overflow: 'hidden',
+                borderRadius: '12px',
+                p: '14px 16px',
                 bgcolor: 'white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                transition: 'box-shadow 0.2s, transform 0.2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                transition: 'box-shadow 0.18s, border-color 0.18s',
                 '&:hover': {
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
-                  transform: 'translateY(-1px)',
+                  boxShadow: '0 3px 12px rgba(0,0,0,0.08)',
+                  borderColor: 'rgba(124,58,237,0.2)',
                 },
               }}
             >
+              {/* Avatar */}
               <Box sx={{
-                height: 80,
+                width: 44,
+                height: 44,
+                borderRadius: '10px',
                 background: getGradient(listing.eventTitle),
-                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                fontWeight: 700,
+                color: 'white',
+                flexShrink: 0,
               }}>
-                <Box sx={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                }}>
+                {getInitials(listing.eventTitle)}
+              </Box>
+
+              {/* Info */}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '2px' }}>
+                  <Typography sx={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: BRAND.dark,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {listing.eventTitle}
+                  </Typography>
                   <Chip
-                    label={canBuy ? 'Buy Now' : 'Pending Sale'}
+                    label={canBuy ? 'Buy Now' : 'Pending'}
                     size="small"
                     sx={{
                       fontSize: 10,
                       fontWeight: 700,
-                      height: 20,
+                      height: 18,
+                      flexShrink: 0,
                       bgcolor: canBuy ? '#ecfdf5' : '#eff6ff',
                       color: canBuy ? '#065f46' : '#1e40af',
                       border: `1px solid ${canBuy ? '#6ee7b7' : '#93c5fd'}`,
@@ -201,70 +223,38 @@ export function MarketplaceTab() {
                     }}
                   />
                 </Box>
+                <Typography sx={{ fontSize: 12, color: '#94a3b8' }}>
+                  {listing.ticketTypeName} · Verified seller
+                </Typography>
               </Box>
 
-              <Box sx={{ p: '16px' }}>
-                <Typography sx={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: BRAND.dark,
-                  mb: '4px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {listing.eventTitle}
-                </Typography>
-
-                <Typography sx={{ fontSize: 12, color: '#94a3b8', mb: '12px' }}>
-                  {listing.ticketTypeName}
-                </Typography>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: '14px' }}>
-                  <Box sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: getGradient(listing.eventTitle),
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: 'white',
-                    flexShrink: 0,
-                  }}>
-                    {getInitials(listing.eventTitle)}
-                  </Box>
-                  <Typography sx={{ fontSize: 12, color: '#64748b' }}>
-                    Verified seller
-                  </Typography>
+              {/* Price + Buy */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                <Box sx={{ textAlign: 'right' }}>
+                  <PriceBadge
+                    original={listing.originalPrice}
+                    final={listing.finalPrice}
+                    submitted={listing.submittedPrice}
+                  />
                 </Box>
-
-                <PriceBadge
-                  original={listing.originalPrice}
-                  final={listing.finalPrice}
-                  submitted={listing.submittedPrice}
-                />
-
                 {canBuy && (
                   <Button
-                    fullWidth
                     variant="contained"
-                    startIcon={<BuyIcon sx={{ fontSize: 16 }} />}
+                    startIcon={<BuyIcon sx={{ fontSize: 15 }} />}
                     onClick={() => setConfirmListingId(listing.id)}
                     sx={{
-                      mt: '14px',
                       textTransform: 'none',
-                      borderRadius: '10px',
+                      borderRadius: '9px',
                       fontWeight: 600,
                       fontSize: 13,
                       bgcolor: BRAND.dark,
-                      py: '10px',
+                      py: '8px',
+                      px: '16px',
+                      whiteSpace: 'nowrap',
                       '&:hover': { bgcolor: BRAND.darkSecondary },
                     }}
                   >
-                    Buy Now
+                    Buy
                   </Button>
                 )}
               </Box>

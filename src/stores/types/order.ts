@@ -144,6 +144,7 @@ export interface TicketResponse {
   eventStartAt: string;
   venueName: string;
   venueAddress: string;
+  unitPrice: number;
   issuedAt: string;
   usedAt?: string;
   // Buyer info — populated in admin views

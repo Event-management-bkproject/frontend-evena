@@ -189,16 +189,6 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                 ))}
               </Box>
 
-              {/* About */}
-              <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: { xs: 3, md: 4 }, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #F1F5F9' }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 2.5, fontSize: 18 }}>
-                  {t('customer.aboutEvent')}
-                </Typography>
-                <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.85, fontSize: 15, whiteSpace: 'pre-wrap' }}>
-                  {event.description || `Experience an unforgettable ${event.category?.name ?? 'event'} at ${event.venue?.name}. This spectacular event promises to deliver an amazing experience with world-class entertainment and an atmosphere you'll never forget.`}
-                </Typography>
-              </Box>
-
               {/* Event details card */}
               <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: { xs: 3, md: 4 }, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #F1F5F9' }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 3, fontSize: 18 }}>
@@ -220,6 +210,42 @@ export default function CustomerEventDetailPage({ params }: { params: Promise<{ 
                   ))}
                 </Box>
               </Box>
+
+              {/* About + Additional Images */}
+              <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: { xs: 3, md: 4 }, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', border: '1px solid #F1F5F9' }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 2.5, fontSize: 18 }}>
+                  {t('customer.aboutEvent')}
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#475569', lineHeight: 1.85, fontSize: 15, whiteSpace: 'pre-wrap' }}>
+                  {event.description || `Experience an unforgettable ${event.category?.name ?? 'event'} at ${event.venue?.name}. This spectacular event promises to deliver an amazing experience with world-class entertainment and an atmosphere you'll never forget.`}
+                </Typography>
+
+                {event.imageUrls && event.imageUrls.length > 0 && (
+                  <>
+                    <Divider sx={{ my: 3, borderColor: '#CBD5E1' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', mb: 2.5, fontSize: 18 }}>
+                      Additional Images
+                    </Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 1.5 }}>
+                      {event.imageUrls.map((url, i) => (
+                        <Box
+                          key={i}
+                          component="img"
+                          src={url}
+                          alt={`${event.title} photo ${i + 1}`}
+                          sx={{
+                            width: '100%', height: 120, objectFit: 'cover',
+                            borderRadius: '10px', display: 'block',
+                            transition: 'transform 0.2s, box-shadow 0.2s',
+                            '&:hover': { transform: 'scale(1.03)', boxShadow: '0 6px 20px rgba(0,0,0,0.15)' },
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </>
+                )}
+              </Box>
+
             </Box>
 
             {/* ── RIGHT: Booking sidebar ───────────────────────────── */}

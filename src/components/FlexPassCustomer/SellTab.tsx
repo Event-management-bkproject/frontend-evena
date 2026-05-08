@@ -37,11 +37,12 @@ export function SellTab() {
   );
 
   const selectedTicket = tickets.find((t) => t.id === selectedTicketId);
+  const isFreeTicket = selectedTicket != null && selectedTicket.unitPrice === 0;
 
   const handleSubmit = async () => {
-    if (!selectedTicketId || !submittedPrice) return;
-    const price = parseFloat(submittedPrice.replace(/[^0-9.]/g, ''));
-    if (isNaN(price) || price <= 0) {
+    if (!selectedTicketId) return;
+    const price = isFreeTicket ? 0 : parseFloat(submittedPrice.replace(/[^0-9.]/g, ''));
+    if (!isFreeTicket && (isNaN(price) || price < 0)) {
       setErrorMsg('Please enter a valid price.');
       return;
     }
@@ -240,41 +241,39 @@ export function SellTab() {
               </Typography>
             </Box>
 
-            <Box sx={{
-              bgcolor: '#fffbeb',
-              border: '1px solid #fde68a',
-              borderRadius: '8px',
-              p: '10px 12px',
-              mb: '16px',
-            }}>
-              <Typography sx={{ fontSize: 11, color: '#92400e', lineHeight: 1.5 }}>
-                Price must be between <strong>50%</strong> and <strong>120%</strong> of the original ticket price.
-              </Typography>
-            </Box>
-
-            <TextField
-              fullWidth
-              label="Your resale price (VND)"
-              value={submittedPrice}
-              onChange={(e) => setSubmittedPrice(e.target.value)}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">₫</InputAdornment>,
-              }}
-              sx={{
-                mb: '14px',
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '10px',
-                  fontSize: 13,
-                  bgcolor: 'white',
-                },
-              }}
-            />
+            {isFreeTicket ? (
+              <Box sx={{ bgcolor: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', p: '12px', mb: '16px' }}>
+                <Typography sx={{ fontSize: 12, color: '#166534', fontWeight: 600, mb: '2px' }}>
+                  Free ticket transfer
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: '#166534', lineHeight: 1.5 }}>
+                  This is a free ticket. It will be transferred to the new owner at no cost.
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <Box sx={{ bgcolor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', p: '10px 12px', mb: '16px' }}>
+                  <Typography sx={{ fontSize: 11, color: '#92400e', lineHeight: 1.5 }}>
+                    Price must be between <strong>50%</strong> and <strong>120%</strong> of the original price
+                    {selectedTicket && ` (${formatCurrency(selectedTicket.unitPrice * 0.5)} – ${formatCurrency(selectedTicket.unitPrice * 1.2)})`}.
+                  </Typography>
+                </Box>
+                <TextField
+                  fullWidth
+                  label="Your resale price (VND)"
+                  value={submittedPrice}
+                  onChange={(e) => setSubmittedPrice(e.target.value)}
+                  InputProps={{ endAdornment: <InputAdornment position="end">₫</InputAdornment> }}
+                  sx={{ mb: '14px', '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: 13, bgcolor: 'white' } }}
+                />
+              </>
+            )}
 
             <Button
               fullWidth
               variant="contained"
               onClick={handleSubmit}
-              disabled={creating || !submittedPrice}
+              disabled={creating || (!isFreeTicket && !submittedPrice)}
               sx={{
                 py: '11px',
                 fontSize: 14,
@@ -286,7 +285,7 @@ export function SellTab() {
                 '&:disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' },
               }}
             >
-              {creating ? 'Submitting…' : 'Submit for Approval'}
+              {creating ? 'Submitting…' : isFreeTicket ? 'List for Free Transfer' : 'Submit for Approval'}
             </Button>
 
             <Typography sx={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', mt: '10px' }}>
