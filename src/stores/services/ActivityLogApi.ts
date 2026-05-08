@@ -4,6 +4,7 @@ import { baseQueryWithReAuth } from './baseQuery';
 export interface ActivityLogEntry {
   id: number;
   actorId: string;
+  actorName?: string;
   actorRole: string;
   action: string;
   entityType: string;
@@ -30,9 +31,25 @@ export interface ActivityLogFilter {
   actorId?: string;
   from?: string;
   to?: string;
-  sort?: string;
+  sort?: 'ASC' | 'DESC';
   page?: number;
   size?: number;
+}
+
+export interface ActivityLogStats {
+  activitiesToday: number;
+  criticalToday: number;
+  activeActors: number;
+  topAction: string;
+  topActionCount: number;
+  yesterdayCount: number;
+  criticalYesterday: number;
+}
+
+export interface HourlyCount {
+  hourLabel: string;
+  count: number;
+  isSpike: boolean;
 }
 
 export const ActivityLogAPI = createApi({
@@ -46,13 +63,13 @@ export const ActivityLogAPI = createApi({
         url: '/activity-log',
         method: 'GET',
         params: {
-          ...(params.action ? { action: params.action } : {}),
+          ...(params.action     ? { action: params.action }         : {}),
           ...(params.entityType ? { entityType: params.entityType } : {}),
-          ...(params.entityId ? { entityId: params.entityId } : {}),
-          ...(params.actorId ? { actorId: params.actorId } : {}),
-          ...(params.from ? { from: params.from } : {}),
-          ...(params.to ? { to: params.to } : {}),
-          ...(params.sort ? { sort: params.sort } : {}),
+          ...(params.entityId   ? { entityId: params.entityId }     : {}),
+          ...(params.actorId    ? { actorId: params.actorId }       : {}),
+          ...(params.from       ? { from: params.from }             : {}),
+          ...(params.to         ? { to: params.to }                 : {}),
+          sort: params.sort ?? 'DESC',
           page: params.page ?? 0,
           size: params.size ?? 20,
         },
@@ -68,7 +85,22 @@ export const ActivityLogAPI = createApi({
       }),
       providesTags: (_result, _err, arg) => [{ type: 'ActivityLog', id: `${arg.entityType}-${arg.entityId}` }],
     }),
+
+    getActivityLogStats: builder.query<ActivityLogStats, void>({
+      query: () => ({ url: '/activity-log/stats', method: 'GET' }),
+      providesTags: ['ActivityLog'],
+    }),
+
+    getActivityLogHourly: builder.query<HourlyCount[], void>({
+      query: () => ({ url: '/activity-log/hourly', method: 'GET' }),
+      providesTags: ['ActivityLog'],
+    }),
   }),
 });
 
-export const { useGetActivityLogsQuery, useGetEntityTimelineQuery } = ActivityLogAPI;
+export const {
+  useGetActivityLogsQuery,
+  useGetEntityTimelineQuery,
+  useGetActivityLogStatsQuery,
+  useGetActivityLogHourlyQuery,
+} = ActivityLogAPI;
