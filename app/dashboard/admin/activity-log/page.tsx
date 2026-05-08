@@ -81,10 +81,6 @@ const SAVED_FILTERS: Array<{ label: string; filter: Partial<ActivityLogFilter> }
   { label: 'Org events', filter: { entityType: 'ORGANIZATION' } },
 ];
 
-// ─── API mode ─────────────────────────────────────────────────────────────────
-
-const MOCK_MODE = false;
-
 // ─── Color helpers ─────────────────────────────────────────────────────────────
 
 type Severity = 'critical' | 'warning' | 'success' | 'info';
@@ -248,13 +244,12 @@ function EntityTimelineDrawer({
   onClose: () => void;
   onSelectLog: (log: ActivityLogEntry) => void;
 }) {
-  const { data, isLoading: apiLoading } = useGetEntityTimelineQuery(
+  const { data, isLoading } = useGetEntityTimelineQuery(
     target ? { entityType: target.entityType, entityId: target.entityId, size: 100 } : { entityType: '', entityId: '' },
-    { skip: !target || MOCK_MODE },
+    { skip: !target },
   );
 
-  const entries = MOCK_MODE ? (target ? MOCK_TIMELINE : []) : (data?.content ?? []);
-  const isLoading = MOCK_MODE ? false : apiLoading;
+  const entries: ActivityLogEntry[] = data?.content ?? [];
 
   return (
     <Drawer anchor="right" open={!!target} onClose={onClose} slotProps={{ paper: { sx: { width: 520, p: 0 } } }}>
@@ -495,7 +490,7 @@ function TimelineChart({
           />
           <ReTooltip
             contentStyle={{ background: ADMIN.cardBg, border: `1px solid ${ADMIN.border}`, borderRadius: 8, fontSize: 12 }}
-            formatter={(v: number | undefined) => [v ?? 0, 'events']}
+            formatter={(v) => [v ?? 0, 'events']}
           />
           <Bar dataKey="count" radius={[3, 3, 0, 0]} cursor="pointer">
             {data.map((entry, idx) => (
@@ -594,16 +589,14 @@ export default function AdminActivityLogPage() {
     sort: sortOrder,
     page,
     size: 20,
-  }, { skip: MOCK_MODE });
+  });
 
-  const { data: apiHourly = [] } = useGetActivityLogHourlyQuery(undefined, { skip: MOCK_MODE });
-  const { data: apiStats } = useGetActivityLogStatsQuery(undefined, { skip: MOCK_MODE });
+  const { data: hourlyData = [] } = useGetActivityLogHourlyQuery();
+  const { data: stats } = useGetActivityLogStatsQuery();
 
-  const data     = MOCK_MODE ? { content: MOCK_LOGS, totalPages: 3, totalElements: 60, number: 0, size: 20 } : apiData;
-  const isLoading  = MOCK_MODE ? false : apiLoading;
-  const isFetching = MOCK_MODE ? false : apiFetching;
-  const hourlyData = MOCK_MODE ? MOCK_HOURLY : apiHourly;
-  const stats      = MOCK_MODE ? MOCK_STATS  : apiStats;
+  const data       = apiData;
+  const isLoading  = apiLoading;
+  const isFetching = apiFetching;
 
   const logs = data?.content ?? [];
   const totalPages    = data?.totalPages ?? 1;
