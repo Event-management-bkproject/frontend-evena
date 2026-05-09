@@ -1,6 +1,8 @@
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import nextConfig from 'eslint-config-next';
+import pluginSecurity from 'eslint-plugin-security';
+import pluginNoUnsanitized from 'eslint-plugin-no-unsanitized';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -9,6 +11,32 @@ const __dirname = dirname(__filename);
 const eslintConfig = [
   // Next.js base + core-web-vitals + TypeScript rules
   ...nextConfig,
+
+  // Security: detect dangerous patterns (eval, RegExp injection, non-literal fs calls, etc.)
+  {
+    ...pluginSecurity.configs.recommended,
+    rules: {
+      ...pluginSecurity.configs.recommended.rules,
+      'security/detect-object-injection': 'warn',
+      'security/detect-non-literal-regexp': 'error',
+      'security/detect-non-literal-fs-filename': 'error',
+      'security/detect-eval-with-expression': 'error',
+      'security/detect-no-csrf-before-method-override': 'error',
+      'security/detect-possible-timing-attacks': 'warn',
+      'security/detect-pseudoRandomBytes': 'error',
+      'security/detect-unsafe-regex': 'error',
+      'security/detect-buffer-noassert': 'error',
+    },
+  },
+
+  // Security: prevent XSS via innerHTML / dangerouslySetInnerHTML
+  {
+    plugins: { 'no-unsanitized': pluginNoUnsanitized },
+    rules: {
+      'no-unsanitized/method': 'error',
+      'no-unsanitized/property': 'error',
+    },
+  },
 
   // Project-level overrides
   {
