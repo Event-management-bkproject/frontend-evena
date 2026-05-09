@@ -26,19 +26,21 @@ import {
   Verified as VerifiedIcon,
   PendingActions as PendingIcon,
   Delete as DeleteIcon,
-  CheckCircle as ApproveIcon,
   Business as BusinessIcon,
+  FolderOpen as DocsIcon,
 } from '@mui/icons-material';
 import AdminLayout from '@/src/components/layout/AdminLayout';
 import AdminPageShell from '@/src/components/AdminSidebar/AdminPageShell';
 import RoleGuard from '@/src/components/RoleGuard';
 import { ConfirmationDialog } from '@/src/components/ConfirmationDialog';
 import Snackbar from '@/src/components/SnackBar';
+import AdminOrgDocumentDialog from '@/src/components/AdminOrgDocumentDialog';
 import {
   useGetOrganizationsQuery,
   useVerifyOrganizationMutation,
   useDeleteOrganizationMutation,
 } from '@/src/stores/services/OrganizerApi';
+import { OrganizationResponse } from '@/src/stores/types';
 import { ADMIN } from '@/src/utils/constants/adminBrand';
 
 type FilterMode = 'all' | 'pending' | 'verified';
@@ -47,6 +49,7 @@ export default function AdminOrganizationsPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [reviewOrg, setReviewOrg] = useState<OrganizationResponse | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   const { data, isLoading } = useGetOrganizationsQuery({ page: 0, size: 200 });
@@ -75,9 +78,10 @@ export default function AdminOrganizationsPage() {
   const handleVerify = async (id: number) => {
     try {
       await verifyOrg(id).unwrap();
-      show('Organization verified');
+      show('Organization verified successfully');
+      setReviewOrg(null);
     } catch {
-      show('Failed to verify', 'error');
+      show('Failed to verify organization', 'error');
     }
   };
 
@@ -109,22 +113,41 @@ export default function AdminOrganizationsPage() {
               onChange={(e) => setSearch(e.target.value)}
               sx={{ minWidth: 260, bgcolor: ADMIN.cardBg, borderRadius: '8px' }}
               InputProps={{
-                startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: ADMIN.textMuted }} /></InputAdornment>,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: ADMIN.textMuted }} />
+                  </InputAdornment>
+                ),
               }}
             />
             <ToggleButtonGroup value={filter} exclusive onChange={(_, v) => v && setFilter(v)} size="small">
-              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 13 }}>All ({allOrgs.length})</ToggleButton>
+              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 13 }}>
+                All ({allOrgs.length})
+              </ToggleButton>
               <ToggleButton value="pending" sx={{ textTransform: 'none', fontSize: 13 }}>
                 Pending
                 {pendingCount > 0 && (
-                  <Chip label={pendingCount} size="small" sx={{ ml: 0.5, height: 18, fontSize: 10, bgcolor: ADMIN.error, color: '#fff' }} />
+                  <Chip
+                    label={pendingCount}
+                    size="small"
+                    sx={{ ml: 0.5, height: 18, fontSize: 10, bgcolor: ADMIN.error, color: '#fff' }}
+                  />
                 )}
               </ToggleButton>
-              <ToggleButton value="verified" sx={{ textTransform: 'none', fontSize: 13 }}>Verified</ToggleButton>
+              <ToggleButton value="verified" sx={{ textTransform: 'none', fontSize: 13 }}>
+                Verified
+              </ToggleButton>
             </ToggleButtonGroup>
           </Box>
 
-          <Card sx={{ borderRadius: '12px', overflow: 'hidden', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <Card
+            sx={{
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: `1px solid ${ADMIN.border}`,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            }}
+          >
             {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                 <CircularProgress sx={{ color: ADMIN.primary }} />
@@ -140,7 +163,17 @@ export default function AdminOrganizationsPage() {
                   <TableHead>
                     <TableRow sx={{ bgcolor: ADMIN.pageBg }}>
                       {['Organization', 'Owner', 'Contact', 'Events', 'Status', 'Actions'].map((h) => (
-                        <TableCell key={h} sx={{ fontWeight: 600, color: ADMIN.heading, fontSize: 12, borderBottom: `1px solid ${ADMIN.border}` }}>{h}</TableCell>
+                        <TableCell
+                          key={h}
+                          sx={{
+                            fontWeight: 600,
+                            color: ADMIN.heading,
+                            fontSize: 12,
+                            borderBottom: `1px solid ${ADMIN.border}`,
+                          }}
+                        >
+                          {h}
+                        </TableCell>
                       ))}
                     </TableRow>
                   </TableHead>
@@ -155,48 +188,104 @@ export default function AdminOrganizationsPage() {
                       >
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Avatar src={org.logoUrl} sx={{ width: 32, height: 32, bgcolor: ADMIN.primary + '20', color: ADMIN.primary, fontSize: 13, fontWeight: 700 }}>
+                            <Avatar
+                              src={org.logoUrl}
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: ADMIN.primary + '20',
+                                color: ADMIN.primary,
+                                fontSize: 13,
+                                fontWeight: 700,
+                              }}
+                            >
                               {!org.logoUrl && org.name.charAt(0).toUpperCase()}
                             </Avatar>
                             <Box>
-                              <Typography variant="body2" sx={{ fontWeight: 600, color: ADMIN.heading }}>{org.name}</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: ADMIN.heading }}>
+                                {org.name}
+                              </Typography>
                               {org.description && (
-                                <Typography variant="caption" sx={{ color: ADMIN.textMuted, display: 'block', maxWidth: 200 }} noWrap>{org.description}</Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: ADMIN.textMuted, display: 'block', maxWidth: 200 }}
+                                  noWrap
+                                >
+                                  {org.description}
+                                </Typography>
                               )}
                             </Box>
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" sx={{ color: ADMIN.body }}>{org.owner?.name ?? '—'}</Typography>
-                          <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>{org.owner?.email}</Typography>
+                          <Typography variant="body2" sx={{ color: ADMIN.body }}>
+                            {org.owner?.name ?? '—'}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>
+                            {org.owner?.email}
+                          </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" sx={{ color: ADMIN.body }}>{org.email ?? '—'}</Typography>
-                          <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>{org.phone}</Typography>
+                          <Typography variant="body2" sx={{ color: ADMIN.body }}>
+                            {org.email ?? '—'}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>
+                            {org.phone}
+                          </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" sx={{ color: ADMIN.body }}>{org.totalEvents}</Typography>
+                          <Typography variant="body2" sx={{ color: ADMIN.body }}>
+                            {org.totalEvents}
+                          </Typography>
                         </TableCell>
                         <TableCell>
                           {org.verified ? (
-                            <Chip icon={<VerifiedIcon sx={{ fontSize: 12 }} />} label="Verified" size="small" sx={{ bgcolor: ADMIN.successBg, color: ADMIN.successText, fontWeight: 600, fontSize: 11 }} />
+                            <Chip
+                              icon={<VerifiedIcon sx={{ fontSize: 12 }} />}
+                              label="Verified"
+                              size="small"
+                              sx={{
+                                bgcolor: ADMIN.successBg,
+                                color: ADMIN.successText,
+                                fontWeight: 600,
+                                fontSize: 11,
+                              }}
+                            />
                           ) : (
-                            <Chip icon={<PendingIcon sx={{ fontSize: 12 }} />} label="Pending" size="small" sx={{ bgcolor: ADMIN.warningBg, color: ADMIN.warningText, fontWeight: 600, fontSize: 11 }} />
+                            <Chip
+                              icon={<PendingIcon sx={{ fontSize: 12 }} />}
+                              label="Pending"
+                              size="small"
+                              sx={{
+                                bgcolor: ADMIN.warningBg,
+                                color: ADMIN.warningText,
+                                fontWeight: 600,
+                                fontSize: 11,
+                              }}
+                            />
                           )}
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            {!org.verified && (
-                              <Tooltip title="Verify">
-                                <span>
-                                  <IconButton size="small" onClick={() => handleVerify(org.id)} disabled={verifying} sx={{ color: ADMIN.success, '&:hover': { bgcolor: ADMIN.successBg } }}>
-                                    <ApproveIcon fontSize="small" />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                            )}
+                            {/* Review documents — always visible, primary CTA for pending */}
+                            <Tooltip title={org.verified ? 'View verification documents' : 'Review documents & verify'}>
+                              <IconButton
+                                size="small"
+                                onClick={() => setReviewOrg(org)}
+                                sx={{
+                                  color: org.verified ? ADMIN.textMuted : ADMIN.primary,
+                                  '&:hover': { bgcolor: org.verified ? ADMIN.pageBg : ADMIN.primaryLight },
+                                }}
+                              >
+                                <DocsIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                             <Tooltip title="Delete">
-                              <IconButton size="small" onClick={() => setDeleteId(org.id)} sx={{ color: ADMIN.error, '&:hover': { bgcolor: ADMIN.errorBg } }}>
+                              <IconButton
+                                size="small"
+                                onClick={() => setDeleteId(org.id)}
+                                sx={{ color: ADMIN.error, '&:hover': { bgcolor: ADMIN.errorBg } }}
+                              >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
@@ -211,12 +300,40 @@ export default function AdminOrganizationsPage() {
           </Card>
         </AdminPageShell>
 
-        <ConfirmationDialog open={deleteId !== null} onClose={() => setDeleteId(null)} onConfirm={handleDelete}
-          title="Delete Organization" message="This will permanently delete the organization and all associated data."
-          variant="error" loading={deleting} confirmText="Delete" cancelText="Cancel" disableBackdropClose />
+        {/* Document review dialog */}
+        {reviewOrg && (
+          <AdminOrgDocumentDialog
+            open={!!reviewOrg}
+            organizationId={reviewOrg.id}
+            organizationName={reviewOrg.name}
+            isVerified={reviewOrg.verified}
+            onClose={() => setReviewOrg(null)}
+            onVerify={() => handleVerify(reviewOrg.id)}
+            isVerifying={verifying}
+          />
+        )}
 
-        <Snackbar open={snackbar.open} message={snackbar.message} severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })} vertical="top" horizontal="right" />
+        <ConfirmationDialog
+          open={deleteId !== null}
+          onClose={() => setDeleteId(null)}
+          onConfirm={handleDelete}
+          title="Delete Organization"
+          message="This will permanently delete the organization and all associated data."
+          variant="error"
+          loading={deleting}
+          confirmText="Delete"
+          cancelText="Cancel"
+          disableBackdropClose
+        />
+
+        <Snackbar
+          open={snackbar.open}
+          message={snackbar.message}
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          vertical="top"
+          horizontal="right"
+        />
       </AdminLayout>
     </RoleGuard>
   );

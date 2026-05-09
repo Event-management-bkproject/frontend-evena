@@ -3,8 +3,9 @@
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetOrganizationDetailsQuery } from '@/src/stores/services/OrganizerApi';
 import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
+import { useInviteMemberMutation } from '@/src/stores/services/OrganizationMemberApi';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import {
   Box,
@@ -28,11 +29,14 @@ import {
   Event as EventIcon,
   People,
   Edit,
+  ManageAccounts,
 } from '@mui/icons-material';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
 import FileUploadManager from '@/src/components/FileUploadManager/FileUploadManager';
 import DashboardHeader from '@/src/components/DashboardHeader';
 import EventCard from '@/src/components/EventCard/EventCard';
+import MemberManagementModal from '@/src/components/MemberManagementModal/MemberManagementModal';
+import InviteMemberModal from '@/src/components/InviteMemberModal/InviteMemberModal';
 import { OrganizationRole } from '@/src/stores/types/enums';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -70,12 +74,19 @@ export default function OrganizationDetailPage() {
 
   const organization = orgResponse?.data;
   const allEvents = eventsResponse?.data?.content || [];
+  const isOwner = organization?.members.some(
+    (m) => m.userId === auth.user?.id && m.role === OrganizationRole.OWNER,
+  ) ?? false;
 
   // Filter events belonging to this organization
   const organizationEvents = useMemo(() => {
     if (!organization || !allEvents.length) return [];
     return allEvents.filter((event) => event.organizerName === organization.name);
   }, [allEvents, organization]);
+
+  const [memberModalOpen, setMemberModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteMember] = useInviteMemberMutation();
 
   const handleBack = () => {
     router.push('/dashboard/organizer/organizations');
@@ -87,6 +98,10 @@ export default function OrganizationDetailPage() {
 
   const handleEventClick = (eventId: string) => {
     router.push(`/dashboard/organizer/events/${eventId}`);
+  };
+
+  const handleInviteSubmit = async (email: string, role: OrganizationRole) => {
+    await inviteMember({ organizationId, data: { email, role } }).unwrap();
   };
 
   const getRoleBadgeColor = (role: OrganizationRole) => {
@@ -360,8 +375,17 @@ export default function OrganizationDetailPage() {
                       <Typography variant="h6" sx={{ fontWeight: 700, color: '#2A3363' }}>
                         {t('organizer.members')}
                       </Typography>
+                      <Chip label={organization.members.length} size="small" sx={{ bgcolor: '#EEF0FF', color: '#37437D' }} />
                     </Box>
-                    <Chip label={organization.members.length} size="small" sx={{ bgcolor: '#EEF0FF', color: '#37437D' }} />
+                    <Tooltip title="Manage members">
+                      <IconButton
+                        size="small"
+                        onClick={() => setMemberModalOpen(true)}
+                        sx={{ color: '#37437D', '&:hover': { bgcolor: '#EEF0FF' } }}
+                      >
+                        <ManageAccounts />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
 
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 400, overflowY: 'auto' }}>
@@ -418,6 +442,7 @@ export default function OrganizationDetailPage() {
                   <FileUploadManager
                     mode={{ type: 'organization', organizationId }}
                     title="Organization Documents"
+                    isOwner={isOwner}
                   />
                 </Card>
               </Box>
@@ -425,6 +450,29 @@ export default function OrganizationDetailPage() {
           </Box>
         </Box>
       </LayoutWithSidebar>
+
+      {organization && (
+        <>
+          <MemberManagementModal
+            open={memberModalOpen}
+            onClose={() => setMemberModalOpen(false)}
+            organization={{
+              ...organization,
+              owner: { id: auth.user?.id ?? '', name: auth.user?.name ?? '', email: auth.user?.email ?? '' },
+              version: 0,
+            }}
+            onInviteMember={() => {
+              setMemberModalOpen(false);
+              setInviteModalOpen(true);
+            }}
+          />
+          <InviteMemberModal
+            open={inviteModalOpen}
+            onClose={() => setInviteModalOpen(false)}
+            onSubmit={handleInviteSubmit}
+          />
+        </>
+      )}
     </ProtectedContent>
   );
 }

@@ -12,21 +12,26 @@ import { VenueAPI } from '@/src/stores/services/VenueApi';
 export default function AuthInitializer() {
   const { setAuthFromInit } = useAuth();
   const dispatch = useDispatch();
-  // Ref guard ensures this runs exactly once per page mount. Unlike putting
-  // auth.isInitialized in the effect deps, this approach never re-runs after
-  // login/logout — those actions only change Redux state, not the page lifecycle.
   const initialized = useRef(false);
 
   useEffect(() => {
+    // Guard: run exactly once per page lifecycle.
+    // IMPORTANT — do NOT add a cleanup that resets initialized.current.
+    // React 18 Strict Mode runs effect → cleanup → effect again in dev.
+    // If cleanup resets the ref, two concurrent refresh calls fire with the
+    // same refresh token. The first call rotates the token; the second fails
+    // (400) and calls setAuthFromInit(null) → user is logged out on every
+    // page refresh. Keep initialized.current = true so the second effect
+    // invocation sees it and returns early without a second fetch.
     if (initialized.current) return;
     initialized.current = true;
-    let isActive = true;
 
+    // IMPORTANT — no isActive flag here.
+    // This component lives in the root layout and never truly unmounts.
+    // If we abandon the in-flight fetch via isActive=false (set in cleanup),
+    // Strict Mode's cleanup fires before the response arrives → setAuthFromInit
+    // is never called → auth stays uninitialized → infinite redirect loop.
     const initializeAuth = async () => {
-      // Defensive guard: if the user explicitly logged out last session, skip
-      // the refresh call even if the httpOnly cookie is still present (e.g.
-      // backend failed to clear it). Flag is set by useAuth.logout() and
-      // cleared here on read — or by useAuth.login() on successful re-login.
       if (typeof window !== 'undefined' && sessionStorage.getItem('__evena_logout')) {
         sessionStorage.removeItem('__evena_logout');
         setAuthFromInit(null, null);
@@ -39,8 +44,6 @@ export default function AuthInitializer() {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         });
-
-        if (!isActive) return;
 
         if (response.ok) {
           const data = await response.json();
@@ -56,21 +59,13 @@ export default function AuthInitializer() {
         dispatch(CategoryAPI.util.resetApiState());
         dispatch(VenueAPI.util.resetApiState());
       } catch {
-        if (!isActive) return;
         setAuthFromInit(null, null);
       }
     };
 
     initializeAuth();
-
-    return () => {
-      isActive = false;
-      // Reset so React Strict Mode's cleanup+remount cycle can re-run the effect.
-      // In production AuthInitializer never unmounts (root layout), so this only
-      // matters in development double-invoke mode.
-      initialized.current = false;
-    };
-  }, []); // empty deps: tied to page mount, not to auth state changes
+    // No cleanup return — intentional. See comments above.
+  }, []);
 
   return null;
 }
