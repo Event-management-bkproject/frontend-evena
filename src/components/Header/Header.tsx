@@ -40,6 +40,7 @@ export default function Header() {
   }, []);
 
   const homePath = (() => {
+    if (!auth?.accessToken) return '/';
     const roles = auth.user?.roles ?? [];
     if (roles.includes('ADMIN')) return '/dashboard/admin';
     if (roles.includes('ORGANIZER')) return '/dashboard/organizer';
@@ -99,23 +100,41 @@ export default function Header() {
           </Box>
 
           {/* Desktop nav */}
-          {!isMobile && auth?.accessToken && (
+          {!isMobile && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
-              {navItems.map((item) => (
-                <Button key={item.path} onClick={() => handleNavigate(item.path)} disableRipple
-                  sx={{
-                    color: isActive(item.path) ? '#fff' : 'rgba(255,255,255,0.75)',
-                    textTransform: 'none', fontSize: 14,
-                    fontWeight: isActive(item.path) ? 700 : 500,
-                    px: 2, py: 0.75, borderRadius: '8px', position: 'relative',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff' },
-                    '&::after': isActive(item.path)
-                      ? { content: '""', position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 20, height: 2, borderRadius: 1, bgcolor: '#fff' }
-                      : {},
-                  }}>
-                  {item.label}
-                </Button>
-              ))}
+              {auth?.accessToken ? (
+                navItems.map((item) => (
+                  <Button key={item.path} onClick={() => handleNavigate(item.path)} disableRipple
+                    sx={{
+                      color: isActive(item.path) ? '#fff' : 'rgba(255,255,255,0.75)',
+                      textTransform: 'none', fontSize: 14,
+                      fontWeight: isActive(item.path) ? 700 : 500,
+                      px: 2, py: 0.75, borderRadius: '8px', position: 'relative',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff' },
+                      '&::after': isActive(item.path)
+                        ? { content: '""', position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 20, height: 2, borderRadius: 1, bgcolor: '#fff' }
+                        : {},
+                    }}>
+                    {item.label}
+                  </Button>
+                ))
+              ) : (
+                [{ label: 'Home', path: '/' }, { label: 'Events', path: '/events' }].map((item) => (
+                  <Button key={item.path} onClick={() => handleNavigate(item.path)} disableRipple
+                    sx={{
+                      color: isActive(item.path) ? '#fff' : 'rgba(255,255,255,0.75)',
+                      textTransform: 'none', fontSize: 14,
+                      fontWeight: isActive(item.path) ? 700 : 500,
+                      px: 2, py: 0.75, borderRadius: '8px', position: 'relative',
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff' },
+                      '&::after': isActive(item.path)
+                        ? { content: '""', position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)', width: 20, height: 2, borderRadius: 1, bgcolor: '#fff' }
+                        : {},
+                    }}>
+                    {item.label}
+                  </Button>
+                ))
+              )}
             </Box>
           )}
 
@@ -227,7 +246,13 @@ export default function Header() {
           )}
           {!auth?.accessToken && (
             <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Button fullWidth variant="outlined" onClick={() => handleNavigate('/login')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, borderColor: '#E2E8F0', color: '#475569' }}>Sign in</Button>
+              {[{ label: 'Home', path: '/' }, { label: 'Events', path: '/events' }].map((item) => (
+                <ListItemButton key={item.path} onClick={() => handleNavigate(item.path)}
+                  sx={{ borderRadius: '10px', py: 1.25, bgcolor: isActive(item.path) ? 'rgba(243,107,249,0.08)' : 'transparent', '&:hover': { bgcolor: '#F8FAFC' } }}>
+                  <ListItemText primary={item.label} slotProps={{ primary: { style: { fontWeight: isActive(item.path) ? 700 : 500, fontSize: 14, color: isActive(item.path) ? '#F36BF9' : '#0F172A' } } }} />
+                </ListItemButton>
+              ))}
+              <Button fullWidth variant="outlined" onClick={() => handleNavigate('/login')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, borderColor: '#E2E8F0', color: '#475569', mt: 1 }}>Sign in</Button>
               <Button fullWidth variant="contained" onClick={() => handleNavigate('/register')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, background: 'linear-gradient(135deg,#F36BF9,#e55ae0)', boxShadow: 'none' }}>Get started</Button>
             </Box>
           )}

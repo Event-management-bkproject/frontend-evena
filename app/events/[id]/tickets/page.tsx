@@ -2,33 +2,29 @@
 
 import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useAuth } from '@/src/hooks/auth/useAuth';
 
-/**
- * Public ticket purchase page - Redirects to login
- * Ticket purchases require authentication
- */
 export default function PublicTicketsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const resolvedParams = use(params);
-  const eventId = resolvedParams.id;
+  const { id: eventId } = use(params);
+  const { auth } = useAuth();
 
   useEffect(() => {
-    // Redirect to login, then to the authenticated ticket purchase page
-    router.push(`/login?redirect=/dashboard/customer/events/${eventId}/tickets`);
-  }, [router, eventId]);
+    if (!auth.isInitialized) return;
+    if (auth.accessToken) {
+      router.replace(`/dashboard/customer/events/${eventId}/tickets`);
+    } else {
+      router.replace(`/login?redirect=${encodeURIComponent(`/dashboard/customer/events/${eventId}/tickets`)}`);
+    }
+  }, [auth.isInitialized, auth.accessToken, eventId, router]);
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#FAFAFA',
-      }}
-    >
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', flexDirection: 'column', gap: 2 }}>
       <CircularProgress sx={{ color: '#F36BF9' }} />
+      <Typography variant="body2" color="text.secondary">
+        {auth.accessToken ? 'Loading checkout…' : 'Redirecting to login…'}
+      </Typography>
     </Box>
   );
 }
