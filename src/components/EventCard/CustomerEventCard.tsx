@@ -54,7 +54,7 @@ export default function CustomerEventCard({ event, hot, onClick }: CustomerEvent
       }}
     >
       {/* Image */}
-      <Box sx={{ position: 'relative', height: 200, flexShrink: 0, overflow: 'hidden' }}>
+      <Box sx={{ position: 'relative', height: { xs: 175, sm: 200 }, flexShrink: 0, overflow: 'hidden' }}>
         <Box
           component="img"
           src={event.coverUrl || FALLBACK_IMG}
