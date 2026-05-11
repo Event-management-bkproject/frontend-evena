@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Snackbar } from '@mui/material';
 import { useAppSelector, useAppDispatch } from '../stores/hooks';
 import { EventAPI } from '../stores/services/EventApi';
@@ -528,8 +528,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     }
   }, [lastEvent, dispatch]);
 
+  const contextValue = useMemo(
+    () => ({ isConnected, lastEvent, notification, clearNotification }),
+    [isConnected, lastEvent, notification, clearNotification],
+  );
+
   return (
-    <SSEContext.Provider value={{ isConnected, lastEvent, notification, clearNotification }}>
+    <SSEContext.Provider value={contextValue}>
       {children}
       {/* Global personal SSE notification toast */}
       <Snackbar
