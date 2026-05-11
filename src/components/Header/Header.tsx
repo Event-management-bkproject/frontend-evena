@@ -15,6 +15,14 @@ import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetMyOrdersQuery } from '@/src/stores/services/OrderApi';
 import { OrderStatus } from '@/src/stores/types/order';
 
+// Stable reference — defined outside component to avoid re-creating on each render
+const selectPendingCount = ({ data }: { data?: any }) => ({
+  pendingOrdersCount:
+    (data?.data?.content as { status: OrderStatus }[] | undefined)?.filter(
+      (o) => o.status === OrderStatus.PENDING,
+    ).length ?? 0,
+});
+
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
@@ -38,12 +46,10 @@ export default function Header() {
     return '/dashboard/customer';
   })();
 
-  const { data: ordersResponse } = useGetMyOrdersQuery(
-    { page: 0, size: 100 },
-    { skip: !auth?.accessToken },
+  const { pendingOrdersCount } = useGetMyOrdersQuery(
+    { page: 0, size: 20 },
+    { skip: !auth?.accessToken, selectFromResult: selectPendingCount },
   );
-  const pendingOrdersCount =
-    ordersResponse?.data?.content?.filter((o) => o.status === OrderStatus.PENDING).length ?? 0;
 
   const handleNavigate = (path: string) => {
     router.push(path);
