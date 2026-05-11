@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+
 import { Box, Typography, Chip } from '@mui/material';
 import { Place, LocalFireDepartment } from '@mui/icons-material';
 import { EventListResponse } from '@/src/stores/types';
@@ -13,9 +13,10 @@ const FALLBACK_IMG =
 interface CustomerEventCardProps {
   event: EventListResponse;
   hot?: boolean;
+  onClick?: () => void;
 }
 
-export default function CustomerEventCard({ event, hot }: CustomerEventCardProps) {
+export default function CustomerEventCard({ event, hot, onClick }: CustomerEventCardProps) {
   const router = useRouter();
 
   const date = new Date(event.startAt);
@@ -26,7 +27,7 @@ export default function CustomerEventCard({ event, hot }: CustomerEventCardProps
   const isSoldOut = event.availableTickets === 0;
   const isAlmostGone = !isSoldOut && event.soldPercentage >= 80;
 
-  const handleClick = () => router.push(`/dashboard/customer/events/${event.id}`);
+  const handleClick = () => onClick ? onClick() : router.push(`/dashboard/customer/events/${event.id}`);
 
   return (
     <Box
