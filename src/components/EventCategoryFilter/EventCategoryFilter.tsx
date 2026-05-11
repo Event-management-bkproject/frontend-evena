@@ -39,8 +39,8 @@ export default function EventCategoryFilter({ categories, onCategoryChange, onTi
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
       {/* Time filter */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: 13, minWidth: 70 }}>
+      <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 1, sm: 2 }, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: 13, minWidth: 70, flexShrink: 0 }}>
           {t('filter.timePeriod')}
         </Typography>
         <ToggleButtonGroup
@@ -50,6 +50,7 @@ export default function EventCategoryFilter({ categories, onCategoryChange, onTi
           size="small"
           sx={{
             gap: 0.5,
+            flexWrap: 'wrap',
             '& .MuiToggleButtonGroup-grouped': { border: 'none', borderRadius: '20px !important', mx: 0 },
           }}
         >
@@ -59,9 +60,9 @@ export default function EventCategoryFilter({ categories, onCategoryChange, onTi
               value={opt.value}
               disableRipple
               sx={{
-                px: 2,
+                px: { xs: 1.5, sm: 2 },
                 py: 0.6,
-                fontSize: 13,
+                fontSize: { xs: 12, sm: 13 },
                 fontWeight: 600,
                 textTransform: 'none',
                 color: '#64748B',
@@ -86,9 +87,9 @@ export default function EventCategoryFilter({ categories, onCategoryChange, onTi
         </ToggleButtonGroup>
       </Box>
 
-      {/* Category chips — horizontally scrollable */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: 13, minWidth: 70 }}>
+      {/* Category chips */}
+      <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 1, sm: 2 }, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: 13, minWidth: 70, flexShrink: 0 }}>
           {t('filter.categories')}
         </Typography>
         <Box
