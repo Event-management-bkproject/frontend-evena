@@ -6,6 +6,8 @@ export interface ActivityLogEntry {
   actorId: string;
   actorName?: string;
   actorRole: string;
+  ownerUserId?: string;
+  ownerName?: string;
   action: string;
   entityType: string;
   entityId: string;

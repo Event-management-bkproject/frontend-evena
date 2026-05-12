@@ -22,6 +22,7 @@ import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
 import DashboardHeader from '@/src/components/DashboardHeader/DashboardHeader';
 import { BRAND } from '@/src/utils/constants/constant';
 import { FlexStatsCard } from '@/src/components/FlexPassAdmin/FlexStatsCard';
+import { SaleWindowPanel } from '@/src/components/FlexPassAdmin/SaleWindowPanel';
 import { useSSE } from '@/src/providers/SSEProvider';
 import { SSENormalizedType } from '@/src/stores/types/sse';
 import {
@@ -303,7 +304,7 @@ function FlexPassOrganizerContent() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0, flex: 1, height: '100%', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0, flex: 1, pb: '20px' }}>
       <DashboardHeader
         title="FlexPass"
         breadcrumbs={[
@@ -313,7 +314,7 @@ function FlexPassOrganizerContent() {
       />
 
       <Box sx={{ bgcolor: BRAND.bgSection, borderRadius: '20px', p: '20px',
-        display: 'flex', flexDirection: 'column', gap: '15px', flex: 1, overflow: 'hidden' }}>
+        display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
         {/* Stats row */}
         <Box sx={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
@@ -367,16 +368,50 @@ function FlexPassOrganizerContent() {
         )}
 
         {/* Master-detail */}
-        {!isLoading && !error && (
-          <Box sx={{ display: 'flex', gap: '12px', flex: 1, minHeight: 0 }}>
+        {!isLoading && !error && groups.length === 0 && (
+          <Box sx={{
+            bgcolor: 'white', borderRadius: '16px', border: '1px solid rgba(0,0,0,0.07)',
+            py: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+          }}>
+            <Box sx={{
+              width: 72, height: 72, borderRadius: '18px',
+              background: 'linear-gradient(135deg, #fef1ff 0%, #ede9fe 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <TicketIcon sx={{ fontSize: 36, color: BRAND.primary, opacity: 0.6 }} />
+            </Box>
+            <Typography sx={{ fontSize: 16, fontWeight: 700, color: '#030213' }}>
+              {filterStatus !== 'ALL' || searchQuery
+                ? 'No listings match your filter'
+                : 'No FlexPass listings yet'}
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: '#717182', textAlign: 'center', maxWidth: 380, lineHeight: 1.7 }}>
+              {filterStatus !== 'ALL' || searchQuery
+                ? 'Try adjusting your search or status filter to find what you\'re looking for.'
+                : 'When customers submit tickets for resale, they will appear here for review and approval.'}
+            </Typography>
+            {(filterStatus !== 'ALL' || searchQuery) && (
+              <Box
+                component="button"
+                onClick={() => { setFilterStatus('ALL'); setSearchQuery(''); }}
+                sx={{
+                  mt: '4px', px: '16px', py: '8px', borderRadius: '8px', fontSize: 13, fontWeight: 600,
+                  bgcolor: BRAND.bgSection, border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', color: '#030213',
+                  '&:hover': { bgcolor: '#efefef' },
+                }}
+              >
+                Clear filters
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {!isLoading && !error && groups.length > 0 && (
+          <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
             {/* Event list (left) */}
-            <Box sx={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px' }}>
-              {groups.length === 0 ? (
-                <Box sx={{ bgcolor: 'white', borderRadius: '10px', border: '1px solid rgba(0,0,0,0.07)', p: '20px', textAlign: 'center' }}>
-                  <Typography sx={{ fontSize: 12, color: '#717182' }}>No listings found</Typography>
-                </Box>
-              ) : groups.map((group) => {
+            <Box sx={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', pr: '2px' }}>
+              {groups.map((group) => {
                 const pendingCount = group.listings.filter((l) => l.status === 'PENDING_APPROVAL').length;
                 const isSelected = selectedEventId === group.eventId;
                 return (
@@ -434,15 +469,19 @@ function FlexPassOrganizerContent() {
                     </Typography>
                   </Box>
 
-                  <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: '2px' }}>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', pb: '4px' }}>
-                      {selectedGroup.listings.map((listing) => (
-                        <ListingCard key={listing.id} listing={listing}
-                          onApprove={handleApprove}
-                          onReject={(id) => setRejectTarget({ id, eventTitle: listing.eventTitle })}
-                          approveLoading={approveLoading} />
-                      ))}
-                    </Box>
+                  <SaleWindowPanel
+                    eventId={selectedGroup.eventId}
+                    eventTitle={selectedGroup.eventTitle}
+                    approvedCount={selectedGroup.listings.filter(l => l.status === FlexPassListingStatus.APPROVED).length}
+                  />
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', pb: '4px' }}>
+                    {selectedGroup.listings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing}
+                        onApprove={handleApprove}
+                        onReject={(id) => setRejectTarget({ id, eventTitle: listing.eventTitle })}
+                        approveLoading={approveLoading} />
+                    ))}
                   </Box>
                 </>
               )}

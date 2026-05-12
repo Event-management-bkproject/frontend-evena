@@ -73,6 +73,7 @@ export default function Header() {
       ]
     : [
         { label: 'Home', path: '/dashboard/customer' },
+        { label: 'Marketplace', path: '/dashboard/customer/marketplace' },
         { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
         { label: 'My Bookings', path: '/dashboard/customer/cart' },
       ];
