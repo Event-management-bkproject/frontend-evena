@@ -102,7 +102,7 @@ export const FlexPassAPI = createApi({
       providesTags: (result, error, eventId) => [{ type: 'FlexPassPriceAnalysis', id: eventId }],
     }),
 
-    getEventSaleWindow: builder.query<ApiResponse<FlexPassSaleWindowResponse | null>, string>({
+    getEventSaleWindow: builder.query<ApiResponse<FlexPassSaleWindowResponse[]>, string>({
       query: (eventId) => ({
         url: `/flexpass/organizer/events/${eventId}/sale-window`,
         method: 'GET',

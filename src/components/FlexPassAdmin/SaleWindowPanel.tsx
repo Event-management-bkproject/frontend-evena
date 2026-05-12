@@ -559,6 +559,115 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
   );
 }
 
+// ─── Single window card ───────────────────────────────────────────────────────
+
+function SaleWindowCard({
+  saleWindow,
+  eventId,
+  onCancelled,
+}: {
+  saleWindow: import('@/src/stores/types/flexpass').FlexPassSaleWindowResponse;
+  eventId: string;
+  onCancelled: () => void;
+}) {
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelWindow] = useCancelSaleWindowMutation();
+
+  const cfg = WINDOW_STATUS_CFG[saleWindow.status];
+  const isActive = saleWindow.status === FlexPassSaleWindowStatus.OPENED;
+  const isDimmed = saleWindow.status === FlexPassSaleWindowStatus.CLOSED || saleWindow.status === FlexPassSaleWindowStatus.CANCELLED;
+  const canCancel = saleWindow.status === FlexPassSaleWindowStatus.SCHEDULED;
+
+  const fmtDt = (iso: string) =>
+    new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  const handleCancel = async () => {
+    setCancelLoading(true);
+    try {
+      await cancelWindow({ saleWindowId: saleWindow.id, eventId }).unwrap();
+      onCancelled();
+    } catch { /* snackbar handled by RTK */ }
+    finally { setCancelLoading(false); }
+  };
+
+  const methodLabel = (() => {
+    const methods = saleWindow.prices.map(p => p.pricingMethod).filter(Boolean);
+    const unique = [...new Set(methods)];
+    if (methods.length === 0) return METHOD_CFG[saleWindow.pricingMethod].label;
+    return unique.length === 1 ? METHOD_CFG[unique[0]].label : 'Mixed';
+  })();
+
+  return (
+    <Box sx={{
+      mb: '10px', borderRadius: '10px', overflow: 'hidden',
+      border: `1px solid ${cfg.border}`,
+      bgcolor: isDimmed ? '#FAFAFA' : cfg.bg,
+      opacity: isDimmed ? 0.72 : 1,
+    }}>
+      <Box sx={{
+        px: '14px', py: '10px',
+        display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+        borderBottom: saleWindow.prices.length > 0 ? `1px solid ${cfg.border}` : 'none',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: cfg.color, boxShadow: isActive ? `0 0 0 3px ${cfg.border}` : 'none' }} />
+          <Typography sx={{ fontSize: 12, fontWeight: 700, color: cfg.color }}>{cfg.label}</Typography>
+        </Box>
+        <Box sx={{ width: 1, height: 14, bgcolor: cfg.border, flexShrink: 0 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <TrendIcon sx={{ fontSize: 12, color: '#7C3AED' }} />
+          <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>{methodLabel}</Typography>
+        </Box>
+        <Box sx={{ width: 1, height: 14, bgcolor: cfg.border, flexShrink: 0 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1, minWidth: 160 }}>
+          <ClockIcon sx={{ fontSize: 12, color: '#94A3B8', flexShrink: 0 }} />
+          <Typography sx={{ fontSize: 11, color: '#64748B', whiteSpace: 'nowrap' }}>{fmtDt(saleWindow.startAt)}</Typography>
+          <Typography sx={{ fontSize: 11, color: '#CBD5E1' }}>→</Typography>
+          <Typography sx={{ fontSize: 11, color: '#64748B', whiteSpace: 'nowrap' }}>{fmtDt(saleWindow.endAt)}</Typography>
+        </Box>
+        {canCancel && (
+          <Button
+            size="small" variant="text"
+            startIcon={<CancelIcon sx={{ fontSize: 13 }} />}
+            disabled={cancelLoading} onClick={handleCancel}
+            sx={{
+              ml: 'auto', flexShrink: 0,
+              textTransform: 'none', fontSize: 11, fontWeight: 600,
+              color: '#EF4444', borderRadius: '7px', px: '10px', py: '4px',
+              '&:hover': { bgcolor: '#FEF2F2' },
+            }}
+          >
+            {cancelLoading ? 'Cancelling…' : 'Cancel'}
+          </Button>
+        )}
+      </Box>
+      {saleWindow.prices.length > 0 && (
+        <Box sx={{ px: '14px', py: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+          <Typography sx={{ fontSize: 10, fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', mr: '2px', flexShrink: 0 }}>
+            Locked
+          </Typography>
+          {saleWindow.prices.map((p) => {
+            const mCfg = p.pricingMethod ? METHOD_CFG[p.pricingMethod] : null;
+            return (
+              <Box key={p.ticketTypeId} sx={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                px: '10px', py: '3px', borderRadius: '20px',
+                bgcolor: 'rgba(255,255,255,0.7)', border: `1px solid ${cfg.border}`,
+              }}>
+                <Typography sx={{ fontSize: 11, color: '#374151' }}>{p.ticketTypeName}</Typography>
+                <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>·</Typography>
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: isActive ? '#7C3AED' : '#374151' }}>{fmt(p.selectedPrice)}</Typography>
+                {mCfg && <Typography sx={{ fontSize: 10, color: mCfg.color, fontWeight: 600 }}>{mCfg.label}</Typography>}
+                {isActive && <CheckIcon sx={{ fontSize: 11, color: '#10B981' }} />}
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 // ─── SaleWindowPanel ──────────────────────────────────────────────────────────
 
 interface SaleWindowPanelProps {
@@ -569,45 +678,25 @@ interface SaleWindowPanelProps {
 
 export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWindowPanelProps) {
   const [createOpen, setCreateOpen] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
 
   const { data: windowData, isLoading } = useGetEventSaleWindowQuery(eventId);
-  const [cancelWindow] = useCancelSaleWindowMutation();
-
-  const saleWindow = windowData?.data ?? null;
-
-  const handleCancel = async () => {
-    if (!saleWindow || saleWindow.status !== FlexPassSaleWindowStatus.SCHEDULED) return;
-    setCancelLoading(true);
-    try {
-      await cancelWindow({ saleWindowId: saleWindow.id, eventId }).unwrap();
-    } catch { /* snackbar handled by RTK */ }
-    finally { setCancelLoading(false); }
-  };
+  const saleWindows = windowData?.data ?? [];
 
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
         <CircularProgress size={14} sx={{ color: BRAND.primary }} />
-        <Typography sx={{ fontSize: 12, color: '#717182' }}>Loading sale window…</Typography>
+        <Typography sx={{ fontSize: 12, color: '#717182' }}>Loading sale windows…</Typography>
       </Box>
     );
   }
 
-  const cfg = saleWindow ? WINDOW_STATUS_CFG[saleWindow.status] : null;
-  const canCreateNew = !saleWindow || saleWindow.status === FlexPassSaleWindowStatus.CLOSED || saleWindow.status === FlexPassSaleWindowStatus.CANCELLED;
-  const canCancel = saleWindow?.status === FlexPassSaleWindowStatus.SCHEDULED;
-
-  const fmtDt = (iso: string) =>
-    new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-  // ── No window ──────────────────────────────────────────────────────────────
-  if (!saleWindow) {
-    return (
-      <>
+  return (
+    <>
+      {saleWindows.length === 0 && (
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: '12px',
-          px: '16px', py: '12px', mb: '12px',
+          px: '16px', py: '12px', mb: '10px',
           bgcolor: '#FAFAFA', borderRadius: '10px',
           border: '1px dashed #E2E8F0',
         }}>
@@ -622,167 +711,26 @@ export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWind
               </Typography>
             )}
           </Box>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<ScheduleIcon sx={{ fontSize: 13 }} />}
-            onClick={() => setCreateOpen(true)}
-            sx={{
-              textTransform: 'none', borderRadius: '8px', fontSize: 12,
-              fontWeight: 600, px: '14px', py: '6px', flexShrink: 0,
-              bgcolor: '#7C3AED', boxShadow: 'none',
-              '&:hover': { bgcolor: '#6D28D9', boxShadow: 'none' },
-            }}
-          >
-            Schedule Window
-          </Button>
         </Box>
+      )}
 
-        <CreateSaleWindowDialog
-          open={createOpen}
-          eventId={eventId}
-          eventTitle={eventTitle}
-          onClose={() => setCreateOpen(false)}
-        />
-      </>
-    );
-  }
+      {saleWindows.map((sw) => (
+        <SaleWindowCard key={sw.id} saleWindow={sw} eventId={eventId} onCancelled={() => {}} />
+      ))}
 
-  // ── Has window ─────────────────────────────────────────────────────────────
-  const isActive   = saleWindow.status === FlexPassSaleWindowStatus.OPENED;
-  const isDimmed   = saleWindow.status === FlexPassSaleWindowStatus.CLOSED || saleWindow.status === FlexPassSaleWindowStatus.CANCELLED;
-
-  return (
-    <>
-      <Box sx={{
-        mb: '12px', borderRadius: '10px', overflow: 'hidden',
-        border: `1px solid ${cfg!.border}`,
-        bgcolor: isDimmed ? '#FAFAFA' : cfg!.bg,
-        opacity: isDimmed ? 0.75 : 1,
-      }}>
-        {/* Status row */}
-        <Box sx={{
-          px: '14px', py: '10px',
-          display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
-          borderBottom: saleWindow.prices.length > 0 ? `1px solid ${cfg!.border}` : 'none',
-        }}>
-          {/* Colored status dot + label */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <Box sx={{
-              width: 8, height: 8, borderRadius: '50%',
-              bgcolor: cfg!.color,
-              boxShadow: isActive ? `0 0 0 3px ${cfg!.border}` : 'none',
-            }} />
-            <Typography sx={{ fontSize: 12, fontWeight: 700, color: cfg!.color }}>
-              {cfg!.label}
-            </Typography>
-          </Box>
-
-          {/* Separator */}
-          <Box sx={{ width: 1, height: 14, bgcolor: cfg!.border, flexShrink: 0 }} />
-
-          {/* Pricing method — derived from per-ticket prices if available */}
-          {(() => {
-            const methods = saleWindow.prices.map(p => p.pricingMethod).filter(Boolean);
-            const uniqueMethods = [...new Set(methods)];
-            const label = methods.length === 0
-              ? METHOD_CFG[saleWindow.pricingMethod].label
-              : uniqueMethods.length === 1
-                ? METHOD_CFG[uniqueMethods[0]].label
-                : 'Mixed';
-            return (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                <TrendIcon sx={{ fontSize: 12, color: '#7C3AED' }} />
-                <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>
-                  {label}
-                </Typography>
-              </Box>
-            );
-          })()}
-
-          {/* Separator */}
-          <Box sx={{ width: 1, height: 14, bgcolor: cfg!.border, flexShrink: 0 }} />
-
-          {/* Time range */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1, minWidth: 160 }}>
-            <ClockIcon sx={{ fontSize: 12, color: '#94A3B8', flexShrink: 0 }} />
-            <Typography sx={{ fontSize: 11, color: '#64748B', whiteSpace: 'nowrap' }}>
-              {fmtDt(saleWindow.startAt)}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: '#CBD5E1' }}>→</Typography>
-            <Typography sx={{ fontSize: 11, color: '#64748B', whiteSpace: 'nowrap' }}>
-              {fmtDt(saleWindow.endAt)}
-            </Typography>
-          </Box>
-
-          {/* Actions — right-aligned */}
-          <Box sx={{ ml: 'auto', flexShrink: 0, display: 'flex', gap: '6px' }}>
-            {canCancel && (
-              <Button
-                size="small"
-                variant="text"
-                startIcon={<CancelIcon sx={{ fontSize: 13 }} />}
-                disabled={cancelLoading}
-                onClick={handleCancel}
-                sx={{
-                  textTransform: 'none', fontSize: 11, fontWeight: 600,
-                  color: '#EF4444', borderRadius: '7px', px: '10px', py: '4px',
-                  '&:hover': { bgcolor: '#FEF2F2' },
-                }}
-              >
-                {cancelLoading ? 'Cancelling…' : 'Cancel'}
-              </Button>
-            )}
-            {canCreateNew && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<ScheduleIcon sx={{ fontSize: 13 }} />}
-                onClick={() => setCreateOpen(true)}
-                sx={{
-                  textTransform: 'none', fontSize: 11, fontWeight: 600,
-                  color: '#7C3AED', borderColor: 'rgba(124,58,237,0.3)',
-                  borderRadius: '7px', px: '10px', py: '4px',
-                  '&:hover': { bgcolor: 'rgba(124,58,237,0.04)', borderColor: '#7C3AED' },
-                }}
-              >
-                New Window
-              </Button>
-            )}
-          </Box>
-        </Box>
-
-        {/* Locked prices row */}
-        {saleWindow.prices.length > 0 && (
-          <Box sx={{ px: '14px', py: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-            <Typography sx={{ fontSize: 10, fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', mr: '2px', flexShrink: 0 }}>
-              Locked
-            </Typography>
-            {saleWindow.prices.map((p) => {
-              const mCfg = p.pricingMethod ? METHOD_CFG[p.pricingMethod] : null;
-              return (
-                <Box key={p.ticketTypeId} sx={{
-                  display: 'inline-flex', alignItems: 'center', gap: '5px',
-                  px: '10px', py: '3px', borderRadius: '20px',
-                  bgcolor: 'rgba(255,255,255,0.7)', border: `1px solid ${cfg!.border}`,
-                }}>
-                  <Typography sx={{ fontSize: 11, color: '#374151' }}>{p.ticketTypeName}</Typography>
-                  <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>·</Typography>
-                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: isActive ? '#7C3AED' : '#374151' }}>
-                    {fmt(p.selectedPrice)}
-                  </Typography>
-                  {mCfg && (
-                    <Typography sx={{ fontSize: 10, color: mCfg.color, fontWeight: 600 }}>
-                      {mCfg.label}
-                    </Typography>
-                  )}
-                  {isActive && <CheckIcon sx={{ fontSize: 11, color: '#10B981' }} />}
-                </Box>
-              );
-            })}
-          </Box>
-        )}
-      </Box>
+      <Button
+        size="small" variant="outlined" fullWidth
+        startIcon={<ScheduleIcon sx={{ fontSize: 13 }} />}
+        onClick={() => setCreateOpen(true)}
+        sx={{
+          textTransform: 'none', borderRadius: '8px', fontSize: 12,
+          fontWeight: 600, py: '7px',
+          color: '#7C3AED', borderColor: 'rgba(124,58,237,0.3)',
+          '&:hover': { bgcolor: 'rgba(124,58,237,0.04)', borderColor: '#7C3AED' },
+        }}
+      >
+        + Schedule New Window
+      </Button>
 
       <CreateSaleWindowDialog
         open={createOpen}
