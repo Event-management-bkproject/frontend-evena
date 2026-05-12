@@ -192,10 +192,10 @@ export function SellTab() {
                       {ticket.ticketTypeName}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: '#64748B', mt: '1px', fontWeight: 500 }}>
-                      🕐 {formatEventTime(ticket.eventStartAt)}
+                      🛒 Purchased {formatEventTime(ticket.issuedAt)}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: '#b0b0c0', mt: '1px' }}>
-                      Issued {formatDate(ticket.issuedAt)} · #{ticket.id}
+                      #{ticket.id}
                     </Typography>
                   </Box>
                 </Box>
