@@ -23,6 +23,10 @@ function formatDate(iso: string) {
   try { return format(parseISO(iso), 'dd MMM yyyy'); } catch { return iso; }
 }
 
+function formatEventTime(iso: string) {
+  try { return format(parseISO(iso), 'dd MMM yyyy · HH:mm'); } catch { return iso; }
+}
+
 export function SellTab() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [submittedPrice, setSubmittedPrice] = useState('');
@@ -130,7 +134,7 @@ export function SellTab() {
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '60vh', overflowY: 'auto', pr: '4px' }}>
           {tickets.map((ticket) => {
             const isSelected = selectedTicketId === ticket.id;
             return (
@@ -186,6 +190,9 @@ export function SellTab() {
                     </Typography>
                     <Typography sx={{ fontSize: 12, color: '#94a3b8', mt: '2px' }}>
                       {ticket.ticketTypeName}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: '#64748B', mt: '1px', fontWeight: 500 }}>
+                      🕐 {formatEventTime(ticket.eventStartAt)}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: '#b0b0c0', mt: '1px' }}>
                       Issued {formatDate(ticket.issuedAt)} · #{ticket.id}
