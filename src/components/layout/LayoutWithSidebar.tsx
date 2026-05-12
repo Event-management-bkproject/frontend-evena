@@ -30,7 +30,11 @@ const LayoutWithSidebar: React.FC<LayoutWithSidebarProps> = ({ children, current
           display: 'flex',
           flexDirection: 'column',
           height: 'calc(100vh - 20px)',
-          overflow: 'hidden',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          '&::-webkit-scrollbar': { width: 4 },
+          '&::-webkit-scrollbar-thumb': { bgcolor: '#E2E8F0', borderRadius: 4 },
+          '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
         }}
       >
         {children}

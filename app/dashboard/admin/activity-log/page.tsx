@@ -894,35 +894,58 @@ export default function AdminActivityLogPage() {
                             {/* Time */}
                             <TableCell sx={{ whiteSpace: 'nowrap' }}>
                               <Typography variant="body2" sx={{ fontSize: 12, color: ADMIN.body }}>
-                                {dayjs(log.createdAt).format('DD/MM/YY HH:mm:ss')}
+                                {log.createdAt ? dayjs(log.createdAt).format('DD/MM/YY HH:mm:ss') : '—'}
                               </Typography>
                               <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>
-                                {dayjs(log.createdAt).fromNow()}
+                                {log.createdAt ? dayjs(log.createdAt).fromNow() : '(unknown)'}
                               </Typography>
                             </TableCell>
 
                             {/* Actor */}
                             <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Avatar sx={{ width: 28, height: 28, bgcolor: actorColor + '18', color: actorColor, fontSize: 10, fontWeight: 700 }}>
-                                  {actorInitials(log.actorName, log.actorRole)}
-                                </Avatar>
-                                <Box>
-                                  <Typography variant="caption" sx={{ color: ADMIN.body, fontWeight: 600, display: 'block' }}>
-                                    {log.actorName ?? log.actorId?.substring(0, 8) + '…'}
-                                  </Typography>
-                                  <Chip
-                                    label={log.actorRole}
-                                    size="small"
-                                    sx={{
-                                      fontSize: 9, height: 16,
-                                      bgcolor: actorColor + '15',
-                                      color: actorColor,
-                                      '& .MuiChip-label': { px: 0.75 },
-                                    }}
-                                  />
+                              {/* FlexPass purchase: show seller → buyer transfer */}
+                              {log.entityType === 'FLEXPASS_PURCHASE' && log.ownerName ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Avatar sx={{ width: 20, height: 20, bgcolor: '#FEF3C7', color: '#B45309', fontSize: 8, fontWeight: 700 }}>
+                                      {(log.ownerName ?? '?')[0].toUpperCase()}
+                                    </Avatar>
+                                    <Typography variant="caption" sx={{ fontSize: 11, color: ADMIN.textSecondary, fontWeight: 500 }}>
+                                      {log.ownerName}
+                                    </Typography>
+                                  </Box>
+                                  <Typography variant="caption" sx={{ fontSize: 10, color: ADMIN.textMuted, pl: '24px' }}>↓ sold to</Typography>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Avatar sx={{ width: 20, height: 20, bgcolor: actorColor + '18', color: actorColor, fontSize: 8, fontWeight: 700 }}>
+                                      {actorInitials(log.actorName, log.actorRole)}
+                                    </Avatar>
+                                    <Typography variant="caption" sx={{ fontSize: 11, color: ADMIN.body, fontWeight: 600 }}>
+                                      {log.actorName ?? log.actorId?.substring(0, 8) + '…'}
+                                    </Typography>
+                                  </Box>
                                 </Box>
-                              </Box>
+                              ) : (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Avatar sx={{ width: 28, height: 28, bgcolor: actorColor + '18', color: actorColor, fontSize: 10, fontWeight: 700 }}>
+                                    {actorInitials(log.actorName, log.actorRole)}
+                                  </Avatar>
+                                  <Box>
+                                    <Typography variant="caption" sx={{ color: ADMIN.body, fontWeight: 600, display: 'block' }}>
+                                      {log.actorName ?? log.actorId?.substring(0, 8) + '…'}
+                                    </Typography>
+                                    <Chip
+                                      label={log.actorRole}
+                                      size="small"
+                                      sx={{
+                                        fontSize: 9, height: 16,
+                                        bgcolor: actorColor + '15',
+                                        color: actorColor,
+                                        '& .MuiChip-label': { px: 0.75 },
+                                      }}
+                                    />
+                                  </Box>
+                                </Box>
+                              )}
                             </TableCell>
 
                             {/* Action */}
