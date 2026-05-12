@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, CircularProgress, Alert,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Divider, Chip,
+  Dialog, DialogContent, DialogActions,
+  TextField, Chip, Select, MenuItem, FormControl, InputLabel,
 } from '@mui/material';
 import {
   Schedule as ScheduleIcon,
@@ -256,7 +256,8 @@ interface CreateDialogProps {
 }
 
 function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDialogProps) {
-  const [method, setMethod] = useState<FlexPassPricingMethod>(FlexPassPricingMethod.TRIMMED_MEAN);
+  const [methodsByTicket, setMethodsByTicket] = useState<Record<number, FlexPassPricingMethod>>({});
+  const [activeTicketTypeId, setActiveTicketTypeId] = useState<number | null>(null);
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');
   const [err, setErr] = useState('');
@@ -267,15 +268,36 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
   const analysis = analysisData?.data;
   const hasData = (analysis?.items.length ?? 0) > 0;
 
-  // Build prices map from first ticket type (method selector reference)
-  const firstItem = analysis?.items[0];
-  const pricesMap = firstItem
+  // Initialise per-ticket methods once analysis loads
+  useEffect(() => {
+    if (!analysis || !hasData) return;
+    const ids = analysis.items.map(i => i.ticketTypeId);
+    setMethodsByTicket(prev => {
+      const next = { ...prev };
+      ids.forEach(id => { if (!(id in next)) next[id] = FlexPassPricingMethod.TRIMMED_MEAN; });
+      return next;
+    });
+    setActiveTicketTypeId(prev => prev ?? ids[0]);
+  }, [analysis, hasData]);
+
+  const activeItem = analysis?.items.find(i => i.ticketTypeId === activeTicketTypeId) ?? analysis?.items[0] ?? null;
+
+  const activeMethod = activeTicketTypeId !== null
+    ? (methodsByTicket[activeTicketTypeId] ?? FlexPassPricingMethod.TRIMMED_MEAN)
+    : FlexPassPricingMethod.TRIMMED_MEAN;
+
+  const activePricesMap = activeItem
     ? {
-        [FlexPassPricingMethod.MEAN]:         firstItem.mean,
-        [FlexPassPricingMethod.MEDIAN]:       firstItem.median,
-        [FlexPassPricingMethod.TRIMMED_MEAN]: firstItem.trimmedMean,
+        [FlexPassPricingMethod.MEAN]:         activeItem.mean,
+        [FlexPassPricingMethod.MEDIAN]:       activeItem.median,
+        [FlexPassPricingMethod.TRIMMED_MEAN]: activeItem.trimmedMean,
       }
     : undefined;
+
+  const handleSelectMethod = (ticketTypeId: number, m: FlexPassPricingMethod) => {
+    setMethodsByTicket(prev => ({ ...prev, [ticketTypeId]: m }));
+    setActiveTicketTypeId(ticketTypeId);
+  };
 
   const validate = (): string => {
     if (!startAt) return 'Please set a sale start time.';
@@ -292,7 +314,7 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
     try {
       await createWindow({
         eventId,
-        pricingMethod: method,
+        pricingMethodByTicketTypeId: methodsByTicket,
         startAt: fromDatetimeLocal(startAt),
         endAt:   fromDatetimeLocal(endAt),
       }).unwrap();
@@ -335,7 +357,7 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
         </Box>
         {hasData && (
           <Chip
-            label="Click a bar to select pricing method"
+            label="Select a ticket type to configure its pricing method"
             size="small"
             sx={{ fontSize: 10, color: '#7C3AED', bgcolor: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '20px' }}
           />
@@ -346,7 +368,7 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
         {/* ── Top 2-column zone ─────────────────────────── */}
         <Box sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 320px' },
+          gridTemplateColumns: { xs: '1fr', md: '1fr 300px' },
           gap: 0,
           borderBottom: '1px solid #F1F5F9',
         }}>
@@ -374,27 +396,99 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
               </Box>
             )}
 
-            {hasData && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {analysis!.items.map((item) => (
-                  <Box key={item.ticketTypeId} sx={{
-                    bgcolor: '#FAFAFA', borderRadius: '12px',
-                    border: '1px solid #F1F5F9', p: '16px 16px 8px',
-                  }}>
-                    <TicketPriceChart item={item} selected={method} onSelect={setMethod} />
+            {hasData && analysis && (
+              <>
+                {/* Ticket type selector */}
+                {analysis.items.length > 1 && (
+                  <FormControl size="small" fullWidth sx={{ mb: 2 }}>
+                    <InputLabel sx={{ fontSize: 12 }}>Ticket Type</InputLabel>
+                    <Select
+                      value={activeTicketTypeId ?? ''}
+                      label="Ticket Type"
+                      onChange={(e) => setActiveTicketTypeId(Number(e.target.value))}
+                      sx={{ fontSize: 13, borderRadius: '8px' }}
+                    >
+                      {analysis.items.map((item) => {
+                        const m = methodsByTicket[item.ticketTypeId] ?? FlexPassPricingMethod.TRIMMED_MEAN;
+                        const mCfg = METHOD_CFG[m];
+                        return (
+                          <MenuItem key={item.ticketTypeId} value={item.ticketTypeId}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 1 }}>
+                              <Typography sx={{ fontSize: 13 }}>{item.ticketTypeName}</Typography>
+                              <Chip
+                                label={mCfg.label}
+                                size="small"
+                                sx={{ fontSize: 9, height: 16, fontWeight: 700, bgcolor: mCfg.bg, color: mCfg.color, border: `1px solid ${mCfg.border}` }}
+                              />
+                            </Box>
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                )}
+
+                {/* Single chart for active ticket */}
+                {activeItem && (
+                  <Box sx={{ bgcolor: '#FAFAFA', borderRadius: '12px', border: '1px solid #F1F5F9', p: '16px 16px 8px' }}>
+                    <TicketPriceChart
+                      item={activeItem}
+                      selected={activeMethod}
+                      onSelect={(m) => activeTicketTypeId !== null && handleSelectMethod(activeTicketTypeId, m)}
+                    />
                   </Box>
-                ))}
-              </Box>
+                )}
+
+                {/* Per-ticket method summary (shown when multiple ticket types) */}
+                {analysis.items.length > 1 && (
+                  <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {analysis.items.map((item) => {
+                      const m = methodsByTicket[item.ticketTypeId] ?? FlexPassPricingMethod.TRIMMED_MEAN;
+                      const mCfg = METHOD_CFG[m];
+                      const isActive = item.ticketTypeId === activeTicketTypeId;
+                      return (
+                        <Box
+                          key={item.ticketTypeId}
+                          onClick={() => setActiveTicketTypeId(item.ticketTypeId)}
+                          sx={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            px: '10px', py: '4px', borderRadius: '20px', cursor: 'pointer',
+                            border: `1px solid ${isActive ? '#8B5CF6' : '#E2E8F0'}`,
+                            bgcolor: isActive ? 'rgba(139,92,246,0.06)' : '#FAFAFA',
+                            transition: 'all 0.12s',
+                            '&:hover': { borderColor: '#C4B5FD' },
+                          }}
+                        >
+                          <Typography sx={{ fontSize: 11, color: '#374151' }}>{item.ticketTypeName}</Typography>
+                          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: mCfg.color, flexShrink: 0 }} />
+                          <Typography sx={{ fontSize: 10, fontWeight: 700, color: mCfg.color }}>{mCfg.label}</Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
+              </>
             )}
           </Box>
 
-          {/* Right: Pricing Method */}
+          {/* Right: Pricing Method for active ticket */}
           <Box sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#0F172A', mb: 1.5 }}>
-              Pricing Method
-            </Typography>
+            <Box sx={{ mb: 1.5 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                Pricing Method
+              </Typography>
+              {activeItem && (
+                <Typography sx={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, mt: '2px' }}>
+                  {activeItem.ticketTypeName}
+                </Typography>
+              )}
+            </Box>
             <Box sx={{ flex: 1 }}>
-              <MethodCards selected={method} onSelect={setMethod} prices={pricesMap} />
+              <MethodCards
+                selected={activeMethod}
+                onSelect={(m) => activeTicketTypeId !== null && handleSelectMethod(activeTicketTypeId, m)}
+                prices={activePricesMap}
+              />
             </Box>
           </Box>
         </Box>
@@ -587,13 +681,24 @@ export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWind
           {/* Separator */}
           <Box sx={{ width: 1, height: 14, bgcolor: cfg!.border, flexShrink: 0 }} />
 
-          {/* Pricing method */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <TrendIcon sx={{ fontSize: 12, color: '#7C3AED' }} />
-            <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>
-              {METHOD_CFG[saleWindow.pricingMethod].label}
-            </Typography>
-          </Box>
+          {/* Pricing method — derived from per-ticket prices if available */}
+          {(() => {
+            const methods = saleWindow.prices.map(p => p.pricingMethod).filter(Boolean);
+            const uniqueMethods = [...new Set(methods)];
+            const label = methods.length === 0
+              ? METHOD_CFG[saleWindow.pricingMethod].label
+              : uniqueMethods.length === 1
+                ? METHOD_CFG[uniqueMethods[0]].label
+                : 'Mixed';
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                <TrendIcon sx={{ fontSize: 12, color: '#7C3AED' }} />
+                <Typography sx={{ fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>
+                  {label}
+                </Typography>
+              </Box>
+            );
+          })()}
 
           {/* Separator */}
           <Box sx={{ width: 1, height: 14, bgcolor: cfg!.border, flexShrink: 0 }} />
@@ -653,20 +758,28 @@ export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWind
             <Typography sx={{ fontSize: 10, fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', mr: '2px', flexShrink: 0 }}>
               Locked
             </Typography>
-            {saleWindow.prices.map((p) => (
-              <Box key={p.ticketTypeId} sx={{
-                display: 'inline-flex', alignItems: 'center', gap: '5px',
-                px: '10px', py: '3px', borderRadius: '20px',
-                bgcolor: 'rgba(255,255,255,0.7)', border: `1px solid ${cfg!.border}`,
-              }}>
-                <Typography sx={{ fontSize: 11, color: '#374151' }}>{p.ticketTypeName}</Typography>
-                <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>·</Typography>
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: isActive ? '#7C3AED' : '#374151' }}>
-                  {fmt(p.selectedPrice)}
-                </Typography>
-                {isActive && <CheckIcon sx={{ fontSize: 11, color: '#10B981' }} />}
-              </Box>
-            ))}
+            {saleWindow.prices.map((p) => {
+              const mCfg = p.pricingMethod ? METHOD_CFG[p.pricingMethod] : null;
+              return (
+                <Box key={p.ticketTypeId} sx={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  px: '10px', py: '3px', borderRadius: '20px',
+                  bgcolor: 'rgba(255,255,255,0.7)', border: `1px solid ${cfg!.border}`,
+                }}>
+                  <Typography sx={{ fontSize: 11, color: '#374151' }}>{p.ticketTypeName}</Typography>
+                  <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>·</Typography>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: isActive ? '#7C3AED' : '#374151' }}>
+                    {fmt(p.selectedPrice)}
+                  </Typography>
+                  {mCfg && (
+                    <Typography sx={{ fontSize: 10, color: mCfg.color, fontWeight: 600 }}>
+                      {mCfg.label}
+                    </Typography>
+                  )}
+                  {isActive && <CheckIcon sx={{ fontSize: 11, color: '#10B981' }} />}
+                </Box>
+              );
+            })}
           </Box>
         )}
       </Box>
