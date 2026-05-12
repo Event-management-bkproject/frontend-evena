@@ -73,6 +73,7 @@ export interface FlexPassSaleWindowPriceResponse {
   trimmedMeanPrice: number;
   recommendedPrice: number;
   selectedPrice: number;
+  pricingMethod: FlexPassPricingMethod;
 }
 
 export interface FlexPassSaleWindowResponse {
@@ -114,7 +115,7 @@ export interface CreateFlexPassListingRequest {
 
 export interface CreateFlexPassSaleWindowRequest {
   eventId: string;
-  pricingMethod: FlexPassPricingMethod;
+  pricingMethodByTicketTypeId: Record<number, FlexPassPricingMethod>;
   startAt: string;
   endAt: string;
 }
