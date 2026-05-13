@@ -14,6 +14,7 @@ import { OrganizerAPI } from '@/src/stores/services/OrganizerApi';
 import { EventAPI } from '@/src/stores/services/EventApi';
 import { CategoryAPI } from '@/src/stores/services/CategoryApi';
 import { VenueAPI } from '@/src/stores/services/VenueApi';
+import { hasPermission, AppRole, Permission } from '@/src/config/permissions';
 
 const resetAllApiCaches = (dispatch: ReturnType<typeof useDispatch>) => {
   dispatch(AuthAPI.util.resetApiState());
@@ -76,5 +77,14 @@ export const useAuth = () => {
     logout,
     setAuthFromInit,
     isAuthenticated: !!auth.accessToken,
+  };
+};
+
+export const usePermission = () => {
+  const auth = useSelector((state: RootState) => state.auth);
+  const role = auth.user?.roles?.[0]?.replace(/^ROLE_/, '') as AppRole | undefined;
+  return {
+    can: (permission: Permission) => hasPermission(role, permission),
+    role,
   };
 };

@@ -132,6 +132,13 @@ export const FlexPassAPI = createApi({
         { type: 'FlexPassSaleWindow', id: eventId },
       ],
     }),
+
+    // ─── Admin endpoints ──────────────────────────────────────────────────────
+
+    getAdminSaleWindows: builder.query<ApiResponse<FlexPassSaleWindowResponse[]>, void>({
+      query: () => ({ url: '/flexpass/admin/sale-windows', method: 'GET' }),
+      providesTags: ['FlexPassSaleWindow'],
+    }),
   }),
 });
 
@@ -149,4 +156,5 @@ export const {
   useGetEventSaleWindowQuery,
   useCreateSaleWindowMutation,
   useCancelSaleWindowMutation,
+  useGetAdminSaleWindowsQuery,
 } = FlexPassAPI;

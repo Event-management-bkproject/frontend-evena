@@ -26,12 +26,15 @@ import {
   Person as PersonIcon,
   Logout as LogoutIcon,
   AdminPanelSettings as AdminIcon,
+  SwapHoriz as FlexPassIcon,
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { useGetOrganizerRefundRequestsQuery } from '@/src/stores/services/RefundRequestApi';
+import { useGetOrganizerListingsQuery } from '@/src/stores/services/FlexPassApi';
+import { FlexPassListingStatus } from '@/src/stores/types/flexpass';
 import { ADMIN } from '@/src/utils/constants/adminBrand';
 
 const SIDEBAR_W = 240;
@@ -44,9 +47,11 @@ interface AdminSidebarProps {
 function useBadgeCounts() {
   const { data: orgsData } = useGetOrganizationsQuery({ page: 0, size: 200 });
   const { data: refundsData } = useGetOrganizerRefundRequestsQuery({ page: 0, size: 100, status: 'PENDING' });
+  const { data: flexPassData } = useGetOrganizerListingsQuery();
   const pendingOrgs = (orgsData?.data?.content ?? []).filter((o) => !o.verified).length;
   const pendingRefunds = refundsData?.data?.totalElements ?? 0;
-  return { pendingOrgs, pendingRefunds };
+  const pendingFlexPass = (flexPassData?.data ?? []).filter((l) => l.status === FlexPassListingStatus.PENDING_APPROVAL).length;
+  return { pendingOrgs, pendingRefunds, pendingFlexPass };
 }
 
 interface NavItem {
@@ -88,7 +93,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, onClose }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { logout, auth } = useAuth();
   const { t } = useTranslation();
-  const { pendingOrgs, pendingRefunds } = useBadgeCounts();
+  const { pendingOrgs, pendingRefunds, pendingFlexPass } = useBadgeCounts();
 
   const navItems: NavItem[] = [
     { label: 'Overview',      path: '/dashboard/admin',               exact: true, icon: <DashboardIcon fontSize="small" /> },
@@ -96,6 +101,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ open, onClose }) => {
     { label: 'Events',        path: '/dashboard/admin/events',                     icon: <EventIcon fontSize="small" /> },
     { label: 'Orders',        path: '/dashboard/admin/orders',                     icon: <OrdersIcon fontSize="small" /> },
     { label: 'Tickets',       path: '/dashboard/admin/tickets',                    icon: <TicketsIcon fontSize="small" /> },
+    { label: 'FlexPass',      path: '/dashboard/admin/flexpass',                   icon: <FlexPassIcon fontSize="small" />, badge: pendingFlexPass },
     { label: 'Refunds',       path: '/dashboard/admin/refunds',                    icon: <RefundIcon fontSize="small" />, badge: pendingRefunds },
     { label: 'Content',       path: '/dashboard/admin/content',                    icon: <ContentIcon fontSize="small" /> },
     { label: 'Activity Log',  path: '/dashboard/admin/activity-log',               icon: <ActivityIcon fontSize="small" /> },

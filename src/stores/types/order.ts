@@ -59,6 +59,7 @@ export enum PaymentStatus {
 
 export enum TicketStatus {
   ACTIVE = 'ACTIVE',
+  TRANSFER_LOCKED = 'TRANSFER_LOCKED',
   USED = 'USED',
   CANCELLED = 'CANCELLED',
   EXPIRED = 'EXPIRED',
