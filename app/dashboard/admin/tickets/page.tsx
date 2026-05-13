@@ -18,10 +18,11 @@ import dayjs from 'dayjs';
 type FilterMode = 'all' | TicketStatus;
 
 const STATUS_META: Record<TicketStatus, { label: string; bg: string; color: string }> = {
-  [TicketStatus.ACTIVE]:    { label: 'Active',    bg: ADMIN.successBg, color: ADMIN.successText },
-  [TicketStatus.USED]:      { label: 'Used',      bg: ADMIN.infoBg,    color: ADMIN.infoText },
-  [TicketStatus.CANCELLED]: { label: 'Cancelled', bg: ADMIN.errorBg,   color: ADMIN.errorText },
-  [TicketStatus.EXPIRED]:   { label: 'Expired',   bg: ADMIN.pageBg,    color: ADMIN.textMuted },
+  [TicketStatus.ACTIVE]:          { label: 'Active',          bg: ADMIN.successBg, color: ADMIN.successText },
+  [TicketStatus.TRANSFER_LOCKED]: { label: 'Transfer Locked', bg: ADMIN.warningBg, color: ADMIN.warningText },
+  [TicketStatus.USED]:            { label: 'Used',            bg: ADMIN.infoBg,    color: ADMIN.infoText },
+  [TicketStatus.CANCELLED]:       { label: 'Cancelled',       bg: ADMIN.errorBg,   color: ADMIN.errorText },
+  [TicketStatus.EXPIRED]:         { label: 'Expired',         bg: ADMIN.pageBg,    color: ADMIN.textMuted },
 };
 
 export default function AdminTicketsPage() {

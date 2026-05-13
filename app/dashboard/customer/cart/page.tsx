@@ -54,10 +54,11 @@ const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 };
 
 const TICKET_STATUS_CFG: Record<TicketStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  [TicketStatus.ACTIVE]:    { label: 'Active',    color: '#16A34A', bg: 'rgba(255,255,255,0.92)', icon: <CheckCircle sx={{ fontSize: 12 }} /> },
-  [TicketStatus.USED]:      { label: 'Used',      color: '#475569', bg: 'rgba(255,255,255,0.92)', icon: <AccessTime sx={{ fontSize: 12 }} /> },
-  [TicketStatus.CANCELLED]: { label: 'Cancelled', color: '#DC2626', bg: 'rgba(255,255,255,0.92)', icon: <Cancel sx={{ fontSize: 12 }} /> },
-  [TicketStatus.EXPIRED]:   { label: 'Expired',   color: '#64748B', bg: 'rgba(255,255,255,0.92)', icon: <Cancel sx={{ fontSize: 12 }} /> },
+  [TicketStatus.ACTIVE]:          { label: 'Active',          color: '#16A34A', bg: 'rgba(255,255,255,0.92)', icon: <CheckCircle sx={{ fontSize: 12 }} /> },
+  [TicketStatus.TRANSFER_LOCKED]: { label: 'Transfer Locked', color: '#D97706', bg: 'rgba(255,255,255,0.92)', icon: <AccessTime sx={{ fontSize: 12 }} /> },
+  [TicketStatus.USED]:            { label: 'Used',            color: '#475569', bg: 'rgba(255,255,255,0.92)', icon: <AccessTime sx={{ fontSize: 12 }} /> },
+  [TicketStatus.CANCELLED]:       { label: 'Cancelled',       color: '#DC2626', bg: 'rgba(255,255,255,0.92)', icon: <Cancel sx={{ fontSize: 12 }} /> },
+  [TicketStatus.EXPIRED]:         { label: 'Expired',         color: '#64748B', bg: 'rgba(255,255,255,0.92)', icon: <Cancel sx={{ fontSize: 12 }} /> },
 };
 
 // ── Shared sub-components ────────────────────────────────────────────────────
