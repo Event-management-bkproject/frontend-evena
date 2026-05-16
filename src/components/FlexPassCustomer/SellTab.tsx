@@ -53,7 +53,7 @@ export function SellTab() {
   const [cancelListing, { isLoading: cancelling }] = useCancelListingMutation();
 
   const tickets = (ticketsData?.data ?? []).filter(
-    (t) => t.status === TicketStatus.ACTIVE
+    (t) => t.status === TicketStatus.ACTIVE || t.status === TicketStatus.TRANSFER_LOCKED
   );
 
   const allListings = listingsData?.data ?? [];
