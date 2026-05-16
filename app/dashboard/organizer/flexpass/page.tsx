@@ -16,6 +16,7 @@ import {
   Refresh as RefreshIcon,
   BarChart as AnalyticsIcon,
   Schedule as ScheduleIcon,
+  ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import ProtectedContent from '@/src/components/ProtectedContent';
 import LayoutWithSidebar from '@/src/components/layout/LayoutWithSidebar';
@@ -221,12 +222,16 @@ interface EventGroup {
   listings: FlexPassListingResponse[];
 }
 
+type RightView = 'listings' | 'schedule';
+
 // ─── Main Content ─────────────────────────────────────────────────────────────
 
 function FlexPassOrganizerContent() {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedView, setSelectedView] = useState<RightView>('listings');
   const [rejectTarget, setRejectTarget] = useState<{ id: number; eventTitle: string } | null>(null);
 
   const { data, isLoading, error, refetch } = useGetOrganizerListingsQuery();
@@ -276,15 +281,35 @@ function FlexPassOrganizerContent() {
     return Array.from(map.values());
   }, [filtered]);
 
-  // Auto-select event with pending listings
+  // Auto-expand event with pending listings on first load
   useEffect(() => {
-    if (!selectedEventId || !groups.find((g) => g.eventId === selectedEventId)) {
+    if (!expandedEventId || !groups.find((g) => g.eventId === expandedEventId)) {
       const withPending = groups.find((g) => g.listings.some((l) => l.status === 'PENDING_APPROVAL'));
-      setSelectedEventId(withPending?.eventId ?? groups[0]?.eventId ?? null);
+      const autoId = withPending?.eventId ?? groups[0]?.eventId ?? null;
+      if (autoId) {
+        setExpandedEventId(autoId);
+        setSelectedEventId(autoId);
+        setSelectedView('listings');
+      }
     }
   }, [groups]);
 
   const selectedGroup = groups.find((g) => g.eventId === selectedEventId) ?? null;
+
+  const handleEventClick = (eventId: string) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+    } else {
+      setExpandedEventId(eventId);
+      setSelectedEventId(eventId);
+      setSelectedView('listings');
+    }
+  };
+
+  const handleSubViewClick = (eventId: string, view: RightView) => {
+    setSelectedEventId(eventId);
+    setSelectedView(view);
+  };
 
   // Stats
   const pending  = listings.filter((l) => l.status === FlexPassListingStatus.PENDING_APPROVAL).length;
@@ -407,82 +432,185 @@ function FlexPassOrganizerContent() {
         )}
 
         {!isLoading && !error && groups.length > 0 && (
-          <Box sx={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'flex', gap: '12px', height: 'calc(100vh - 340px)', minHeight: 400 }}>
 
             {/* Event list (left) */}
-            <Box sx={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', pr: '2px' }}>
+            <Box sx={{ width: 230, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
               {groups.map((group) => {
                 const pendingCount = group.listings.filter((l) => l.status === 'PENDING_APPROVAL').length;
-                const isSelected = selectedEventId === group.eventId;
+                const isExpanded = expandedEventId === group.eventId;
+                const isListingsActive = selectedEventId === group.eventId && selectedView === 'listings';
+                const isScheduleActive = selectedEventId === group.eventId && selectedView === 'schedule';
                 return (
-                  <Box key={group.eventId} onClick={() => setSelectedEventId(group.eventId)}
-                    sx={{ bgcolor: isSelected ? 'white' : 'rgba(255,255,255,0.5)',
-                      border: `1.5px solid ${isSelected ? BRAND.primary : 'rgba(0,0,0,0.07)'}`,
-                      borderRadius: '10px', p: '11px', cursor: 'pointer', transition: 'all 0.15s',
-                      '&:hover': { bgcolor: 'white', borderColor: isSelected ? BRAND.primary : 'rgba(0,0,0,0.18)' } }}>
-                    <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#030213', mb: '4px',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {group.eventTitle}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mb: '7px' }}>
-                      <CalendarIcon sx={{ fontSize: 10, color: '#717182' }} />
-                      <Typography sx={{ fontSize: 10, color: '#717182' }}>{formatDate(group.eventStartAt)}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                      <Box sx={{ fontSize: 10, fontWeight: 500, px: '7px', py: '2px', borderRadius: '20px',
-                        bgcolor: '#f7f7f7', color: '#717182', border: '1px solid rgba(0,0,0,0.07)' }}>
-                        {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
+                  <Box key={group.eventId} sx={{
+                    bgcolor: isExpanded ? 'white' : 'rgba(255,255,255,0.6)',
+                    border: `1.5px solid ${isExpanded ? BRAND.primary : 'rgba(0,0,0,0.08)'}`,
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                    boxShadow: isExpanded ? '0 2px 8px rgba(243,107,249,0.10)' : 'none',
+                  }}>
+                    {/* Event header — click to toggle expand */}
+                    <Box onClick={() => handleEventClick(group.eventId)}
+                      sx={{ p: '11px', cursor: 'pointer', position: 'relative',
+                        '&:hover': { bgcolor: 'rgba(243,107,249,0.03)' } }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600,
+                        color: isExpanded ? BRAND.primary : '#030213',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', mb: '4px',
+                        pr: '6px' }}>
+                        {group.eventTitle}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mb: '7px' }}>
+                        <CalendarIcon sx={{ fontSize: 10, color: '#717182' }} />
+                        <Typography sx={{ fontSize: 10, color: '#717182' }}>{formatDate(group.eventStartAt)}</Typography>
                       </Box>
-                      {pendingCount > 0 && (
-                        <Box sx={{ fontSize: 10, fontWeight: 600, px: '7px', py: '2px', borderRadius: '20px',
-                          bgcolor: '#fffbeb', color: '#92400e', border: '1px solid #fcd34d' }}>
-                          {pendingCount} pending
+                      <Box sx={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <Box sx={{ fontSize: 10, fontWeight: 500, px: '7px', py: '2px', borderRadius: '20px',
+                          bgcolor: '#f7f7f7', color: '#717182', border: '1px solid rgba(0,0,0,0.07)' }}>
+                          {group.listings.length} listing{group.listings.length !== 1 ? 's' : ''}
                         </Box>
-                      )}
+                        {pendingCount > 0 && (
+                          <Box sx={{ fontSize: 10, fontWeight: 600, px: '7px', py: '2px', borderRadius: '20px',
+                            bgcolor: '#fffbeb', color: '#92400e', border: '1px solid #fcd34d' }}>
+                            {pendingCount} pending
+                          </Box>
+                        )}
+                        {/* Chevron — bottom-right */}
+                        <ChevronRightIcon sx={{
+                          fontSize: 16, color: isExpanded ? BRAND.primary : '#94a3b8',
+                          ml: 'auto',
+                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease, color 0.15s',
+                        }} />
+                      </Box>
                     </Box>
+
+                    {/* Dropdown sub-options */}
+                    {isExpanded && (
+                      <Box sx={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                        {/* Listings */}
+                        <Box onClick={() => handleSubViewClick(group.eventId, 'listings')}
+                          sx={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            px: '14px', py: '8px', cursor: 'pointer',
+                            bgcolor: isListingsActive ? '#fdf3ff' : 'white',
+                            borderLeft: `3px solid ${isListingsActive ? BRAND.primary : 'transparent'}`,
+                            transition: 'all 0.13s',
+                            '&:hover': { bgcolor: '#fdf3ff' },
+                          }}>
+                          <TicketIcon sx={{ fontSize: 13, color: isListingsActive ? BRAND.primary : '#94a3b8' }} />
+                          <Typography sx={{ fontSize: 12, fontWeight: 600, color: isListingsActive ? BRAND.primary : '#64748b', flex: 1 }}>
+                            Listings
+                          </Typography>
+                          <Box sx={{ fontSize: 10, fontWeight: 700, px: '6px', py: '1px', borderRadius: '20px',
+                            bgcolor: isListingsActive ? BRAND.primaryLight : '#f1f5f9',
+                            color: isListingsActive ? BRAND.primary : '#94a3b8' }}>
+                            {group.listings.length}
+                          </Box>
+                        </Box>
+
+                        {/* Schedule Window */}
+                        <Box onClick={() => handleSubViewClick(group.eventId, 'schedule')}
+                          sx={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            px: '14px', py: '8px', cursor: 'pointer',
+                            bgcolor: isScheduleActive ? '#eff6ff' : 'white',
+                            borderLeft: `3px solid ${isScheduleActive ? '#3b82f6' : 'transparent'}`,
+                            borderTop: '1px solid rgba(0,0,0,0.04)',
+                            transition: 'all 0.13s',
+                            '&:hover': { bgcolor: '#eff6ff' },
+                          }}>
+                          <ScheduleIcon sx={{ fontSize: 13, color: isScheduleActive ? '#3b82f6' : '#94a3b8' }} />
+                          <Typography sx={{ fontSize: 12, fontWeight: 600, color: isScheduleActive ? '#3b82f6' : '#64748b' }}>
+                            Schedule Window
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
                 );
               })}
             </Box>
 
-            {/* Listings (right) */}
-            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Right panel */}
+            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
               {!selectedGroup ? (
                 <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   bgcolor: 'white', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.07)' }}>
-                  <Typography sx={{ fontSize: 14, color: '#717182' }}>Select an event to view listings</Typography>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography sx={{ fontSize: 32, mb: '8px' }}>📋</Typography>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: '#030213', mb: '4px' }}>Select an event</Typography>
+                    <Typography sx={{ fontSize: 12, color: '#717182' }}>Click an event on the left to view listings or manage sale windows.</Typography>
+                  </Box>
                 </Box>
               ) : (
                 <>
-                  <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', px: '2px' }}>
-                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#030213',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {selectedGroup.eventTitle}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                      <CalendarIcon sx={{ fontSize: 11, color: '#717182' }} />
-                      <Typography sx={{ fontSize: 11, color: '#717182' }}>{formatDate(selectedGroup.eventStartAt)}</Typography>
+                  {/* Right panel header */}
+                  <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', px: '2px',
+                    pb: '8px', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#030213',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {selectedGroup.eventTitle}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
+                        <CalendarIcon sx={{ fontSize: 11, color: '#717182' }} />
+                        <Typography sx={{ fontSize: 11, color: '#717182' }}>{formatDate(selectedGroup.eventStartAt)}</Typography>
+                      </Box>
                     </Box>
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
-                      letterSpacing: '0.05em', color: '#717182', ml: 'auto', flexShrink: 0 }}>
-                      {selectedGroup.listings.length} listing{selectedGroup.listings.length !== 1 ? 's' : ''}
-                    </Typography>
+                    {/* View tabs */}
+                    <Box sx={{ display: 'flex', gap: '4px', bgcolor: '#f1f5f9', borderRadius: '8px', p: '3px', flexShrink: 0 }}>
+                      <Box onClick={() => setSelectedView('listings')}
+                        sx={{ display: 'flex', alignItems: 'center', gap: '5px', px: '10px', py: '5px',
+                          borderRadius: '6px', cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                          bgcolor: selectedView === 'listings' ? 'white' : 'transparent',
+                          color: selectedView === 'listings' ? BRAND.primary : '#717182',
+                          boxShadow: selectedView === 'listings' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                          transition: 'all 0.13s' }}>
+                        <TicketIcon sx={{ fontSize: 13 }} /> Listings
+                      </Box>
+                      <Box onClick={() => setSelectedView('schedule')}
+                        sx={{ display: 'flex', alignItems: 'center', gap: '5px', px: '10px', py: '5px',
+                          borderRadius: '6px', cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                          bgcolor: selectedView === 'schedule' ? 'white' : 'transparent',
+                          color: selectedView === 'schedule' ? '#3b82f6' : '#717182',
+                          boxShadow: selectedView === 'schedule' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                          transition: 'all 0.13s' }}>
+                        <ScheduleIcon sx={{ fontSize: 13 }} /> Schedule Window
+                      </Box>
+                    </Box>
                   </Box>
 
-                  <SaleWindowPanel
-                    eventId={selectedGroup.eventId}
-                    eventTitle={selectedGroup.eventTitle}
-                    approvedCount={selectedGroup.listings.filter(l => l.status === FlexPassListingStatus.APPROVED).length}
-                  />
+                  {/* Schedule Window view */}
+                  {selectedView === 'schedule' && (
+                    <SaleWindowPanel
+                      eventId={selectedGroup.eventId}
+                      eventTitle={selectedGroup.eventTitle}
+                      waitingListings={selectedGroup.listings.filter(
+                        l => l.status === FlexPassListingStatus.APPROVED && l.saleWindowId === null
+                      )}
+                    />
+                  )}
 
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', pb: '4px' }}>
-                    {selectedGroup.listings.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing}
-                        onApprove={handleApprove}
-                        onReject={(id) => setRejectTarget({ id, eventTitle: listing.eventTitle })}
-                        approveLoading={approveLoading} />
-                    ))}
-                  </Box>
+                  {/* Listings view */}
+                  {selectedView === 'listings' && (
+                    <>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: '2px', mt: '-4px' }}>
+                        <Typography sx={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
+                          letterSpacing: '0.05em', color: '#717182' }}>
+                          {selectedGroup.listings.length} listing{selectedGroup.listings.length !== 1 ? 's' : ''}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', pb: '4px' }}>
+                        {selectedGroup.listings.map((listing) => (
+                          <ListingCard key={listing.id} listing={listing}
+                            onApprove={handleApprove}
+                            onReject={(id) => setRejectTarget({ id, eventTitle: listing.eventTitle })}
+                            approveLoading={approveLoading} />
+                        ))}
+                      </Box>
+                    </>
+                  )}
                 </>
               )}
             </Box>

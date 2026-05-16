@@ -56,14 +56,15 @@ export const OrderAPI = createApi({
     // Get current user's orders (paginated)
     getMyOrders: builder.query<
       ApiResponse<PaginatedResponse<OrderListResponse>>,
-      { page?: number; size?: number }
+      { page?: number; size?: number; status?: string }
     >({
       query: (params = {}) => ({
         url: '/orders/my-orders',
         method: 'GET',
         params: {
-          page: params.page || 0,
-          size: params.size || 10,
+          page: params.page ?? 0,
+          size: params.size ?? 10,
+          ...(params.status ? { status: params.status } : {}),
         },
       }),
       providesTags: ['Order'],

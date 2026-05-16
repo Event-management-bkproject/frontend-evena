@@ -29,6 +29,7 @@ import {
   FlexPassPricingMethod,
   FlexPassSaleWindowStatus,
   FlexPassPriceAnalysisItem,
+  FlexPassListingResponse,
 } from '@/src/stores/types/flexpass';
 import { BRAND } from '@/src/utils/constants/constant';
 
@@ -477,18 +478,22 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
               <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
                 Pricing Method
               </Typography>
-              {activeItem && (
-                <Typography sx={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, mt: '2px' }}>
-                  {activeItem.ticketTypeName}
-                </Typography>
-              )}
+              <Typography sx={{ fontSize: 11, color: '#7C3AED', fontWeight: 600, mt: '2px' }}>
+                {activeItem ? activeItem.ticketTypeName : '—'}
+              </Typography>
             </Box>
             <Box sx={{ flex: 1 }}>
-              <MethodCards
-                selected={activeMethod}
-                onSelect={(m) => activeTicketTypeId !== null && handleSelectMethod(activeTicketTypeId, m)}
-                prices={activePricesMap}
-              />
+              {hasData ? (
+                <MethodCards
+                  selected={activeMethod}
+                  onSelect={(m) => activeTicketTypeId !== null && handleSelectMethod(activeTicketTypeId, m)}
+                  prices={activePricesMap}
+                />
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#CBD5E1', fontSize: 12, textAlign: 'center', p: 2 }}>
+                  Pricing method will be configurable once approved listings exist.
+                </Box>
+              )}
             </Box>
           </Box>
         </Box>
@@ -542,7 +547,7 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
         <Button
           onClick={handleCreate}
           variant="contained"
-          disabled={creating}
+          disabled={creating || !hasData}
           startIcon={!creating && <ScheduleIcon sx={{ fontSize: 16 }} />}
           sx={{
             textTransform: 'none', borderRadius: '9px', minWidth: 160,
@@ -658,6 +663,10 @@ function SaleWindowCard({
                 <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>·</Typography>
                 <Typography sx={{ fontSize: 11, fontWeight: 700, color: isActive ? '#7C3AED' : '#374151' }}>{fmt(p.selectedPrice)}</Typography>
                 {mCfg && <Typography sx={{ fontSize: 10, color: mCfg.color, fontWeight: 600 }}>{mCfg.label}</Typography>}
+                <Typography sx={{ fontSize: 10, color: '#94A3B8' }}>·</Typography>
+                <Typography sx={{ fontSize: 10, fontWeight: 600, color: '#64748B' }}>
+                  {p.sampleCount} listing{p.sampleCount !== 1 ? 's' : ''}
+                </Typography>
                 {isActive && <CheckIcon sx={{ fontSize: 11, color: '#10B981' }} />}
               </Box>
             );
@@ -668,19 +677,150 @@ function SaleWindowCard({
   );
 }
 
+// ─── WaitingListingsDialog ────────────────────────────────────────────────────
+
+function WaitingListingsDialog({ open, onClose, listings }: { open: boolean; onClose: () => void; listings: FlexPassListingResponse[] }) {
+  const byTicketType = listings.reduce<Record<number, { name: string; items: FlexPassListingResponse[] }>>((acc, l) => {
+    if (!acc[l.ticketTypeId]) acc[l.ticketTypeId] = { name: l.ticketTypeName, items: [] };
+    acc[l.ticketTypeId].items.push(l);
+    return acc;
+  }, {});
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth
+      PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}>
+      {/* Header */}
+      <Box sx={{
+        px: 3, pt: 2.5, pb: 2,
+        background: 'linear-gradient(135deg, #F5F3FF 0%, #EFF6FF 100%)',
+        borderBottom: '1px solid #E2E8F0',
+        display: 'flex', alignItems: 'center', gap: 1.5,
+      }}>
+        <Box sx={{
+          width: 32, height: 32, borderRadius: '8px',
+          background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <ClockIcon sx={{ fontSize: 17, color: '#fff' }} />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 800, color: '#0F172A', lineHeight: 1.2 }}>
+            Queued for Next Window
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: '#64748B' }}>
+            {listings.length} listing{listings.length !== 1 ? 's' : ''} will be included when the next window is created
+          </Typography>
+        </Box>
+      </Box>
+
+      <DialogContent sx={{ p: 0 }}>
+        <Box sx={{ px: 3, py: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {Object.values(byTicketType).map(({ name, items }) => (
+            <Box key={name}>
+              {/* Ticket type header */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#0F172A' }}>{name}</Typography>
+                <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>
+                  {items.length} listing{items.length !== 1 ? 's' : ''}
+                </Typography>
+              </Box>
+              {/* Listing rows */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {items.map((l) => (
+                  <Box key={l.id} sx={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    px: '12px', py: '8px', borderRadius: '8px',
+                    bgcolor: '#F8FAFC', border: '1px solid #E2E8F0',
+                  }}>
+                    <Typography sx={{ fontSize: 10, fontFamily: 'monospace', color: '#94A3B8', flexShrink: 0, minWidth: 32 }}>
+                      #{l.id}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: '#374151', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {l.sellerName}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', flexShrink: 0 }}>
+                      {fmt(l.submittedPrice)}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, pb: 2.5, pt: 0, borderTop: '1px solid #F1F5F9' }}>
+        <Button onClick={onClose} variant="contained"
+          sx={{
+            textTransform: 'none', borderRadius: '9px', minWidth: 100,
+            background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+            fontWeight: 700, fontSize: 13,
+            '&:hover': { background: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+          }}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// ─── WaitingListingsSection ───────────────────────────────────────────────────
+
+function WaitingListingsSection({ listings }: { listings: FlexPassListingResponse[] }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  if (listings.length === 0) return null;
+
+  return (
+    <>
+      <Box sx={{
+        mb: '10px', px: '14px', py: '9px', borderRadius: '10px',
+        border: '1px dashed #C4B5FD', bgcolor: '#F5F3FF',
+        display: 'flex', alignItems: 'center', gap: '8px',
+      }}>
+        <ClockIcon sx={{ fontSize: 13, color: '#7C3AED', flexShrink: 0 }} />
+        <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', flex: 1 }}>
+          Queued for next window
+        </Typography>
+        <Typography sx={{
+          fontSize: 10, fontWeight: 600, color: '#7C3AED',
+          bgcolor: 'rgba(124,58,237,0.1)', px: '8px', py: '2px', borderRadius: '20px', flexShrink: 0,
+        }}>
+          {listings.length} listing{listings.length !== 1 ? 's' : ''}
+        </Typography>
+        <Button size="small" variant="text"
+          onClick={() => setDialogOpen(true)}
+          sx={{ textTransform: 'none', fontSize: 11, fontWeight: 600, color: '#7C3AED', px: '8px', py: '2px', borderRadius: '6px', flexShrink: 0, minWidth: 0, '&:hover': { bgcolor: 'rgba(124,58,237,0.08)' } }}>
+          View details
+        </Button>
+      </Box>
+
+      <WaitingListingsDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        listings={listings}
+      />
+    </>
+  );
+}
+
 // ─── SaleWindowPanel ──────────────────────────────────────────────────────────
 
 interface SaleWindowPanelProps {
   eventId: string;
   eventTitle: string;
-  approvedCount: number;
+  waitingListings: FlexPassListingResponse[];
 }
 
-export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWindowPanelProps) {
+export function SaleWindowPanel({ eventId, eventTitle, waitingListings }: SaleWindowPanelProps) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data: windowData, isLoading } = useGetEventSaleWindowQuery(eventId);
   const saleWindows = windowData?.data ?? [];
+
+  const hasActiveWindow = saleWindows.some(
+    (sw) => sw.status === FlexPassSaleWindowStatus.SCHEDULED || sw.status === FlexPassSaleWindowStatus.OPENED,
+  );
 
   if (isLoading) {
     return (
@@ -705,9 +845,9 @@ export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWind
             <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#94A3B8' }}>
               No sale window scheduled
             </Typography>
-            {approvedCount > 0 && (
+            {waitingListings.length > 0 && (
               <Typography sx={{ fontSize: 11, color: '#10B981', mt: '1px' }}>
-                {approvedCount} listing{approvedCount !== 1 ? 's' : ''} approved and ready to lock
+                {waitingListings.length} listing{waitingListings.length !== 1 ? 's' : ''} approved and ready to lock
               </Typography>
             )}
           </Box>
@@ -718,19 +858,23 @@ export function SaleWindowPanel({ eventId, eventTitle, approvedCount }: SaleWind
         <SaleWindowCard key={sw.id} saleWindow={sw} eventId={eventId} onCancelled={() => {}} />
       ))}
 
-      <Button
-        size="small" variant="outlined" fullWidth
-        startIcon={<ScheduleIcon sx={{ fontSize: 13 }} />}
-        onClick={() => setCreateOpen(true)}
-        sx={{
-          textTransform: 'none', borderRadius: '8px', fontSize: 12,
-          fontWeight: 600, py: '7px',
-          color: '#7C3AED', borderColor: 'rgba(124,58,237,0.3)',
-          '&:hover': { bgcolor: 'rgba(124,58,237,0.04)', borderColor: '#7C3AED' },
-        }}
-      >
-        + Schedule New Window
-      </Button>
+      <WaitingListingsSection listings={waitingListings} />
+
+      {!hasActiveWindow && (
+        <Button
+          size="small" variant="outlined" fullWidth
+          startIcon={<ScheduleIcon sx={{ fontSize: 13 }} />}
+          onClick={() => setCreateOpen(true)}
+          sx={{
+            textTransform: 'none', borderRadius: '8px', fontSize: 12,
+            fontWeight: 600, py: '7px',
+            color: '#7C3AED', borderColor: 'rgba(124,58,237,0.3)',
+            '&:hover': { bgcolor: 'rgba(124,58,237,0.04)', borderColor: '#7C3AED' },
+          }}
+        >
+          + Schedule New Window
+        </Button>
+      )}
 
       <CreateSaleWindowDialog
         open={createOpen}

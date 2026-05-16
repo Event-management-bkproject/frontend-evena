@@ -201,6 +201,8 @@ export interface EventListResponse {
   organizerName: string;
   minPrice: number;
   availableTickets: number;
+  totalTickets?: number;
+  soldTickets?: number;
   soldPercentage: number;
   eventVersion: number;
   createdAt: string;

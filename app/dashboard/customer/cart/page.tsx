@@ -372,20 +372,33 @@ export default function MyBookingsPage() {
   useEffect(() => {
     setTab(searchParams.get('tab') === '1' ? 1 : 0);
   }, [searchParams]);
-  const [orderPage, setOrderPage] = useState(0);
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderFilter, setOrderFilter] = useState<OrderStatus | 'ALL'>('ALL');
+  const [ticketPage, setTicketPage] = useState(1);
+  const [ticketFilter, setTicketFilter] = useState<TicketStatus | 'ALL'>('ALL');
   const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(null);
 
+  const ITEMS_PER_PAGE = 9;
+
   const { data: ordersData, isLoading: ordersLoading, error: ordersError, refetch: refetchOrders } =
-    useGetMyOrdersQuery({ page: orderPage, size: 10 });
+    useGetMyOrdersQuery({
+      page: orderPage - 1,
+      size: ITEMS_PER_PAGE,
+      status: orderFilter !== 'ALL' ? orderFilter : undefined,
+    });
   const { data: ticketsData, isLoading: ticketsLoading, error: ticketsError, refetch: refetchTickets } =
     useGetMyTicketsQuery();
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
   const orders = ordersData?.data?.content ?? [];
-  const totalPages = ordersData?.data?.totalPages ?? 0;
-  const totalOrders = ordersData?.data?.totalElements ?? 0;
+  const orderTotalPages = ordersData?.data?.totalPages ?? 0;
+  const orderTotalElements = ordersData?.data?.totalElements ?? 0;
   const tickets = ticketsData?.data ?? [];
+
+  // Total across all statuses — fetched separately for the "All" chip count
+  const { data: allOrdersCountData } = useGetMyOrdersQuery({ page: 0, size: 1 });
+  const totalOrders = allOrdersCountData?.data?.totalElements ?? orderTotalElements;
 
   useEffect(() => {
     if (!lastEvent) return;
@@ -489,15 +502,37 @@ export default function MyBookingsPage() {
       <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
 
         {/* ── Orders tab ─────────────────────────────────────── */}
-        {tab === 0 && (
-          <>
-            {ordersError ? (
+        {tab === 0 && (() => {
+          const ORDER_FILTERS: { key: OrderStatus | 'ALL'; label: string; color: string }[] = [
+            { key: 'ALL',                    label: 'All',        color: '#F36BF9' },
+            { key: OrderStatus.CONFIRMED,    label: 'Confirmed',  color: '#16A34A' },
+            { key: OrderStatus.PENDING,      label: 'Pending',    color: '#F97316' },
+            { key: OrderStatus.PROCESSING,   label: 'Processing', color: '#6093FC' },
+            { key: OrderStatus.REFUNDED,     label: 'Refunded',   color: '#7C3AED' },
+            { key: OrderStatus.CANCELLED,    label: 'Cancelled',  color: '#64748B' },
+            { key: OrderStatus.EXPIRED,      label: 'Expired',    color: '#94A3B8' },
+          ];
+
+          const handleOrderFilterChange = (f: OrderStatus | 'ALL') => {
+            setOrderFilter(f);
+            setOrderPage(1);
+          };
+
+          const rangeStart = (orderPage - 1) * ITEMS_PER_PAGE + 1;
+          const rangeEnd = Math.min(orderPage * ITEMS_PER_PAGE, orderTotalElements);
+
+          if (ordersError) {
+            return (
               <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: 4, textAlign: 'center', border: '1px solid #FEE2E2' }}>
                 <Typography color="error" fontWeight={600}>
                   {t('messages.error.loadFailed', { item: t('common.entities.order') })}
                 </Typography>
               </Box>
-            ) : orders.length === 0 ? (
+            );
+          }
+
+          if (!ordersLoading && totalOrders === 0) {
+            return (
               <Box sx={{ bgcolor: '#fff', borderRadius: '20px', p: { xs: 5, md: 8 }, textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,rgba(243,107,249,0.12),rgba(229,90,224,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
                   <ShoppingBag sx={{ fontSize: 36, color: '#F36BF9' }} />
@@ -521,53 +556,130 @@ export default function MyBookingsPage() {
                   {t('customer.browseEvents')}
                 </Button>
               </Box>
-            ) : (
-              <>
-                <Grid container spacing={3}>
-                  {orders.map((order) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={order.id}>
-                      <OrderCard
-                        order={order}
-                        onCancel={setCancelTargetId}
-                        isCancelling={isCancelling}
-                        onViewTickets={() => setTab(1)}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
+            );
+          }
 
-                {totalPages > 1 && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                    <Pagination
-                      count={totalPages}
-                      page={orderPage + 1}
-                      onChange={(_, p) => setOrderPage(p - 1)}
-                      size="small"
-                      sx={{
-                        '& .MuiPaginationItem-root.Mui-selected': {
-                          background: 'linear-gradient(135deg,#F36BF9,#e55ae0)',
-                          color: '#fff',
-                          '&:hover': { background: 'linear-gradient(135deg,#e055e8,#cc44cc)' },
-                        },
-                      }}
-                    />
-                  </Box>
-                )}
-              </>
-            )}
-          </>
-        )}
+          return (
+            <>
+              {/* Filter chips + range info */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {ORDER_FILTERS.map(({ key, label, color }) => {
+                    const active = orderFilter === key;
+                    const chipCount = key === 'ALL' ? totalOrders : (active ? orderTotalElements : null);
+                    return (
+                      <Box
+                        key={key}
+                        onClick={() => handleOrderFilterChange(key)}
+                        sx={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          px: '12px', py: '5px', borderRadius: '20px', cursor: 'pointer',
+                          border: `1.5px solid ${active ? color : '#E2E8F0'}`,
+                          bgcolor: active ? `${color}18` : '#fff',
+                          transition: 'all 0.14s',
+                          '&:hover': { borderColor: color },
+                        }}
+                      >
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: active ? color : '#64748B' }}>
+                          {label}
+                        </Typography>
+                        {chipCount !== null && (
+                          <Box sx={{ minWidth: 18, height: 18, borderRadius: '20px', px: '4px', bgcolor: active ? color : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Typography sx={{ fontSize: 10, fontWeight: 700, color: active ? '#fff' : '#64748B' }}>{chipCount}</Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
+                <Typography sx={{ fontSize: 12, color: '#94A3B8', flexShrink: 0 }}>
+                  {ordersLoading ? 'Loading…' : orderTotalElements === 0 ? 'No orders' : `Showing ${rangeStart}–${rangeEnd} of ${orderTotalElements}`}
+                </Typography>
+              </Box>
+
+              {ordersLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress size={28} sx={{ color: '#F36BF9' }} />
+                </Box>
+              ) : orderTotalElements === 0 ? (
+                <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: 5, textAlign: 'center', border: '1px dashed #E2E8F0' }}>
+                  <Typography sx={{ fontSize: 14, color: '#94A3B8' }}>No orders in this category.</Typography>
+                </Box>
+              ) : (
+                <>
+                  <Grid container spacing={3}>
+                    {orders.map((order) => (
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={order.id}>
+                        <OrderCard
+                          order={order}
+                          onCancel={setCancelTargetId}
+                          isCancelling={isCancelling}
+                          onViewTickets={() => setTab(1)}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  {orderTotalPages > 1 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                      <Pagination
+                        count={orderTotalPages}
+                        page={orderPage}
+                        onChange={(_, p) => setOrderPage(p)}
+                        size="small"
+                        sx={{
+                          '& .MuiPaginationItem-root.Mui-selected': {
+                            background: 'linear-gradient(135deg,#F36BF9,#e55ae0)',
+                            color: '#fff',
+                            '&:hover': { background: 'linear-gradient(135deg,#e055e8,#cc44cc)' },
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+            </>
+          );
+        })()}
 
         {/* ── Tickets tab ────────────────────────────────────── */}
-        {tab === 1 && (
-          <>
-            {ticketsError ? (
+        {tab === 1 && (() => {
+          const TICKET_FILTERS: { key: TicketStatus | 'ALL'; label: string; color?: string }[] = [
+            { key: 'ALL',                      label: 'All' },
+            { key: TicketStatus.ACTIVE,        label: 'Active',   color: '#059669' },
+            { key: TicketStatus.USED,          label: 'Used',     color: '#475569' },
+            { key: TicketStatus.TRANSFER_LOCKED, label: 'Locked', color: '#D97706' },
+            { key: TicketStatus.CANCELLED,     label: 'Cancelled',color: '#DC2626' },
+          ];
+
+          const filteredTickets = ticketFilter === 'ALL'
+            ? tickets
+            : tickets.filter((t) => t.status === ticketFilter);
+
+          const ticketTotalPages = Math.ceil(filteredTickets.length / ITEMS_PER_PAGE);
+          const pagedTickets = filteredTickets.slice(
+            (ticketPage - 1) * ITEMS_PER_PAGE,
+            ticketPage * ITEMS_PER_PAGE,
+          );
+
+          const handleFilterChange = (f: TicketStatus | 'ALL') => {
+            setTicketFilter(f);
+            setTicketPage(1);
+          };
+
+          if (ticketsError) {
+            return (
               <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: 4, textAlign: 'center', border: '1px solid #FEE2E2' }}>
                 <Typography color="error" fontWeight={600}>
                   {t('messages.error.loadFailed', { item: t('common.entities.ticket') })}
                 </Typography>
               </Box>
-            ) : tickets.length === 0 ? (
+            );
+          }
+
+          if (tickets.length === 0) {
+            return (
               <Box sx={{ bgcolor: '#fff', borderRadius: '20px', p: { xs: 5, md: 8 }, textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg,rgba(243,107,249,0.12),rgba(96,147,252,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
                   <ConfirmationNumber sx={{ fontSize: 36, background: 'linear-gradient(135deg,#F36BF9,#6093FC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} />
@@ -591,17 +703,82 @@ export default function MyBookingsPage() {
                   {t('customer.browseEvents')}
                 </Button>
               </Box>
-            ) : (
-              <Grid container spacing={3}>
-                {tickets.map((ticket) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={ticket.id}>
-                    <TicketCard ticket={ticket} onViewQR={setSelectedTicket} />
+            );
+          }
+
+          return (
+            <>
+              {/* Filter chips + count */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {TICKET_FILTERS.map(({ key, label, color }) => {
+                    const active = ticketFilter === key;
+                    const count = key === 'ALL' ? tickets.length : tickets.filter((t) => t.status === key).length;
+                    const accent = color ?? '#6093FC';
+                    return (
+                      <Box
+                        key={key}
+                        onClick={() => handleFilterChange(key)}
+                        sx={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          px: '12px', py: '5px', borderRadius: '20px', cursor: 'pointer',
+                          border: `1.5px solid ${active ? accent : '#E2E8F0'}`,
+                          bgcolor: active ? `${accent}18` : '#fff',
+                          transition: 'all 0.14s',
+                          '&:hover': { borderColor: accent },
+                        }}
+                      >
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: active ? accent : '#64748B' }}>
+                          {label}
+                        </Typography>
+                        <Box sx={{ minWidth: 18, height: 18, borderRadius: '20px', px: '4px', bgcolor: active ? accent : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Typography sx={{ fontSize: 10, fontWeight: 700, color: active ? '#fff' : '#64748B' }}>{count}</Typography>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Box>
+                <Typography sx={{ fontSize: 12, color: '#94A3B8', flexShrink: 0 }}>
+                  {filteredTickets.length === 0 ? 'No tickets' : `Showing ${(ticketPage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(ticketPage * ITEMS_PER_PAGE, filteredTickets.length)} of ${filteredTickets.length}`}
+                </Typography>
+              </Box>
+
+              {filteredTickets.length === 0 ? (
+                <Box sx={{ bgcolor: '#fff', borderRadius: '16px', p: 5, textAlign: 'center', border: '1px dashed #E2E8F0' }}>
+                  <Typography sx={{ fontSize: 14, color: '#94A3B8' }}>No tickets in this category.</Typography>
+                </Box>
+              ) : (
+                <>
+                  <Grid container spacing={3}>
+                    {pagedTickets.map((ticket) => (
+                      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={ticket.id}>
+                        <TicketCard ticket={ticket} onViewQR={setSelectedTicket} />
+                      </Grid>
+                    ))}
                   </Grid>
-                ))}
-              </Grid>
-            )}
-          </>
-        )}
+
+                  {ticketTotalPages > 1 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                      <Pagination
+                        count={ticketTotalPages}
+                        page={ticketPage}
+                        onChange={(_, p) => setTicketPage(p)}
+                        size="small"
+                        sx={{
+                          '& .MuiPaginationItem-root.Mui-selected': {
+                            background: 'linear-gradient(135deg,#F36BF9,#6093FC)',
+                            color: '#fff',
+                            '&:hover': { background: 'linear-gradient(135deg,#e055e8,#4a7ef0)' },
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+            </>
+          );
+        })()}
       </Container>
 
       {/* QR Code modal */}

@@ -10,5 +10,5 @@ export const categorySchema = Yup.object({
     .optional()
     .nullable()
     .max(500, 'Description cannot exceed 500 characters'),
-  iconUrl: Yup.string().optional().nullable().url('Icon URL must be a valid URL'),
+  iconUrl: Yup.string().optional().nullable(),
 });
