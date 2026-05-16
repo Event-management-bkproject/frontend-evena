@@ -42,7 +42,7 @@ export default function OrganizationFilters({
   return (
     <Box sx={{ mb: 3 }}>
       {/* Top Row: Search and Create Button */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, mb: 3, alignItems: 'center' }}>
         {/* Search */}
         <TextField
           placeholder={t('searchBar.searchOrganizations')}
@@ -51,19 +51,14 @@ export default function OrganizationFilters({
           disabled={loading}
           sx={{
             flex: 1,
+            minWidth: 0,
             backgroundColor: '#FFFFFF',
             borderRadius: '12px',
             '& .MuiOutlinedInput-root': {
               borderRadius: '12px',
-              '& fieldset': {
-                borderColor: '#E0E0E0',
-              },
-              '&:hover fieldset': {
-                borderColor: '#B0B0B0',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#f36bf9',
-              },
+              '& fieldset': { borderColor: '#E0E0E0' },
+              '&:hover fieldset': { borderColor: '#B0B0B0' },
+              '&.Mui-focused fieldset': { borderColor: '#f36bf9' },
             },
           }}
           InputProps={{
@@ -82,10 +77,9 @@ export default function OrganizationFilters({
             backgroundColor: '#FFFFFF',
             border: '1px solid #E0E0E0',
             borderRadius: '12px',
-            padding: '12px',
-            '&:hover': {
-              backgroundColor: '#F5F5F5',
-            },
+            padding: { xs: '8px', sm: '12px' },
+            flexShrink: 0,
+            '&:hover': { backgroundColor: '#F5F5F5' },
           }}
         >
           <Badge badgeContent={pendingCount} color="error">
@@ -93,7 +87,7 @@ export default function OrganizationFilters({
           </Badge>
         </IconButton>
 
-        {/* Create Organization Button */}
+        {/* Create Organization Button — icon-only on xs, full label on sm+ */}
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -102,20 +96,21 @@ export default function OrganizationFilters({
           sx={{
             backgroundColor: '#f36bf9',
             borderRadius: '12px',
-            padding: '12px 24px',
+            padding: { xs: '10px', sm: '12px 24px' },
+            minWidth: 0,
+            flexShrink: 0,
             textTransform: 'none',
-            fontSize: '16px',
+            fontSize: { xs: '13px', sm: '16px' },
             fontWeight: 600,
             whiteSpace: 'nowrap',
-            '&:hover': {
-              backgroundColor: '#e55ae0',
-            },
-            '&:disabled': {
-              backgroundColor: '#cccccc',
-            },
+            '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 }, ml: { xs: 0, sm: '-4px' } },
+            '&:hover': { backgroundColor: '#e55ae0' },
+            '&:disabled': { backgroundColor: '#cccccc' },
           }}
         >
-          {t('organizationFilter.createOrganization')}
+          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+            {t('organizationFilter.createOrganization')}
+          </Box>
         </Button>
       </Box>
 
@@ -143,20 +138,21 @@ export default function OrganizationFilters({
               flex: 1,
               display: 'flex',
               alignItems: 'center',
-              gap: 1.5,
-              px: 3,
-              py: 1.5,
+              gap: { xs: 1, sm: 1.5 },
+              px: { xs: 1.5, sm: 3 },
+              py: { xs: 1, sm: 1.5 },
               borderLeft: idx > 0 ? '1px solid #E0E0E0' : 'none',
+              minWidth: 0,
             }}
           >
-            <Box sx={{ width: 36, height: 36, borderRadius: '10px', bgcolor: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Box sx={{ width: { xs: 28, sm: 36 }, height: { xs: 28, sm: 36 }, borderRadius: '10px', bgcolor: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {stat.icon}
             </Box>
-            <Box>
-              <Typography variant="h6" fontWeight={700} sx={{ color: stat.color, lineHeight: 1, mb: 0.25 }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography fontWeight={700} sx={{ color: stat.color, lineHeight: 1, mb: 0.25, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 {stat.value}
               </Typography>
-              <Typography variant="caption" sx={{ color: '#888', fontSize: '11px' }}>
+              <Typography variant="caption" sx={{ color: '#888', fontSize: { xs: '10px', sm: '11px' }, lineHeight: 1.2, display: 'block' }}>
                 {stat.label}
               </Typography>
             </Box>

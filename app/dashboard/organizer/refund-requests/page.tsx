@@ -97,12 +97,12 @@ function RefundRequestsContent() {
         }}
       >
         {/* Filter bar */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: BRAND.dark }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, color: BRAND.dark, flexShrink: 0 }}>
             <FilterList sx={{ fontSize: 18 }} />
-            <Typography variant="body2" fontWeight={600}>Filter by status</Typography>
+            <Typography variant="body2" fontWeight={600} sx={{ display: { xs: 'none', sm: 'block' } }}>Filter by status</Typography>
           </Box>
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          <FormControl size="small" sx={{ minWidth: { xs: 130, sm: 180 } }}>
             <InputLabel>Status</InputLabel>
             <Select
               value={statusFilter}
@@ -117,7 +117,7 @@ function RefundRequestsContent() {
             </Select>
           </FormControl>
           {!isLoading && (
-            <Box sx={{ ml: 'auto', px: 2, py: 0.5, bgcolor: '#fff', borderRadius: '20px', border: `1px solid ${BRAND.border}` }}>
+            <Box sx={{ ml: { xs: 0, sm: 'auto' }, px: { xs: 1, sm: 2 }, py: 0.5, bgcolor: '#fff', borderRadius: '20px', border: `1px solid ${BRAND.border}` }}>
               <Typography variant="caption" fontWeight={700} color={BRAND.dark}>
                 {requests.length} result{requests.length !== 1 ? 's' : ''}
               </Typography>

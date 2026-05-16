@@ -210,9 +210,9 @@ export default function OrganizerDashboard() {
             <Grid container spacing='20px'>
               {/* Performance table — 3/4 width */}
               <Grid size={{ xs: 12, lg: 9 }} sx={{ minWidth: 0 }}>
-                <Box sx={{ bgcolor: '#fff', borderRadius: '16px', border: `1px solid ${BRAND.border}`, overflow: 'hidden' }}>
+                <Box sx={{ bgcolor: '#fff', borderRadius: '16px', border: `1px solid ${BRAND.border}`, overflow: 'hidden', overflowX: { xs: 'auto', md: 'hidden' } }}>
                   {/* Table header */}
-                  <Box sx={{ px: 2.5, pt: 2.5, pb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+                  <Box sx={{ px: { xs: 1.5, sm: 2.5 }, pt: 2, pb: 1.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
                     <Box>
                       <Typography sx={{ fontWeight: 700, color: BRAND.dark, fontSize: 15 }}>
                         Event Performance
@@ -224,7 +224,7 @@ export default function OrganizerDashboard() {
                         {hotCount === 0 && slowCount === 0 && 'All events on track'}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
                       <ToggleButtonGroup
                         value={signalFilter}
                         exclusive
@@ -240,9 +240,10 @@ export default function OrganizerDashboard() {
                         variant="contained"
                         startIcon={<Add />}
                         onClick={() => router.push('/dashboard/organizer/events')}
-                        sx={{ bgcolor: BRAND.primary, borderRadius: '20px', textTransform: 'none', px: 2, fontWeight: 600, fontSize: 12, boxShadow: 'none', '&:hover': { bgcolor: BRAND.primaryHover } }}
+                        sx={{ bgcolor: BRAND.primary, borderRadius: '20px', textTransform: 'none', px: { xs: 1.5, sm: 2 }, fontWeight: 600, fontSize: 12, boxShadow: 'none', '&:hover': { bgcolor: BRAND.primaryHover } }}
                       >
-                        New Event
+                        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>New Event</Box>
+                        <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>New</Box>
                       </Button>
                     </Box>
                   </Box>
@@ -266,7 +267,7 @@ export default function OrganizerDashboard() {
                       </Button>
                     </Box>
                   ) : (
-                    <TableContainer sx={{ maxHeight: 420, '&::-webkit-scrollbar': { width: 4, height: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: BRAND.borderLight, borderRadius: 4 } }}>
+                    <TableContainer sx={{ maxHeight: 420, overflowX: 'auto', WebkitOverflowScrolling: 'touch', '&::-webkit-scrollbar': { width: 4, height: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: BRAND.borderLight, borderRadius: 4 } }}>
                       <Table stickyHeader size="small">
                         <TableHead>
                           <TableRow sx={{ '& th': { bgcolor: BRAND.bgSurface, fontWeight: 700, fontSize: 11, color: BRAND.textSecondary, textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: `1px solid ${BRAND.border}`, py: 1.25 } }}>
@@ -369,7 +370,7 @@ export default function OrganizerDashboard() {
                   )}
 
                   {tableRows.length > 0 && (
-                    <Box sx={{ px: 2.5, py: 1.5, borderTop: `1px solid ${BRAND.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ px: { xs: 1.5, sm: 2.5 }, py: 1.5, borderTop: `1px solid ${BRAND.border}`, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
                       <Typography sx={{ fontSize: 12, color: BRAND.textMuted }}>
                         Showing {tableRows.length} of {totalEvents} events
                       </Typography>

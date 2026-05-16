@@ -74,16 +74,10 @@ function OrdersContent() {
 
           {/* Left: stat cards + overview chart */}
           <Box sx={{ flex: { xs: '1 1 auto', md: '0 0 calc(50% - 7.5px)' }, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <Box sx={{ display: 'flex', gap: '10px', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-              <Box sx={{ flex: { xs: '1 1 calc(33% - 7px)', sm: 1 } }}>
-                <StatCard icon={<TicketIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalOrders')} value={totalOrders.toLocaleString()} />
-              </Box>
-              <Box sx={{ flex: { xs: '1 1 calc(33% - 7px)', sm: 1 } }}>
-                <StatCard icon={<SoldIcon sx={{ fontSize: 28 }} />} label={t('organizer.confirmedOrders')} value={confirmedOrders.toLocaleString()} />
-              </Box>
-              <Box sx={{ flex: { xs: '1 1 calc(33% - 7px)', sm: 1 } }}>
-                <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalRevenue')} value={formatCurrency(totalRevenue)} />
-              </Box>
+            <Box sx={{ display: 'grid', gap: '10px', gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr' } }}>
+              <StatCard icon={<TicketIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalOrders')} value={totalOrders.toLocaleString()} />
+              <StatCard icon={<SoldIcon sx={{ fontSize: 28 }} />} label={t('organizer.confirmedOrders')} value={confirmedOrders.toLocaleString()} />
+              <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalRevenue')} value={formatCurrency(totalRevenue)} />
             </Box>
             <OrdersOverviewChart orders={allOrders} />
           </Box>
