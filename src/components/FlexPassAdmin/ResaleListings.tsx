@@ -299,10 +299,10 @@ export function ResaleListings({
       </Box>
 
       {/* ── Master-detail body ── */}
-      <Box sx={{ display: 'flex', gap: '12px', flex: 1, minHeight: 0 }}>
+      <Box sx={{ display: 'flex', gap: '12px', flex: 1, minHeight: 0, flexDirection: { xs: 'column', md: 'row' } }}>
 
         {/* Left panel: event list */}
-        <Box sx={{ width: 220, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px' }}>
+        <Box sx={{ width: { xs: '100%', md: 220 }, maxHeight: { xs: 260, md: 'none' }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px' }}>
           {groups.length === 0 ? (
             <Box sx={{ bgcolor: 'white', borderRadius: '10px', border: '1px solid rgba(0,0,0,0.07)', p: '20px', textAlign: 'center' }}>
               <Typography sx={{ fontSize: 12, color: '#717182' }}>
@@ -322,6 +322,7 @@ export function ResaleListings({
                     border: `1.5px solid ${isSelected ? BRAND.primary : 'rgba(0,0,0,0.07)'}`,
                     borderRadius: '10px', p: '11px', cursor: 'pointer',
                     transition: 'all 0.15s',
+                    flexShrink: 0,
                     '&:hover': { bgcolor: 'white', borderColor: isSelected ? BRAND.primary : 'rgba(0,0,0,0.18)' },
                   }}
                 >
@@ -369,7 +370,7 @@ export function ResaleListings({
                 </Typography>
               </Box>
               <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: '2px' }}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', pb: '4px' }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '10px', pb: '4px' }}>
                   {selectedGroup.tickets.map((ticket) => (
                     <ResaleCard key={ticket.id} ticket={ticket} onApprove={onApprove} onReject={onReject} />
                   ))}

@@ -70,18 +70,18 @@ function OrdersContent() {
         }}
       >
         {/* Charts + stat cards row */}
-        <Box sx={{ display: 'flex', gap: '15px', alignItems: 'stretch', flexShrink: 0, height: '360px' }}>
+        <Box sx={{ display: 'flex', gap: '15px', alignItems: 'stretch', flexShrink: 0, flexDirection: { xs: 'column', md: 'row' }, height: { xs: 'auto', md: '360px' } }}>
 
           {/* Left: stat cards + overview chart */}
-          <Box sx={{ flex: '0 0 calc(50% - 7.5px)', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <Box sx={{ display: 'flex', gap: '10px' }}>
-              <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: { xs: '1 1 auto', md: '0 0 calc(50% - 7.5px)' }, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Box sx={{ display: 'flex', gap: '10px', flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+              <Box sx={{ flex: { xs: '1 1 calc(33% - 7px)', sm: 1 } }}>
                 <StatCard icon={<TicketIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalOrders')} value={totalOrders.toLocaleString()} />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: { xs: '1 1 calc(33% - 7px)', sm: 1 } }}>
                 <StatCard icon={<SoldIcon sx={{ fontSize: 28 }} />} label={t('organizer.confirmedOrders')} value={confirmedOrders.toLocaleString()} />
               </Box>
-              <Box sx={{ flex: 1 }}>
+              <Box sx={{ flex: { xs: '1 1 calc(33% - 7px)', sm: 1 } }}>
                 <StatCard icon={<EarningsIcon sx={{ fontSize: 28 }} />} label={t('organizer.totalRevenue')} value={formatCurrency(totalRevenue)} />
               </Box>
             </Box>
@@ -89,7 +89,7 @@ function OrdersContent() {
           </Box>
 
           {/* Right: category chart */}
-          <Box sx={{ flex: '0 0 calc(50% - 7.5px)', minWidth: 0, display: 'flex' }}>
+          <Box sx={{ flex: { xs: '1 1 auto', md: '0 0 calc(50% - 7.5px)' }, minWidth: 0, display: 'flex', height: { xs: 320, md: '100%' } }}>
             <OrdersCategoryChart orders={allOrders} />
           </Box>
         </Box>

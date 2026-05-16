@@ -342,7 +342,7 @@ function FlexPassOrganizerContent() {
         display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
         {/* Stats row */}
-        <Box sx={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: '10px', flexShrink: 0 }}>
           <FlexStatsCard title="Total Listings" value={String(total)} change={undefined}
             icon={<TicketIcon sx={{ fontSize: 20, color: BRAND.primary }} />} iconBg="#fef1ff" />
           <FlexStatsCard title="Awaiting Approval" value={String(pending)}
@@ -432,10 +432,10 @@ function FlexPassOrganizerContent() {
         )}
 
         {!isLoading && !error && groups.length > 0 && (
-          <Box sx={{ display: 'flex', gap: '12px', height: 'calc(100vh - 340px)', minHeight: 400 }}>
+          <Box sx={{ display: 'flex', gap: '12px', flexDirection: { xs: 'column', md: 'row' }, height: { xs: 'auto', md: 'calc(100vh - 340px)' }, minHeight: { xs: 0, md: 400 } }}>
 
             {/* Event list (left) */}
-            <Box sx={{ width: 230, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
+            <Box sx={{ width: { xs: '100%', md: 230 }, maxHeight: { xs: 280, md: 'none' }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
               {groups.map((group) => {
                 const pendingCount = group.listings.filter((l) => l.status === 'PENDING_APPROVAL').length;
                 const isExpanded = expandedEventId === group.eventId;
@@ -533,7 +533,7 @@ function FlexPassOrganizerContent() {
             </Box>
 
             {/* Right panel */}
-            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
+            <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px', overflowY: { xs: 'visible', md: 'auto' }, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
               {!selectedGroup ? (
                 <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   bgcolor: 'white', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.07)' }}>
@@ -595,13 +595,13 @@ function FlexPassOrganizerContent() {
                   {/* Listings view */}
                   {selectedView === 'listings' && (
                     <>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: '2px', mt: '-4px' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', px: '2px', mt: '-4px', flexShrink: 0 }}>
                         <Typography sx={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
                           letterSpacing: '0.05em', color: '#717182' }}>
                           {selectedGroup.listings.length} listing{selectedGroup.listings.length !== 1 ? 's' : ''}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', pb: '4px' }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '10px', pb: '4px', flexShrink: 0 }}>
                         {selectedGroup.listings.map((listing) => (
                           <ListingCard key={listing.id} listing={listing}
                             onApprove={handleApprove}

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
+import { Menu as MenuIcon } from '@mui/icons-material';
 import Sidebar from '../Sidebar/Sidebar';
 interface LayoutWithSidebarProps {
   children: React.ReactNode;
@@ -37,6 +38,21 @@ const LayoutWithSidebar: React.FC<LayoutWithSidebarProps> = ({ children, current
           '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
         }}
       >
+        {/* Mobile-only hamburger — opens the sidebar drawer */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', mb: '8px' }}>
+          <IconButton
+            onClick={() => setSidebarOpen(true)}
+            size="small"
+            sx={{
+              bgcolor: '#E4E6F5',
+              borderRadius: '10px',
+              p: '8px',
+              '&:hover': { bgcolor: '#CDD0E8' },
+            }}
+          >
+            <MenuIcon sx={{ color: '#2A3363', fontSize: 20 }} />
+          </IconButton>
+        </Box>
         {children}
       </Box>
     </Box>

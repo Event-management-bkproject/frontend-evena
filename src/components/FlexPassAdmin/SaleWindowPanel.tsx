@@ -608,6 +608,7 @@ function SaleWindowCard({
       border: `1px solid ${cfg.border}`,
       bgcolor: isDimmed ? '#FAFAFA' : cfg.bg,
       opacity: isDimmed ? 0.72 : 1,
+      flexShrink: 0,
     }}>
       <Box sx={{
         px: '14px', py: '10px',
@@ -777,6 +778,7 @@ function WaitingListingsSection({ listings }: { listings: FlexPassListingRespons
         mb: '10px', px: '14px', py: '9px', borderRadius: '10px',
         border: '1px dashed #C4B5FD', bgcolor: '#F5F3FF',
         display: 'flex', alignItems: 'center', gap: '8px',
+        flexShrink: 0,
       }}>
         <ClockIcon sx={{ fontSize: 13, color: '#7C3AED', flexShrink: 0 }} />
         <Typography sx={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', flex: 1 }}>
@@ -839,6 +841,7 @@ export function SaleWindowPanel({ eventId, eventTitle, waitingListings }: SaleWi
           px: '16px', py: '12px', mb: '10px',
           bgcolor: '#FAFAFA', borderRadius: '10px',
           border: '1px dashed #E2E8F0',
+          flexShrink: 0,
         }}>
           <ScheduleIcon sx={{ fontSize: 16, color: '#CBD5E1', flexShrink: 0 }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>

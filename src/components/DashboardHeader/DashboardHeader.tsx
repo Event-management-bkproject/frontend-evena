@@ -37,10 +37,11 @@ export function DashboardHeader({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        py: 2,
-        px: 3,
+        py: { xs: 1.5, sm: 2 },
+        px: { xs: 1.5, sm: 3 },
         backgroundColor: '#F7F7F7',
         borderRadius: '20px',
+        gap: 1,
       }}
     >
       {/* Left: Breadcrumbs */}
@@ -78,7 +79,7 @@ export function DashboardHeader({
           sx={{
             mt: 0.5,
             color: '#36437C',
-            fontSize: '1.75rem',
+            fontSize: { xs: '1.25rem', sm: '1.75rem' },
           }}
         >
           {title}
@@ -129,7 +130,7 @@ export function DashboardHeader({
             alignItems: 'center',
             gap: 1,
             cursor: 'pointer',
-            px: 1.5,
+            px: { xs: 0.5, sm: 1.5 },
             py: 0.5,
             borderRadius: 2,
             '&:hover': {
@@ -140,15 +141,15 @@ export function DashboardHeader({
           <Avatar
             src={resolvedAvatar}
             sx={{
-              width: 36,
-              height: 36,
+              width: { xs: 32, sm: 36 },
+              height: { xs: 32, sm: 36 },
               bgcolor: 'primary.main',
               fontSize: '0.875rem',
             }}
           >
             {!resolvedAvatar && getInitials(resolvedName)}
           </Avatar>
-          <Typography variant="body2" fontWeight={500}>
+          <Typography variant="body2" fontWeight={500} sx={{ display: { xs: 'none', sm: 'block' } }}>
             {resolvedName}
           </Typography>
         </Box>
