@@ -341,7 +341,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
         />
         <ReTooltip
           contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 6, fontSize: 11, padding: '3px 8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-          formatter={(v: unknown) => [v ?? 0, 'events']}
+          formatter={(v: unknown) => [`${v ?? 0}`, 'events'] as [string, string]}
           labelFormatter={() => ''}
           cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '3 3' }}
         />
