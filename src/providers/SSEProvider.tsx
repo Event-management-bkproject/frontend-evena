@@ -12,6 +12,7 @@ import { TicketTypeAPI } from '../stores/services/TicketTypeApi';
 import { OrderAPI } from '../stores/services/OrderApi';
 import { RefundRequestAPI } from '../stores/services/RefundRequestApi';
 import { FlexPassAPI } from '../stores/services/FlexPassApi';
+import { ActivityLogAPI } from '../stores/services/ActivityLogApi';
 import { SSEAction, SSENormalizedType } from '../stores/types/sse';
 import type { SSEContextType, SSEEvent, SSENotification } from '../stores/types/sse';
 
@@ -526,6 +527,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       default:
         break;
     }
+  }, [lastEvent, dispatch]);
+
+  // Every SSE event represents a recorded action — invalidate ActivityLog so
+  // admin panels (recent activity feed, stats, hourly chart) stay current.
+  useEffect(() => {
+    if (!lastEvent) return;
+    dispatch(ActivityLogAPI.util.invalidateTags(['ActivityLog']));
   }, [lastEvent, dispatch]);
 
   const contextValue = useMemo(

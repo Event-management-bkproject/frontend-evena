@@ -1,6 +1,6 @@
 export type TabType = 'marketplace' | 'sell' | 'mine';
 
-export const CARD_H  = 580;
+export const CARD_H  = 750;
 export const TAB_W   = 112;
 export const TAB_H   = 56;
 export const TAB_GAP = 10;

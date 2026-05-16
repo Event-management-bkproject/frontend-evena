@@ -24,6 +24,8 @@ import {
 import AdminLayout from '@/src/components/layout/AdminLayout';
 import AdminPageShell from '@/src/components/AdminSidebar/AdminPageShell';
 import RoleGuard from '@/src/components/RoleGuard';
+import SSEHealthPanel from '@/src/components/AdminDashboard/SSEHealthPanel';
+import AnomalySignalsPanel from '@/src/components/AdminDashboard/AnomalySignalsPanel';
 import { useGetOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { useGetMyEventsQuery } from '@/src/stores/services/EventApi';
 import { useGetOrganizerOrdersQuery } from '@/src/stores/services/OrderApi';
@@ -155,6 +157,12 @@ export default function AdminOverviewPage() {
           </Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2, mb: 3 }}>
             {kpiRow2.map((k) => <KpiCard key={k.label} {...k} />)}
+          </Box>
+
+          {/* System monitoring row */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 3 }}>
+            <SSEHealthPanel />
+            <AnomalySignalsPanel />
           </Box>
 
           {/* Bottom row: alerts + activity */}

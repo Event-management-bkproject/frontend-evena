@@ -62,6 +62,7 @@ export interface FlexPassMarketplaceListing {
   submittedPrice: number;
   finalPrice: number | null;
   createdAt: string;
+  perUserLimit?: number | null;
 }
 
 export interface FlexPassSaleWindowPriceResponse {

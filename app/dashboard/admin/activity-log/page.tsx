@@ -330,8 +330,21 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   const chartData = data.map((v, i) => ({ i, v }));
   return (
     <ResponsiveContainer width="100%" height={36}>
-      <LineChart data={chartData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-        <Line type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} dot={false} />
+      <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+        <Line
+          type="monotone"
+          dataKey="v"
+          stroke={color}
+          strokeWidth={1.5}
+          dot={false}
+          activeDot={{ r: 3, fill: color, stroke: '#fff', strokeWidth: 1.5 }}
+        />
+        <ReTooltip
+          contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 6, fontSize: 11, padding: '3px 8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+          formatter={(v: unknown) => [v ?? 0, 'events']}
+          labelFormatter={() => ''}
+          cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '3 3' }}
+        />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -632,12 +645,29 @@ export default function AdminActivityLogPage() {
     const start = baseDate.add(hourIndex, 'hour');
     setFromFilter(start.format('YYYY-MM-DDTHH:mm'));
     setToFilter(start.add(1, 'hour').format('YYYY-MM-DDTHH:mm'));
+    setActiveSavedFilter(-1);
     setPage(0);
   }
 
   function onInvestigate() {
-    const preset = { action: 'EVENT_DELETED' };
-    setActionFilter(preset.action);
+    const spikes = hourlyData.filter((h) => h.isSpike);
+    if (spikes.length > 0) {
+      // Set time window spanning all spike hours so admin sees everything during anomalies
+      const baseDate = dayjs().subtract(23, 'hour').startOf('hour');
+      const firstIdx = hourlyData.findIndex((h) => h.isSpike);
+      const lastIdx  = hourlyData.reduce((acc, h, i) => (h.isSpike ? i : acc), firstIdx);
+      const from = baseDate.add(firstIdx, 'hour');
+      const to   = baseDate.add(lastIdx + 1, 'hour');
+      setFromFilter(from.format('YYYY-MM-DDTHH:mm'));
+      setToFilter(to.format('YYYY-MM-DDTHH:mm'));
+      setActionFilter('');  // show all actions, not just one type
+    } else {
+      // No activity spikes — show all critical-severity actions today
+      setFromFilter(dayjs().startOf('day').format('YYYY-MM-DDTHH:mm'));
+      setToFilter('');
+      setActionFilter('');
+    }
+    setActiveSavedFilter(-1);
     setPage(0);
   }
 

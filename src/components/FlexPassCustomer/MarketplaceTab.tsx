@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import {
   Box, Typography, CircularProgress, Alert, Dialog,
   DialogContent, DialogContentText, DialogActions, Button, MenuItem,
-  Select, Chip, InputBase,
+  Select, Chip, InputBase, IconButton,
 } from '@mui/material';
 import {
   ShoppingCart as BuyIcon,
@@ -13,6 +13,8 @@ import {
   SwapVert as SortIcon,
   CheckCircle as CheckIcon,
   CalendarToday as CalIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
 } from '@mui/icons-material';
 import { useGetMarketplaceListingsQuery, useCheckoutListingMutation } from '@/src/stores/services/FlexPassApi';
 import { FlexPassListingStatus, FlexPassMarketplaceListing } from '@/src/stores/types/flexpass';
@@ -55,11 +57,23 @@ function pctLabel(price: number, original: number): { text: string; positive: bo
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
+interface TicketGroup {
+  ticketTypeName: string;
+  price: number;
+  originalPrice: number;
+  status: FlexPassListingStatus;
+  finalPrice: number | null;
+  count: number;
+  representativeId: number;
+  allIds: number[];
+  perUserLimit: number | null;
+}
+
 interface EventGroup {
   eventId: string;
   eventTitle: string;
   eventStartAt: string;
-  listings: FlexPassMarketplaceListing[];
+  ticketGroups: TicketGroup[];
 }
 
 type SortKey = 'default' | 'price_asc' | 'price_desc';
@@ -67,17 +81,17 @@ type SortKey = 'default' | 'price_asc' | 'price_desc';
 // ─── TicketRow ────────────────────────────────────────────────────────────────
 
 function TicketRow({
-  listing,
+  group: listing,
   onBuy,
   isLast,
 }: {
-  listing: FlexPassMarketplaceListing;
-  onBuy: (id: number) => void;
+  group: TicketGroup;
+  onBuy: (group: TicketGroup) => void;
   isLast: boolean;
 }) {
   const canBuy = listing.status === FlexPassListingStatus.PRICE_LOCKED && listing.finalPrice != null;
   const isFree = canBuy && listing.finalPrice === 0;
-  const price = listing.finalPrice ?? listing.submittedPrice;
+  const price = listing.finalPrice ?? listing.price;
   const pct = pctLabel(price, listing.originalPrice);
 
   return (
@@ -97,9 +111,14 @@ function TicketRow({
           <TicketIcon sx={{ fontSize: 16, color: '#0369A1' }} />
         </Box>
         <Box>
-          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
-            {listing.ticketTypeName}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
+              {listing.ticketTypeName}
+            </Typography>
+            {listing.count > 1 && (
+              <Chip label={`×${listing.count}`} size="small" sx={{ height: 16, fontSize: 10, fontWeight: 700, bgcolor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: '20px' }} />
+            )}
+          </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mt: '2px' }}>
             <CheckIcon sx={{ fontSize: 11, color: '#0EA5E9' }} />
             <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>Organizer verified</Typography>
@@ -172,7 +191,7 @@ function TicketRow({
               variant="outlined"
               size="small"
               startIcon={<CheckIcon sx={{ fontSize: 14 }} />}
-              onClick={() => onBuy(listing.id)}
+              onClick={() => onBuy(listing)}
               sx={{
                 textTransform: 'none', fontWeight: 700, fontSize: 12,
                 borderRadius: '9px', px: '14px', py: '7px', whiteSpace: 'nowrap',
@@ -187,7 +206,7 @@ function TicketRow({
               variant="contained"
               size="small"
               startIcon={<BuyIcon sx={{ fontSize: 14 }} />}
-              onClick={() => onBuy(listing.id)}
+              onClick={() => onBuy(listing)}
               sx={{
                 textTransform: 'none', fontWeight: 700, fontSize: 12,
                 borderRadius: '9px', px: '14px', py: '7px', whiteSpace: 'nowrap',
@@ -209,10 +228,10 @@ function TicketRow({
 
 // ─── EventSection ─────────────────────────────────────────────────────────────
 
-function EventSection({ group, onBuy }: { group: EventGroup; onBuy: (id: number) => void }) {
+function EventSection({ group, onBuy }: { group: EventGroup; onBuy: (group: TicketGroup) => void }) {
   const gradient = accentGradient(group.eventTitle);
-  const availableCount = group.listings.filter(
-    (l) => l.status === FlexPassListingStatus.PRICE_LOCKED && l.finalPrice != null,
+  const availableCount = group.ticketGroups.filter(
+    (g) => g.status === FlexPassListingStatus.PRICE_LOCKED && g.finalPrice != null,
   ).length;
 
   return (
@@ -267,7 +286,7 @@ function EventSection({ group, onBuy }: { group: EventGroup; onBuy: (id: number)
             />
           )}
           <Chip
-            label={`${group.listings.length} ticket type${group.listings.length !== 1 ? 's' : ''}`}
+            label={`${group.ticketGroups.length} ticket type${group.ticketGroups.length !== 1 ? 's' : ''}`}
             size="small"
             sx={{ fontSize: 11, fontWeight: 600, height: 22, bgcolor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: '20px' }}
           />
@@ -275,12 +294,12 @@ function EventSection({ group, onBuy }: { group: EventGroup; onBuy: (id: number)
       </Box>
 
       {/* Ticket rows */}
-      {group.listings.map((listing, idx) => (
+      {group.ticketGroups.map((tg, idx) => (
         <TicketRow
-          key={listing.id}
-          listing={listing}
+          key={`${tg.ticketTypeName}-${tg.price}`}
+          group={tg}
           onBuy={onBuy}
-          isLast={idx === group.listings.length - 1}
+          isLast={idx === group.ticketGroups.length - 1}
         />
       ))}
     </Box>
@@ -289,8 +308,13 @@ function EventSection({ group, onBuy }: { group: EventGroup; onBuy: (id: number)
 
 // ─── MarketplaceTab ───────────────────────────────────────────────────────────
 
+interface ConfirmTarget {
+  group: TicketGroup;
+  quantity: number;
+}
+
 export function MarketplaceTab() {
-  const [confirmListingId, setConfirmListingId] = useState<number | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null);
   const [provider, setProvider] = useState<'VNPAY' | 'MOMO'>('VNPAY');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('default');
@@ -300,10 +324,9 @@ export function MarketplaceTab() {
   const [checkoutListing, { isLoading: checkoutLoading }] = useCheckoutListingMutation();
 
   const allListings = data?.data ?? [];
-  const confirmListing = allListings.find((l) => l.id === confirmListingId);
 
   const groups = useMemo<EventGroup[]>(() => {
-    // Filter
+    // Filter by search
     let filtered = allListings;
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -312,30 +335,64 @@ export function MarketplaceTab() {
       );
     }
 
-    // Group by event
-    const map = new Map<string, EventGroup>();
+    // Only show events that have at least one PRICE_LOCKED listing (sale window is open)
+    const priceLockedSet = new Set(
+      filtered
+        .filter((l) => l.status === FlexPassListingStatus.PRICE_LOCKED && l.finalPrice != null)
+        .map((l) => l.eventId),
+    );
+    filtered = filtered.filter((l) => priceLockedSet.has(l.eventId));
+
+    // Group by event → then by ticketTypeName + price (merge identical type+price rows)
+    const eventMap = new Map<string, { eventId: string; eventTitle: string; eventStartAt: string; byKey: Map<string, TicketGroup> }>();
     for (const l of filtered) {
-      if (!map.has(l.eventId)) {
-        map.set(l.eventId, { eventId: l.eventId, eventTitle: l.eventTitle, eventStartAt: l.eventStartAt, listings: [] });
+      if (!eventMap.has(l.eventId)) {
+        eventMap.set(l.eventId, { eventId: l.eventId, eventTitle: l.eventTitle, eventStartAt: l.eventStartAt, byKey: new Map() });
       }
-      map.get(l.eventId)!.listings.push(l);
+      const entry = eventMap.get(l.eventId)!;
+      const price = l.finalPrice ?? l.submittedPrice;
+      const key = `${l.ticketTypeName}::${Math.round(price)}`;
+      if (!entry.byKey.has(key)) {
+        entry.byKey.set(key, {
+          ticketTypeName: l.ticketTypeName,
+          price,
+          originalPrice: l.originalPrice,
+          status: l.status,
+          finalPrice: l.finalPrice,
+          count: 0,
+          representativeId: l.id,
+          allIds: [],
+          perUserLimit: l.perUserLimit ?? null,
+        });
+      }
+      const tg = entry.byKey.get(key)!;
+      tg.count++;
+      tg.allIds.push(l.id);
+      // Prefer PRICE_LOCKED representative
+      if (l.status === FlexPassListingStatus.PRICE_LOCKED && tg.status !== FlexPassListingStatus.PRICE_LOCKED) {
+        tg.status = l.status;
+        tg.finalPrice = l.finalPrice;
+        tg.representativeId = l.id;
+      }
     }
 
-    let result = Array.from(map.values());
+    let result: EventGroup[] = Array.from(eventMap.values()).map((e) => ({
+      eventId: e.eventId,
+      eventTitle: e.eventTitle,
+      eventStartAt: e.eventStartAt,
+      ticketGroups: Array.from(e.byKey.values()),
+    }));
 
-    // Sort listings within each group
+    // Sort ticket groups within each event
     if (sort !== 'default') {
       const dir = sort === 'price_asc' ? 1 : -1;
       result = result.map((g) => ({
         ...g,
-        listings: [...g.listings].sort(
-          (a, b) => dir * ((a.finalPrice ?? a.submittedPrice) - (b.finalPrice ?? b.submittedPrice)),
-        ),
+        ticketGroups: [...g.ticketGroups].sort((a, b) => dir * (a.price - b.price)),
       }));
-      // Also sort groups by their min/max price
       result.sort((a, b) => {
-        const pa = Math.min(...a.listings.map((l) => l.finalPrice ?? l.submittedPrice));
-        const pb = Math.min(...b.listings.map((l) => l.finalPrice ?? l.submittedPrice));
+        const pa = Math.min(...a.ticketGroups.map((tg) => tg.price));
+        const pb = Math.min(...b.ticketGroups.map((tg) => tg.price));
         return dir * (pa - pb);
       });
     }
@@ -343,10 +400,8 @@ export function MarketplaceTab() {
     return result;
   }, [allListings, search, sort]);
 
-  const totalListings = groups.reduce((sum, g) => sum + g.listings.length, 0);
-  const totalAvailable = allListings.filter(
-    (l) => l.status === FlexPassListingStatus.PRICE_LOCKED && l.finalPrice != null,
-  ).length;
+  const totalListings = groups.reduce((sum, g) => sum + g.ticketGroups.reduce((s, tg) => s + tg.count, 0), 0);
+  const totalAvailable = groups.reduce((sum, g) => sum + g.ticketGroups.filter((tg) => tg.status === FlexPassListingStatus.PRICE_LOCKED && tg.finalPrice != null).reduce((s, tg) => s + tg.count, 0), 0);
 
   const RULE_MESSAGES: Record<string, string> = {
     FLEXPASS_SELF_PURCHASE_NOT_ALLOWED: 'You cannot purchase your own listing.',
@@ -355,15 +410,29 @@ export function MarketplaceTab() {
   };
 
   const handleBuy = async () => {
-    if (!confirmListingId) return;
+    if (!confirmTarget) return;
     setCheckoutError(null);
+    const { group, quantity } = confirmTarget;
+    const idsToProcess = group.allIds.slice(0, quantity);
+    const isFree = group.finalPrice === 0;
+
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await checkoutListing({ listingId: confirmListingId, provider }).unwrap() as any;
-      if (result.data?.paymentUrl) {
-        window.location.href = result.data.paymentUrl;
+      if (isFree) {
+        // For free tickets: claim each one sequentially
+        for (const id of idsToProcess) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (checkoutListing({ listingId: id, provider }) as any).unwrap();
+        }
+        setConfirmTarget(null);
       } else {
-        setConfirmListingId(null);
+        // For paid: process first listing and redirect to payment
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await checkoutListing({ listingId: idsToProcess[0], provider }).unwrap() as any;
+        if (result.data?.paymentUrl) {
+          window.location.href = result.data.paymentUrl;
+        } else {
+          setConfirmTarget(null);
+        }
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -378,7 +447,12 @@ export function MarketplaceTab() {
   };
 
   const handleCloseDialog = () => {
-    setConfirmListingId(null);
+    setConfirmTarget(null);
+    setCheckoutError(null);
+  };
+
+  const handleOpenConfirm = (group: TicketGroup) => {
+    setConfirmTarget({ group, quantity: 1 });
     setCheckoutError(null);
   };
 
@@ -395,7 +469,7 @@ export function MarketplaceTab() {
   }
 
   return (
-    <>
+    <Box sx={{ height: '100%', minHeight: 0, overflowY: 'auto', pr: '2px', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
       {/* Toolbar */}
       <Box sx={{ display: 'flex', gap: '10px', mb: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
         <Box sx={{
@@ -477,7 +551,7 @@ export function MarketplaceTab() {
       {groups.length > 0 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {groups.map((group) => (
-            <EventSection key={group.eventId} group={group} onBuy={setConfirmListingId} />
+            <EventSection key={group.eventId} group={group} onBuy={handleOpenConfirm} />
           ))}
         </Box>
       )}
@@ -486,15 +560,25 @@ export function MarketplaceTab() {
         Payment held in escrow · released to seller after identity verification
       </Typography>
 
-      {/* Buy confirm dialog */}
+      {/* Buy / Claim confirm dialog */}
       <Dialog
-        open={confirmListingId !== null}
+        open={confirmTarget !== null}
         onClose={handleCloseDialog}
         maxWidth="xs" fullWidth
         PaperProps={{ sx: { borderRadius: '16px', overflow: 'hidden' } }}
       >
-        {(() => {
-          const isFreeTicket = confirmListing != null && (confirmListing.finalPrice ?? confirmListing.submittedPrice) === 0;
+        {confirmTarget && (() => {
+          const { group, quantity } = confirmTarget;
+          const isFreeTicket = group.finalPrice === 0;
+          const unitPrice = group.finalPrice ?? group.price;
+          const totalPrice = unitPrice * quantity;
+          const maxQty = group.perUserLimit != null
+            ? Math.min(group.count, group.perUserLimit)
+            : group.count;
+
+          const setQty = (q: number) =>
+            setConfirmTarget({ group, quantity: Math.min(Math.max(1, q), maxQty) });
+
           return (
             <>
               <Box sx={{
@@ -507,30 +591,86 @@ export function MarketplaceTab() {
                 <Typography sx={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>
                   {isFreeTicket ? 'Claim Free Ticket' : 'Confirm Purchase'}
                 </Typography>
-                <Typography sx={{ fontSize: 12, color: '#64748B', mt: '2px' }}>{confirmListing?.eventTitle}</Typography>
+                <Typography sx={{ fontSize: 12, color: '#64748B', mt: '2px' }}>{group.ticketTypeName}</Typography>
               </Box>
 
               <DialogContent sx={{ pt: 2.5 }}>
-                <DialogContentText sx={{ fontSize: 13, color: '#374151', mb: isFreeTicket ? 0 : '16px' }}>
-                  {isFreeTicket ? (
-                    <>Claim <strong>{confirmListing?.ticketTypeName}</strong> for free? The ticket will be transferred to your account after identity verification.</>
-                  ) : (
-                    <>Buy <strong>{confirmListing?.ticketTypeName}</strong> for{' '}
-                    <strong style={{ color: '#0C4A6E' }}>
-                      {confirmListing ? formatCurrency(confirmListing.finalPrice ?? confirmListing.submittedPrice) : ''}
-                    </strong>?</>
-                  )}
+                <DialogContentText sx={{ fontSize: 13, color: '#374151', mb: '16px' }}>
+                  {isFreeTicket
+                    ? <>Claim <strong>{group.ticketTypeName}</strong> for free. Tickets will be transferred after identity verification.</>
+                    : <>Buy <strong>{group.ticketTypeName}</strong> — {maxQty} available.</>
+                  }
                 </DialogContentText>
 
+                {/* Quantity selector */}
+                <Box sx={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px',
+                  px: '14px', py: '10px', mb: group.perUserLimit != null ? '6px' : '16px',
+                }}>
+                  <Box>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Quantity</Typography>
+                    <Typography sx={{ fontSize: 11, color: '#94A3B8' }}>
+                      {group.count} available{group.perUserLimit != null ? ` · max ${group.perUserLimit}/person` : ''}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IconButton size="small" onClick={() => setQty(quantity - 1)} disabled={quantity <= 1}
+                      sx={{ width: 28, height: 28, bgcolor: 'white', border: '1px solid #E2E8F0',
+                        '&:hover': { bgcolor: '#F1F5F9' }, '&:disabled': { opacity: 0.4 } }}>
+                      <RemoveIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#0F172A', minWidth: 28, textAlign: 'center' }}>
+                      {quantity}
+                    </Typography>
+                    <IconButton size="small" onClick={() => setQty(quantity + 1)} disabled={quantity >= maxQty}
+                      sx={{ width: 28, height: 28, bgcolor: 'white', border: '1px solid #E2E8F0',
+                        '&:hover': { bgcolor: '#F1F5F9' }, '&:disabled': { opacity: 0.4 } }}>
+                      <AddIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+                {group.perUserLimit != null && quantity >= maxQty && (
+                  <Typography sx={{ fontSize: 11, color: '#F59E0B', mb: '14px', pl: '2px' }}>
+                    Maximum {group.perUserLimit} ticket{group.perUserLimit !== 1 ? 's' : ''} per person for this ticket type.
+                  </Typography>
+                )}
+                {group.perUserLimit != null && quantity < maxQty && (
+                  <Box sx={{ mb: '14px' }} />
+                )}
+
+                {/* Price summary */}
                 {!isFreeTicket && (
-                  <Select
-                    fullWidth value={provider}
-                    onChange={(e) => setProvider(e.target.value as 'VNPAY' | 'MOMO')}
-                    size="small" sx={{ fontSize: 13, borderRadius: '8px', mt: '16px' }}
-                  >
-                    <MenuItem value="VNPAY" sx={{ fontSize: 13 }}>VNPay</MenuItem>
-                    <MenuItem value="MOMO" sx={{ fontSize: 13 }}>MoMo</MenuItem>
-                  </Select>
+                  <>
+                    <Box sx={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      bgcolor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px',
+                      px: '14px', py: '10px', mb: '14px',
+                    }}>
+                      <Typography sx={{ fontSize: 13, color: '#64748B' }}>
+                        {formatCurrency(unitPrice)} × {quantity}
+                      </Typography>
+                      <Typography sx={{ fontSize: 15, fontWeight: 800, color: '#0C4A6E' }}>
+                        {formatCurrency(totalPrice)}
+                      </Typography>
+                    </Box>
+                    <Select
+                      fullWidth value={provider}
+                      onChange={(e) => setProvider(e.target.value as 'VNPAY' | 'MOMO')}
+                      size="small" sx={{ fontSize: 13, borderRadius: '8px' }}
+                    >
+                      <MenuItem value="VNPAY" sx={{ fontSize: 13 }}>VNPay</MenuItem>
+                      <MenuItem value="MOMO" sx={{ fontSize: 13 }}>MoMo</MenuItem>
+                    </Select>
+                  </>
+                )}
+
+                {isFreeTicket && (
+                  <Box sx={{ bgcolor: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: '8px', px: '14px', py: '10px' }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#15803D' }}>
+                      Total: Free × {quantity}
+                    </Typography>
+                  </Box>
                 )}
 
                 {checkoutError && (
@@ -548,22 +688,26 @@ export function MarketplaceTab() {
                   onClick={handleBuy}
                   variant="contained"
                   disabled={checkoutLoading}
-                  startIcon={isFreeTicket ? <CheckIcon sx={{ fontSize: 15 }} /> : undefined}
+                  startIcon={isFreeTicket ? <CheckIcon sx={{ fontSize: 15 }} /> : <BuyIcon sx={{ fontSize: 15 }} />}
                   sx={{
-                    textTransform: 'none', borderRadius: '9px', minWidth: 120, fontWeight: 700,
+                    textTransform: 'none', borderRadius: '9px', minWidth: 130, fontWeight: 700,
                     ...(isFreeTicket
                       ? { bgcolor: '#16A34A', '&:hover': { bgcolor: '#15803D' }, boxShadow: '0 3px 10px rgba(22,163,74,0.25)' }
                       : { background: 'linear-gradient(135deg, #0EA5E9, #0369A1)', boxShadow: '0 3px 10px rgba(3,105,161,0.25)', '&:hover': { background: 'linear-gradient(135deg, #38BDF8, #0284C7)' } }
                     ),
                   }}
                 >
-                  {checkoutLoading ? 'Processing…' : isFreeTicket ? 'Claim Ticket' : 'Pay Now'}
+                  {checkoutLoading
+                    ? 'Processing…'
+                    : isFreeTicket
+                      ? `Claim ${quantity > 1 ? `${quantity} ` : ''}Ticket${quantity > 1 ? 's' : ''}`
+                      : 'Pay Now'}
                 </Button>
               </DialogActions>
             </>
           );
         })()}
       </Dialog>
-    </>
+    </Box>
   );
 }
