@@ -446,6 +446,11 @@ export default function EventTicketsPage({ params }: { params: Promise<{ id: str
                           );
                         })}
                       </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, bgcolor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', px: 1.5, py: 1, mb: 2 }}>
+                        <Typography sx={{ fontSize: 11, color: '#92400E', lineHeight: 1.5 }}>
+                          ⚠️ <strong>Simulation mode</strong> — MoMo &amp; VNPay payments are simulated. No real charge will occur.
+                        </Typography>
+                      </Box>
                     </>
                   )}
 
