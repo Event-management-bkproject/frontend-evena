@@ -115,7 +115,7 @@ export default function SSEHealthPanel() {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   const fetchHealth = useCallback(async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || '';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '') || '';
 
     // Backend health
     try {
