@@ -12,6 +12,23 @@ export interface OrganizationFileDTO {
   fileSize: number;
   fileType: OrganizationFileType;
   uploadedAt: string;
+  storageBucket: string | null;
+  objectKey: string | null;
+  objectETag: string | null;
+  objectVersionId: string | null;
+  analysisJobId: string | null;
+  analysisCorrelationId: string | null;
+  /** PENDING_ANALYSIS | NEEDS_REVIEW | COMPLETED | FAILED */
+  analysisStatus: string | null;
+  /** PASS | REVIEW_REQUIRED */
+  analysisRecommendation: string | null;
+  analysisConfidence: number | null;
+  analysisReasons: string | null;   // JSON array string
+  analysisSummary: string | null;   // JSON object string with OCR details
+  analyzerProvider: string | null;
+  analyzerName: string | null;
+  analyzerVersion: string | null;
+  analyzedAt: string | null;
 }
 
 export const FileAPI = createApi({

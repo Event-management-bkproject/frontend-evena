@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -15,6 +15,7 @@ import {
   Button,
   Divider,
   Alert,
+  LinearProgress,
 } from '@mui/material';
 import {
   Close,
@@ -27,6 +28,8 @@ import {
   CheckCircle,
   OpenInNew,
   ArrowBack,
+  HourglassEmpty,
+  Science,
 } from '@mui/icons-material';
 import { useListOrgVerificationFilesQuery, OrganizationFileDTO } from '@/src/stores/services/FileApi';
 import { ADMIN } from '@/src/utils/constants/adminBrand';
@@ -81,10 +84,220 @@ function isImage(contentType: string) {
   return contentType.startsWith('image/');
 }
 
+// ── Analysis helpers ──────────────────────────────────────────────────────────
+function parseJsonSafe<T>(str: string | null | undefined): T | null {
+  if (!str) return null;
+  try { return JSON.parse(str) as T; } catch { return null; }
+}
+
+function formatReason(reason: string): string {
+  return reason
+    .toLowerCase()
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+interface OcrSummary {
+  ocrAverageConfidence?: number;
+  ocrEngine?: string;
+  ocrLineCount?: number;
+  ocrTextPreview?: string;
+}
+
+function AnalysisChips({ file }: { file: OrganizationFileDTO }) {
+  const { analysisStatus, analysisRecommendation, analysisConfidence } = file;
+  if (!analysisStatus) return null;
+
+  if (analysisStatus === 'PENDING_ANALYSIS') {
+    return (
+      <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+        <Chip
+          icon={<HourglassEmpty sx={{ fontSize: '11px !important' }} />}
+          label="AI Analyzing…"
+          size="small"
+          sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.border, color: ADMIN.textSecondary }}
+        />
+      </Box>
+    );
+  }
+
+  const isPassed = analysisRecommendation === 'PASS';
+  const confidence = analysisConfidence != null ? `${Math.round(Number(analysisConfidence) * 100)}%` : null;
+
+  return (
+    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
+      <Chip
+        label={isPassed ? 'AI Passed' : 'Review Required'}
+        size="small"
+        sx={{
+          height: 18, fontSize: 10, fontWeight: 600,
+          bgcolor: isPassed ? ADMIN.successBg : ADMIN.warningBg,
+          color: isPassed ? ADMIN.successText : ADMIN.warningText,
+        }}
+      />
+      {confidence && (
+        <Chip
+          label={`${confidence} confidence`}
+          size="small"
+          sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.border, color: ADMIN.textSecondary }}
+        />
+      )}
+    </Box>
+  );
+}
+
+function AnalysisDetailsPanel({ file }: { file: OrganizationFileDTO }) {
+  const {
+    analysisStatus, analysisRecommendation, analysisConfidence,
+    analysisReasons, analysisSummary, analyzerProvider, analyzerName, analyzedAt,
+  } = file;
+
+  if (!analysisStatus) return null;
+
+  const reasons = parseJsonSafe<string[]>(analysisReasons) ?? [];
+  const summary = parseJsonSafe<OcrSummary>(analysisSummary);
+  const confidence = analysisConfidence != null ? Number(analysisConfidence) : null;
+  const isPassed = analysisRecommendation === 'PASS';
+  const isPending = analysisStatus === 'PENDING_ANALYSIS';
+
+  return (
+    <Box sx={{ mt: 1.5, borderRadius: '10px', border: `1px solid ${ADMIN.border}`, overflow: 'hidden' }}>
+      {/* Header */}
+      <Box
+        sx={{
+          px: 2, py: 1.25,
+          bgcolor: isPending ? ADMIN.pageBg : isPassed ? ADMIN.successBg : ADMIN.warningBg,
+          display: 'flex', alignItems: 'center', gap: 1,
+          borderBottom: `1px solid ${ADMIN.border}`,
+        }}
+      >
+        <Science sx={{ fontSize: 16, color: isPending ? ADMIN.textMuted : isPassed ? ADMIN.successText : ADMIN.warningText }} />
+        <Typography variant="caption" fontWeight={700} sx={{ color: isPending ? ADMIN.textSecondary : isPassed ? ADMIN.successText : ADMIN.warningText }}>
+          AI Document Analysis
+        </Typography>
+        {isPending ? (
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <CircularProgress size={10} sx={{ color: ADMIN.textMuted }} />
+            <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>Processing…</Typography>
+          </Box>
+        ) : (
+          <Chip
+            label={isPassed ? 'PASSED' : 'REVIEW REQUIRED'}
+            size="small"
+            sx={{
+              ml: 'auto', height: 18, fontSize: 10, fontWeight: 700,
+              bgcolor: isPassed ? ADMIN.success : ADMIN.warning,
+              color: '#fff',
+            }}
+          />
+        )}
+      </Box>
+
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {/* Confidence bar */}
+        {confidence !== null && (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="caption" sx={{ color: ADMIN.textSecondary }}>Confidence</Typography>
+              <Typography variant="caption" fontWeight={600} sx={{ color: isPassed ? ADMIN.success : ADMIN.warning }}>
+                {Math.round(confidence * 100)}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={confidence * 100}
+              sx={{
+                height: 6, borderRadius: 3,
+                bgcolor: ADMIN.border,
+                '& .MuiLinearProgress-bar': { bgcolor: isPassed ? ADMIN.success : ADMIN.warning, borderRadius: 3 },
+              }}
+            />
+          </Box>
+        )}
+
+        {/* Flags / reasons */}
+        {reasons.length > 0 && (
+          <Box>
+            <Typography variant="caption" sx={{ color: ADMIN.textSecondary, display: 'block', mb: 0.5 }}>Flags</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {reasons.map((r) => (
+                <Chip
+                  key={r}
+                  label={formatReason(r)}
+                  size="small"
+                  sx={{ height: 20, fontSize: 10, bgcolor: ADMIN.errorBg, color: ADMIN.errorText }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* OCR details */}
+        {summary && (
+          <Box>
+            <Typography variant="caption" sx={{ color: ADMIN.textSecondary, display: 'block', mb: 0.5 }}>OCR Extraction</Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, mb: 0.75, flexWrap: 'wrap' }}>
+              {summary.ocrLineCount != null && (
+                <Chip label={`${summary.ocrLineCount} lines`} size="small" sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.border, color: ADMIN.textSecondary }} />
+              )}
+              {summary.ocrAverageConfidence != null && (
+                <Chip label={`OCR: ${Math.round(summary.ocrAverageConfidence * 100)}%`} size="small" sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.border, color: ADMIN.textSecondary }} />
+              )}
+              {summary.ocrEngine && (
+                <Chip label={summary.ocrEngine} size="small" sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.border, color: ADMIN.textSecondary }} />
+              )}
+            </Box>
+            {summary.ocrTextPreview && (
+              <Box
+                sx={{
+                  borderRadius: '6px',
+                  border: `1px solid ${ADMIN.border}`,
+                  bgcolor: ADMIN.pageBg,
+                  p: 1,
+                  maxHeight: 96,
+                  overflow: 'auto',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: ADMIN.textSecondary,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    display: 'block',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {summary.ocrTextPreview.length > 400
+                    ? `${summary.ocrTextPreview.slice(0, 400)}…`
+                    : summary.ocrTextPreview}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Analyzer metadata */}
+        {analyzedAt && (
+          <Typography variant="caption" sx={{ color: ADMIN.textMuted }}>
+            Analyzed {new Date(analyzedAt).toLocaleString('en-GB')}
+            {analyzerProvider && ` · ${analyzerProvider}`}
+            {analyzerName && ` / ${analyzerName}`}
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
 // ── Inline preview panel ──────────────────────────────────────────────────────
 function PreviewPanel({ file }: { file: OrganizationFileDTO }) {
+  let preview: React.ReactNode;
+
   if (isPdf(file.contentType)) {
-    return (
+    preview = (
       <Box
         sx={{
           mt: 1.5,
@@ -103,10 +316,8 @@ function PreviewPanel({ file }: { file: OrganizationFileDTO }) {
         />
       </Box>
     );
-  }
-
-  if (isImage(file.contentType)) {
-    return (
+  } else if (isImage(file.contentType)) {
+    preview = (
       <Box
         sx={{
           mt: 1.5,
@@ -127,35 +338,41 @@ function PreviewPanel({ file }: { file: OrganizationFileDTO }) {
         />
       </Box>
     );
+  } else {
+    preview = (
+      <Box
+        sx={{
+          mt: 1.5,
+          borderRadius: '10px',
+          border: `1px solid ${ADMIN.border}`,
+          bgcolor: ADMIN.pageBg,
+          p: 4,
+          textAlign: 'center',
+        }}
+      >
+        <FileTypeIcon contentType={file.contentType} size={48} />
+        <Typography variant="body2" sx={{ color: ADMIN.textSecondary, mt: 1 }}>
+          Preview not available for this file type.
+        </Typography>
+        <Button
+          size="small"
+          href={file.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          startIcon={<Download fontSize="small" />}
+          sx={{ mt: 1.5, textTransform: 'none', color: ADMIN.primary }}
+        >
+          Download to view
+        </Button>
+      </Box>
+    );
   }
 
-  // Word / other — no browser-native preview
   return (
-    <Box
-      sx={{
-        mt: 1.5,
-        borderRadius: '10px',
-        border: `1px solid ${ADMIN.border}`,
-        bgcolor: ADMIN.pageBg,
-        p: 4,
-        textAlign: 'center',
-      }}
-    >
-      <FileTypeIcon contentType={file.contentType} size={48} />
-      <Typography variant="body2" sx={{ color: ADMIN.textSecondary, mt: 1 }}>
-        Preview not available for this file type.
-      </Typography>
-      <Button
-        size="small"
-        href={file.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        startIcon={<Download fontSize="small" />}
-        sx={{ mt: 1.5, textTransform: 'none', color: ADMIN.primary }}
-      >
-        Download to view
-      </Button>
-    </Box>
+    <>
+      {preview}
+      <AnalysisDetailsPanel file={file} />
+    </>
   );
 }
 
@@ -343,6 +560,7 @@ export default function AdminOrgDocumentDialog({
                           {formatDate(f.uploadedAt)}
                         </Typography>
                       </Box>
+                      <AnalysisChips file={f} />
                     </Box>
 
                     <Tooltip title="Download">
