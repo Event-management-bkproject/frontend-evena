@@ -4,6 +4,7 @@ import { Box, Typography, Breadcrumbs, Link } from '@mui/material';
 import { ChevronRight as ChevronIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { ADMIN } from '@/src/utils/constants/adminBrand';
+import { NotificationBell } from '@/src/components/NotificationBell';
 
 interface Crumb {
   label: string;
@@ -69,7 +70,10 @@ export default function AdminPageShell({ title, breadcrumbs = [], actions, child
             {title}
           </Typography>
         </Box>
-        {actions && <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>{actions}</Box>}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {actions}
+          <NotificationBell variant="admin" />
+        </Box>
       </Box>
 
       {/* Page body */}

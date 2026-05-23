@@ -5,6 +5,7 @@ import { Box, Typography, Button, IconButton } from '@mui/material';
 import { Logout as LogoutIcon, Settings } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
+import { NotificationBell } from '@/src/components/NotificationBell';
 
 interface AdminHeaderProps {
   onLogout: () => void;
@@ -26,6 +27,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onLogout }) => {
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        {/* Notifications */}
+        <NotificationBell />
+
         {/* Settings Button for Language */}
         <IconButton
           onClick={() => setLanguageSwitcherOpen(true)}
