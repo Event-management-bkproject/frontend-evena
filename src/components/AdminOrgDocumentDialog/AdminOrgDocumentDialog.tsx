@@ -106,7 +106,7 @@ interface OcrSummary {
 }
 
 function AnalysisChips({ file }: { file: OrganizationFileDTO }) {
-  const { analysisStatus, analysisRecommendation, analysisConfidence } = file;
+  const { analysisStatus, analysisRecommendation, analysisConfidence, analysisReasons } = file;
   if (!analysisStatus) return null;
 
   if (analysisStatus === 'PENDING_ANALYSIS') {
@@ -124,6 +124,7 @@ function AnalysisChips({ file }: { file: OrganizationFileDTO }) {
 
   const isPassed = analysisRecommendation === 'PASS';
   const confidence = analysisConfidence != null ? `${Math.round(Number(analysisConfidence) * 100)}%` : null;
+  const reasons = parseJsonSafe<string[]>(analysisReasons) ?? [];
 
   return (
     <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
@@ -143,6 +144,14 @@ function AnalysisChips({ file }: { file: OrganizationFileDTO }) {
           sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.border, color: ADMIN.textSecondary }}
         />
       )}
+      {reasons.map((r) => (
+        <Chip
+          key={r}
+          label={formatReason(r)}
+          size="small"
+          sx={{ height: 18, fontSize: 10, bgcolor: ADMIN.errorBg, color: ADMIN.errorText }}
+        />
+      ))}
     </Box>
   );
 }
