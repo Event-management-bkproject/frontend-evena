@@ -14,3 +14,4 @@ export * from './FlexPassApi';
 export * from './FileApi';
 export * from './ActivityLogApi';
 export * from './StorageApi';
+export * from './NotificationApi';

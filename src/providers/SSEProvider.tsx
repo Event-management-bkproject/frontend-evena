@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Snackbar } from '@mui/material';
 import { useAppSelector, useAppDispatch } from '../stores/hooks';
 import { EventAPI } from '../stores/services/EventApi';
 import { OrganizerAPI } from '../stores/services/OrganizerApi';
@@ -13,14 +12,13 @@ import { OrderAPI } from '../stores/services/OrderApi';
 import { RefundRequestAPI } from '../stores/services/RefundRequestApi';
 import { FlexPassAPI } from '../stores/services/FlexPassApi';
 import { ActivityLogAPI } from '../stores/services/ActivityLogApi';
+import { NotificationAPI } from '../stores/services/NotificationApi';
 import { SSEAction, SSENormalizedType } from '../stores/types/sse';
-import type { SSEContextType, SSEEvent, SSENotification } from '../stores/types/sse';
+import type { SSEContextType, SSEEvent } from '../stores/types/sse';
 
 const SSEContext = createContext<SSEContextType>({
   isConnected: false,
   lastEvent: null,
-  notification: null,
-  clearNotification: () => {},
 });
 
 export const useSSE = () => {
@@ -47,9 +45,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
   const [isConnected, setIsConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
-  const [notification, setNotification] = useState<SSENotification | null>(null);
-
-  const clearNotification = useCallback(() => setNotification(null), []);
 
   // Per-channel EventSource map
   const eventSourcesRef = useRef<Map<string, EventSource>>(new Map());
@@ -186,6 +181,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       on(SSEAction.FLEXPASS_REFUND_COMPLETED,   SSENormalizedType.FLEXPASS_REFUND_COMPLETED);
       on(SSEAction.FLEXPASS_REFUND_FAILED,      SSENormalizedType.FLEXPASS_REFUND_FAILED);
 
+      // SSE-021: in-app notification signal
+      on(SSEAction.NOTIFICATION_NEW, SSENormalizedType.NOTIFICATION_NEW);
+
       eventSource.addEventListener('heartbeat', () => {
         // Heartbeat received — connection alive
       });
@@ -244,36 +242,18 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!lastEvent) return;
 
-    const { type, data, channel } = lastEvent;
-    const isPersonalChannel = channel.startsWith('user:');
+    const { type, data } = lastEvent;
 
     switch (type) {
       // Organization events - targeted when ID available
       case SSENormalizedType.ORGANIZATION_UPDATED:
-      case SSENormalizedType.ORGANIZATION_UNVERIFIED: {
-        const orgId = data?.organizationId;
-        if (orgId) {
-          dispatch(OrganizerAPI.util.invalidateTags([{ type: 'Organizer', id: orgId }, 'Organizer']));
-        } else {
-          dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
-        }
-        break;
-      }
-
+      case SSENormalizedType.ORGANIZATION_UNVERIFIED:
       case SSENormalizedType.ORGANIZATION_VERIFIED: {
         const orgId = data?.organizationId;
-        const orgName = data?.organizationName as string | undefined;
         if (orgId) {
           dispatch(OrganizerAPI.util.invalidateTags([{ type: 'Organizer', id: orgId }, 'Organizer']));
         } else {
           dispatch(OrganizerAPI.util.invalidateTags(['Organizer']));
-        }
-        // Personal notification to the specific org owner
-        if (isPersonalChannel && orgName) {
-          setNotification({
-            message: `Your organization "${orgName}" has been verified by admin!`,
-            severity: 'success',
-          });
         }
         break;
       }
@@ -350,20 +330,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
       // ORDER_CONFIRMED — SSE-009: MUST invalidate Order + Ticket ONLY.
       // MUST NOT invalidate Event or TicketType (snapshot isolation).
-      case SSENormalizedType.ORDER_CONFIRMED: {
+      case SSENormalizedType.ORDER_CONFIRMED:
         dispatch(OrderAPI.util.invalidateTags(['Order', 'Ticket']));
-        // Only show customer toast. Organizer and admin notifications are silent cache invalidations.
-        if (isPersonalChannel && !data?.organizerNotification && !data?.adminNotification) {
-          const eventName = data?.eventName as string | undefined;
-          setNotification({
-            message: eventName
-              ? `Payment successful! Your tickets for "${eventName}" are confirmed.`
-              : 'Payment successful! Your tickets are confirmed.',
-            severity: 'success',
-          });
-        }
         break;
-      }
 
       // ORDER_CREATED — invalidate Order only (no capacity change committed yet)
       case SSENormalizedType.ORDER_CREATED:
@@ -383,22 +352,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       }
 
       // ORDER_REFUNDED — SSE-010: invalidate Order only.
-      // refundAmount is the declared §7.2 exception — display in customer private toast only.
-      // Organizer/admin notifications (organizerNotification/adminNotification:true) are silent.
-      case SSENormalizedType.ORDER_REFUNDED: {
+      case SSENormalizedType.ORDER_REFUNDED:
         dispatch(OrderAPI.util.invalidateTags(['Order']));
-        if (isPersonalChannel && !data?.organizerNotification && !data?.adminNotification) {
-          const refundAmount = data?.refundAmount as number | undefined;
-          const eventName = data?.eventName as string | undefined;
-          setNotification({
-            message: refundAmount != null && eventName
-              ? `Refund of ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(refundAmount)} has been processed for "${eventName}".`
-              : 'Your refund has been processed.',
-            severity: 'info',
-          });
-        }
         break;
-      }
 
       // Ticket events
       case SSENormalizedType.TICKET_ISSUED:
@@ -406,68 +362,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         dispatch(OrderAPI.util.invalidateTags(['Ticket']));
         break;
 
-      // Refund Request created — notify organizer on their private channel
-      case SSENormalizedType.REFUND_REQUEST_CREATED: {
+      // Refund Request events — cache invalidation only, notifications via NotificationBell
+      case SSENormalizedType.REFUND_REQUEST_CREATED:
+      case SSENormalizedType.REFUND_REQUEST_REJECTED:
+      case SSENormalizedType.REFUND_REQUEST_COMPLETED:
+      case SSENormalizedType.REFUND_REQUEST_FAILED:
         dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
-        if (isPersonalChannel) {
-          const eventName = data?.eventName as string | undefined;
-          const requesterName = data?.requesterName as string | undefined;
-          setNotification({
-            message: requesterName && eventName
-              ? `${requesterName} requested a refund for "${eventName}".`
-              : 'A new refund request has been submitted.',
-            severity: 'info',
-          });
-        }
         break;
-      }
-
-      // Refund Request completed — invalidate cache; notify customer (not organizer toast)
-      case SSENormalizedType.REFUND_REQUEST_COMPLETED: {
-        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
-        if (isPersonalChannel && !data?.organizerNotification) {
-          const eventName = data?.eventName as string | undefined;
-          setNotification({
-            message: eventName
-              ? `Your refund request for "${eventName}" has been completed.`
-              : 'Your refund request has been completed.',
-            severity: 'success',
-          });
-        }
-        break;
-      }
-
-      // Refund Request failed — invalidate organizer cache + show warning
-      case SSENormalizedType.REFUND_REQUEST_FAILED: {
-        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
-        if (isPersonalChannel && data?.organizerNotification) {
-          const eventName = data?.eventName as string | undefined;
-          const orderId = data?.orderId as number | undefined;
-          setNotification({
-            message: orderId && eventName
-              ? `Refund processing failed for order #${orderId} — "${eventName}". Please review.`
-              : 'A refund processing request has failed.',
-            severity: 'error',
-          });
-        }
-        break;
-      }
-
-      // Refund Request rejected — notify customer with reviewNote
-      case SSENormalizedType.REFUND_REQUEST_REJECTED: {
-        dispatch(RefundRequestAPI.util.invalidateTags(['RefundRequest']));
-        if (isPersonalChannel) {
-          const eventName = data?.eventName as string | undefined;
-          const reviewNote = data?.reviewNote as string | undefined;
-          setNotification({
-            message: reviewNote
-              ? `Your refund request for "${eventName ?? 'event'}" was rejected: ${reviewNote}`
-              : `Your refund request for "${eventName ?? 'event'}" was rejected.`,
-            severity: 'warning',
-          });
-        }
-        break;
-      }
 
       // FlexPass listing events — invalidate listings cache
       case SSENormalizedType.FLEXPASS_LISTING_CREATED:
@@ -477,22 +378,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       case SSENormalizedType.FLEXPASS_LISTING_EXPIRED:
       case SSENormalizedType.FLEXPASS_PRICE_LOCKED:
         dispatch(FlexPassAPI.util.invalidateTags(['FlexPassListing']));
-        if (isPersonalChannel) {
-          const eventName = data?.eventName as string | undefined;
-          const status = data?.status as string | undefined;
-          if (lastEvent?.type === SSENormalizedType.FLEXPASS_LISTING_APPROVED && eventName) {
-            setNotification({ message: `Your listing for "${eventName}" was approved.`, severity: 'success' });
-          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_LISTING_REJECTED && eventName) {
-            const reason = data?.rejectionReason as string | undefined;
-            setNotification({ message: reason ? `Listing rejected: ${reason}` : `Your listing for "${eventName}" was rejected.`, severity: 'warning' });
-          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_LISTING_EXPIRED && eventName) {
-            setNotification({ message: `Your FlexPass listing for "${eventName}" has expired.`, severity: 'info' });
-          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_PRICE_LOCKED && eventName) {
-            setNotification({ message: `Price locked for your FlexPass listing — "${eventName}".`, severity: 'info' });
-          } else if (status) {
-            void status; // suppress unused warning
-          }
-        }
         break;
 
       // FlexPass sale window events — invalidate listings + sale window cache
@@ -503,25 +388,18 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         dispatch(FlexPassAPI.util.invalidateTags(['FlexPassListing', 'FlexPassSaleWindow']));
         break;
 
-      // FlexPass purchase events — invalidate listings cache; notify buyer/seller
+      // FlexPass purchase events — invalidate listings cache
       case SSENormalizedType.FLEXPASS_TRANSFER_COMPLETED:
       case SSENormalizedType.FLEXPASS_TRANSFER_FAILED:
       case SSENormalizedType.FLEXPASS_REFUND_PENDING:
       case SSENormalizedType.FLEXPASS_REFUND_COMPLETED:
       case SSENormalizedType.FLEXPASS_REFUND_FAILED:
         dispatch(FlexPassAPI.util.invalidateTags(['FlexPassListing']));
-        if (isPersonalChannel) {
-          const eventName = data?.eventName as string | undefined;
-          if (lastEvent?.type === SSENormalizedType.FLEXPASS_TRANSFER_COMPLETED && eventName) {
-            setNotification({ message: `FlexPass transfer completed for "${eventName}".`, severity: 'success' });
-          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_TRANSFER_FAILED && eventName) {
-            setNotification({ message: `FlexPass transfer failed for "${eventName}". Refund will be processed.`, severity: 'error' });
-          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_REFUND_COMPLETED && eventName) {
-            setNotification({ message: `FlexPass refund completed for "${eventName}".`, severity: 'success' });
-          } else if (lastEvent?.type === SSENormalizedType.FLEXPASS_REFUND_FAILED && eventName) {
-            setNotification({ message: `FlexPass refund failed for "${eventName}". Please contact support.`, severity: 'error' });
-          }
-        }
+        break;
+
+      // SSE-021: notification:new — invalidate Notification cache only (SSE-014)
+      case SSENormalizedType.NOTIFICATION_NEW:
+        dispatch(NotificationAPI.util.invalidateTags(['Notification']));
         break;
 
       default:
@@ -537,29 +415,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [lastEvent, dispatch]);
 
   const contextValue = useMemo(
-    () => ({ isConnected, lastEvent, notification, clearNotification }),
-    [isConnected, lastEvent, notification, clearNotification],
+    () => ({ isConnected, lastEvent }),
+    [isConnected, lastEvent],
   );
 
   return (
     <SSEContext.Provider value={contextValue}>
       {children}
-      {/* Global personal SSE notification toast */}
-      <Snackbar
-        open={!!notification}
-        autoHideDuration={6000}
-        onClose={clearNotification}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={clearNotification}
-          severity={notification?.severity ?? 'info'}
-          variant="filled"
-          sx={{ minWidth: 300 }}
-        >
-          {notification?.message}
-        </Alert>
-      </Snackbar>
     </SSEContext.Provider>
   );
 };

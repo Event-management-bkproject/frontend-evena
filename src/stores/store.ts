@@ -18,6 +18,7 @@ import { FlexPassAPI } from './services/FlexPassApi';
 import { FileAPI } from './services/FileApi';
 import { ActivityLogAPI } from './services/ActivityLogApi';
 import { StorageAPI } from './services/StorageApi';
+import { NotificationAPI } from './services/NotificationApi';
 
 // UI state persist — only sidebar preference, purely cosmetic.
 // Auth is NOT persisted: accessToken lives in memory and is restored from
@@ -49,6 +50,7 @@ export const store = configureStore({
     [FileAPI.reducerPath]: FileAPI.reducer,
     [ActivityLogAPI.reducerPath]: ActivityLogAPI.reducer,
     [StorageAPI.reducerPath]: StorageAPI.reducer,
+    [NotificationAPI.reducerPath]: NotificationAPI.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -70,7 +72,8 @@ export const store = configureStore({
       .concat(FlexPassAPI.middleware)
       .concat(FileAPI.middleware)
       .concat(ActivityLogAPI.middleware)
-      .concat(StorageAPI.middleware),
+      .concat(StorageAPI.middleware)
+      .concat(NotificationAPI.middleware),
 });
 
 export const persistor = persistStore(store);

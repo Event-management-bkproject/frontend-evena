@@ -78,6 +78,9 @@ export enum SSEAction {
   FLEXPASS_REFUND_PENDING     = 'flexpass:refund_pending',
   FLEXPASS_REFUND_COMPLETED   = 'flexpass:refund_completed',
   FLEXPASS_REFUND_FAILED      = 'flexpass:refund_failed',
+
+  // In-app notification signal (SSE-021)
+  NOTIFICATION_NEW = 'notification:new',
 }
 
 // ============= SSE NORMALIZED TYPE ENUM (used in frontend cache invalidation) =============
@@ -157,6 +160,9 @@ export enum SSENormalizedType {
   FLEXPASS_REFUND_PENDING     = 'FLEXPASS_REFUND_PENDING',
   FLEXPASS_REFUND_COMPLETED   = 'FLEXPASS_REFUND_COMPLETED',
   FLEXPASS_REFUND_FAILED      = 'FLEXPASS_REFUND_FAILED',
+
+  // In-app notification signal (SSE-021)
+  NOTIFICATION_NEW = 'NOTIFICATION_NEW',
 }
 
 // ============= SSE EVENT DATA SHAPES =============
@@ -355,17 +361,9 @@ export interface SSEEvent {
 
 // ============= SSE CONTEXT =============
 
-export interface SSENotification {
-  message: string;
-  severity: 'success' | 'info' | 'warning' | 'error';
-}
-
 export interface SSEContextType {
   isConnected: boolean;
   lastEvent: SSEEvent | null;
-  /** Personal SSE notification to display as a global toast */
-  notification: SSENotification | null;
-  clearNotification: () => void;
 }
 
 // ============= SSE CHANNELS =============

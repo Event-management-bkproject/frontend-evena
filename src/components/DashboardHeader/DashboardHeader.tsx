@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Breadcrumbs, Typography, IconButton, Avatar, Badge } from '@mui/material';
-import { Notifications, Settings, NavigateNext } from '@mui/icons-material';
+import { Box, Breadcrumbs, Typography, IconButton, Avatar } from '@mui/material';
+import { Settings, NavigateNext } from '@mui/icons-material';
+import { NotificationBell } from '@/src/components/NotificationBell';
 import Link from 'next/link';
 import { DashboardHeaderProps } from './types';
 import { LanguageSwitcher } from '@/src/components/LanguageSwitcher';
@@ -89,22 +90,7 @@ export function DashboardHeader({
       {/* Right: Actions and User Info */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
         {/* Notifications */}
-        <IconButton
-          onClick={onNotificationClick}
-          size="medium"
-          sx={{
-            borderRadius: '50%',
-            backgroundColor: '#36437C',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: '#2a3456',
-            },
-          }}
-        >
-          <Badge badgeContent={3} color="error" sx={{ '& .MuiBadge-badge': { backgroundColor: '#F06CF6' } }}>
-            <Notifications />
-          </Badge>
-        </IconButton>
+        <NotificationBell />
 
         {/* Settings */}
         <IconButton
