@@ -586,6 +586,7 @@ function FlexPassOrganizerContent() {
                     <SaleWindowPanel
                       eventId={selectedGroup.eventId}
                       eventTitle={selectedGroup.eventTitle}
+                      eventStartAt={selectedGroup.eventStartAt}
                       waitingListings={selectedGroup.listings.filter(
                         l => l.status === FlexPassListingStatus.APPROVED && l.saleWindowId === null
                       )}
