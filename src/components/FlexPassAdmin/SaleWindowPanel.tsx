@@ -253,10 +253,11 @@ interface CreateDialogProps {
   open: boolean;
   eventId: string;
   eventTitle: string;
+  eventStartAt: string;
   onClose: () => void;
 }
 
-function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDialogProps) {
+function CreateSaleWindowDialog({ open, eventId, eventTitle, eventStartAt, onClose }: CreateDialogProps) {
   const [methodsByTicket, setMethodsByTicket] = useState<Record<number, FlexPassPricingMethod>>({});
   const [activeTicketTypeId, setActiveTicketTypeId] = useState<number | null>(null);
   const [startAt, setStartAt] = useState('');
@@ -305,6 +306,9 @@ function CreateSaleWindowDialog({ open, eventId, eventTitle, onClose }: CreateDi
     if (!endAt)   return 'Please set a sale end time.';
     if (new Date(startAt) <= new Date()) return 'Sale start must be in the future.';
     if (new Date(endAt) <= new Date(startAt)) return 'Sale end must be after sale start.';
+    if (new Date(endAt) >= new Date(eventStartAt)) {
+      return `Sale window must close before the event starts (${new Date(eventStartAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}).`;
+    }
     return '';
   };
 
@@ -811,10 +815,11 @@ function WaitingListingsSection({ listings }: { listings: FlexPassListingRespons
 interface SaleWindowPanelProps {
   eventId: string;
   eventTitle: string;
+  eventStartAt: string;
   waitingListings: FlexPassListingResponse[];
 }
 
-export function SaleWindowPanel({ eventId, eventTitle, waitingListings }: SaleWindowPanelProps) {
+export function SaleWindowPanel({ eventId, eventTitle, eventStartAt, waitingListings }: SaleWindowPanelProps) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data: windowData, isLoading } = useGetEventSaleWindowQuery(eventId);
@@ -883,6 +888,7 @@ export function SaleWindowPanel({ eventId, eventTitle, waitingListings }: SaleWi
         open={createOpen}
         eventId={eventId}
         eventTitle={eventTitle}
+        eventStartAt={eventStartAt}
         onClose={() => setCreateOpen(false)}
       />
     </>
