@@ -515,10 +515,12 @@ function FlexPassOrganizerContent() {
                         <Box onClick={() => handleSubViewClick(group.eventId, 'schedule')}
                           sx={{
                             display: 'flex', alignItems: 'center', gap: '8px',
-                            px: '14px', pt: '8px', pb: '12px', cursor: 'pointer',
+                            px: '14px', pt: '8px', pb: '10px', cursor: 'pointer',
                             bgcolor: isScheduleActive ? '#eff6ff' : 'white',
                             borderLeft: `3px solid ${isScheduleActive ? '#3b82f6' : 'transparent'}`,
                             borderTop: '1px solid rgba(0,0,0,0.04)',
+                            borderBottomLeftRadius: '8px',
+                            borderBottomRightRadius: '8px',
                             transition: 'all 0.13s',
                             '&:hover': { bgcolor: '#eff6ff' },
                           }}>
