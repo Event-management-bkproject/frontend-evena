@@ -436,7 +436,7 @@ function FlexPassOrganizerContent() {
           <Box sx={{ display: 'flex', gap: '12px', flexDirection: { xs: 'column', md: 'row' }, height: { xs: 'auto', md: 'calc(100vh - 340px)' }, minHeight: { xs: 0, md: 400 } }}>
 
             {/* Event list (left) */}
-            <Box sx={{ width: { xs: '100%', md: 230 }, maxHeight: { xs: 280, md: 'none' }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', pr: '2px', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
+            <Box sx={{ width: { xs: '100%', md: 230 }, maxHeight: { xs: 'none', md: 'none' }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'visible', pr: '2px' }}>
               {groups.map((group) => {
                 const pendingCount = group.listings.filter((l) => l.status === 'PENDING_APPROVAL').length;
                 const isExpanded = expandedEventId === group.eventId;
@@ -447,7 +447,7 @@ function FlexPassOrganizerContent() {
                     bgcolor: isExpanded ? 'white' : 'rgba(255,255,255,0.6)',
                     border: `1.5px solid ${isExpanded ? BRAND.primary : 'rgba(0,0,0,0.08)'}`,
                     borderRadius: '10px',
-                    overflow: 'hidden',
+                    overflow: 'visible',
                     transition: 'border-color 0.15s, box-shadow 0.15s',
                     boxShadow: isExpanded ? '0 2px 8px rgba(243,107,249,0.10)' : 'none',
                   }}>
