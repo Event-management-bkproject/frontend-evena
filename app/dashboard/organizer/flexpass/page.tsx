@@ -142,8 +142,9 @@ function ListingCard({ listing, onApprove, onReject, approveLoading }: ListingCa
 
   return (
     <Box sx={{ bgcolor: 'white', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', p: '16px',
+      minWidth: 0, overflow: 'hidden',
       transition: 'border-color 0.2s', '&:hover': { borderColor: BRAND.primary } }}>
-      <Box sx={{ display: 'flex', gap: '14px' }}>
+      <Box sx={{ display: 'flex', gap: '14px', minWidth: 0 }}>
         <Box sx={{ width: 52, height: 52, borderRadius: '10px',
           background: 'linear-gradient(135deg, #f36bf9 0%, #a855f7 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
