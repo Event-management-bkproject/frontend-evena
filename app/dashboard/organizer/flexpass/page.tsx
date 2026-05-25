@@ -453,14 +453,22 @@ function FlexPassOrganizerContent() {
                   }}>
                     {/* Event header — click to toggle expand */}
                     <Box onClick={() => handleEventClick(group.eventId)}
-                      sx={{ p: '11px', cursor: 'pointer', position: 'relative',
+                      sx={{ p: '11px', cursor: 'pointer', overflow: 'hidden',
                         '&:hover': { bgcolor: 'rgba(243,107,249,0.03)' } }}>
-                      <Typography sx={{ fontSize: 12, fontWeight: 600,
-                        color: isExpanded ? BRAND.primary : '#030213',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', mb: '4px',
-                        pr: '6px' }}>
-                        {group.eventTitle}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mb: '4px', minWidth: 0 }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 600,
+                          color: isExpanded ? BRAND.primary : '#030213',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          flex: 1, minWidth: 0 }}>
+                          {group.eventTitle}
+                        </Typography>
+                        <ChevronRightIcon sx={{
+                          fontSize: 16, flexShrink: 0,
+                          color: isExpanded ? BRAND.primary : '#94a3b8',
+                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease, color 0.15s',
+                        }} />
+                      </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', mb: '7px' }}>
                         <CalendarIcon sx={{ fontSize: 10, color: '#717182' }} />
                         <Typography sx={{ fontSize: 10, color: '#717182' }}>{formatDate(group.eventStartAt)}</Typography>
@@ -476,13 +484,6 @@ function FlexPassOrganizerContent() {
                             {pendingCount} pending
                           </Box>
                         )}
-                        {/* Chevron — bottom-right */}
-                        <ChevronRightIcon sx={{
-                          fontSize: 16, color: isExpanded ? BRAND.primary : '#94a3b8',
-                          ml: 'auto',
-                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.2s ease, color 0.15s',
-                        }} />
                       </Box>
                     </Box>
 
