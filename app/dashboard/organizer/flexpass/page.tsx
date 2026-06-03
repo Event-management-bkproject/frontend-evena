@@ -340,7 +340,7 @@ function FlexPassOrganizerContent() {
       />
 
       <Box sx={{ bgcolor: BRAND.bgSection, borderRadius: '20px', p: '20px',
-        display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        display: 'flex', flexDirection: 'column', gap: '15px', overflow: 'hidden' }}>
 
         {/* Stats row */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: '10px', flexShrink: 0 }}>
@@ -606,7 +606,7 @@ function FlexPassOrganizerContent() {
                           {selectedGroup.listings.length} listing{selectedGroup.listings.length !== 1 ? 's' : ''}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '10px', pb: '4px', flexShrink: 0 }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '10px', pb: '4px' }}>
                         {selectedGroup.listings.map((listing) => (
                           <ListingCard key={listing.id} listing={listing}
                             onApprove={handleApprove}
