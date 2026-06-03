@@ -436,7 +436,7 @@ function FlexPassOrganizerContent() {
           <Box sx={{ display: 'flex', gap: '12px', flexDirection: { xs: 'column', md: 'row' }, height: { xs: 'auto', md: 'calc(100vh - 340px)' }, minHeight: { xs: 0, md: 400 } }}>
 
             {/* Event list (left) */}
-            <Box sx={{ width: { xs: '100%', md: 230 }, maxHeight: { xs: 'none', md: 'none' }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'visible', pr: '2px' }}>
+            <Box sx={{ width: { xs: '100%', md: 230 }, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: { xs: 'visible', md: 'auto' }, pr: '4px', '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: '#CBD5E1' } }}>
               {groups.map((group) => {
                 const pendingCount = group.listings.filter((l) => l.status === 'PENDING_APPROVAL').length;
                 const isExpanded = expandedEventId === group.eventId;
