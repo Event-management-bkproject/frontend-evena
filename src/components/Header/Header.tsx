@@ -69,12 +69,12 @@ export default function Header() {
   const navItems = isOrganizerOrAdmin
     ? [
         { label: 'Home', path: homePath },
-        { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
+        { label: 'Flex Pass', path: '/dashboard/customer/flexpass' },
       ]
     : [
         { label: 'Home', path: '/dashboard/customer' },
         { label: 'Marketplace', path: '/dashboard/customer/marketplace' },
-        { label: 'FlexPass', path: '/dashboard/customer/flexpass' },
+        { label: 'Flex Pass', path: '/dashboard/customer/flexpass' },
         { label: 'My Bookings', path: '/dashboard/customer/cart' },
       ];
 
