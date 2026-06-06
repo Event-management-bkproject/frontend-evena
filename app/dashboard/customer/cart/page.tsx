@@ -9,8 +9,9 @@ import {
 } from '@mui/material';
 import {
   ShoppingBag, ConfirmationNumber, Close, QrCode2, Place, CalendarToday,
-  CheckCircle, Cancel, AccessTime, Visibility, PhoneAndroid,
+  CheckCircle, Cancel, AccessTime, Visibility,
 } from '@mui/icons-material';
+import { QRCodeSVG } from 'qrcode.react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   useGetMyOrdersQuery,
@@ -387,7 +388,7 @@ export default function MyBookingsPage() {
       status: orderFilter !== 'ALL' ? orderFilter : undefined,
     });
   const { data: ticketsData, isLoading: ticketsLoading, error: ticketsError, refetch: refetchTickets } =
-    useGetMyTicketsQuery();
+    useGetMyTicketsQuery(undefined, { pollingInterval: 5 * 60 * 1000 });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
   const orders = ordersData?.data?.content ?? [];
@@ -807,19 +808,16 @@ export default function MyBookingsPage() {
             </Box>
 
             <DialogContent sx={{ p: 3 }}>
-              <Box
-                sx={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  p: 4, bgcolor: '#F8FAFC', borderRadius: '16px', mb: 3,
-                  border: '1px dashed #CBD5E1', gap: 1.5,
-                }}
-              >
-                <PhoneAndroid sx={{ fontSize: 48, color: '#6093FC' }} />
-                <Typography variant="body1" sx={{ fontWeight: 700, color: '#0F172A', textAlign: 'center' }}>
-                  Mở app Evena để xem QR
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#64748B', textAlign: 'center', lineHeight: 1.6 }}>
-                  Mã QR chỉ hiển thị trên ứng dụng di động để bảo vệ vé của bạn.
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, bgcolor: '#F8FAFC', borderRadius: '16px', mb: 3, border: '1px solid #E2E8F0' }}>
+                <Box sx={{ p: 2, bgcolor: '#fff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                  <QRCodeSVG
+                    value={(ticketsData?.data?.find(t => t.id === selectedTicket.id) ?? selectedTicket).qrPayload}
+                    size={200}
+                    level="M"
+                  />
+                </Box>
+                <Typography variant="caption" sx={{ mt: 1.5, color: '#64748B' }}>
+                  Xuất trình mã QR này tại cửa vào
                 </Typography>
               </Box>
 
