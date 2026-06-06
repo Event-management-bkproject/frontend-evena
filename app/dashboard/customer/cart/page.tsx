@@ -9,9 +9,8 @@ import {
 } from '@mui/material';
 import {
   ShoppingBag, ConfirmationNumber, Close, QrCode2, Place, CalendarToday,
-  CheckCircle, Cancel, AccessTime, Visibility,
+  CheckCircle, Cancel, AccessTime, Visibility, PhoneAndroid,
 } from '@mui/icons-material';
-import { QRCodeSVG } from 'qrcode.react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   useGetMyOrdersQuery,
@@ -808,8 +807,20 @@ export default function MyBookingsPage() {
             </Box>
 
             <DialogContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3, bgcolor: '#F8FAFC', borderRadius: '16px', mb: 3 }}>
-                <QRCodeSVG value={selectedTicket.qrPayload} size={220} level="H" />
+              <Box
+                sx={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  p: 4, bgcolor: '#F8FAFC', borderRadius: '16px', mb: 3,
+                  border: '1px dashed #CBD5E1', gap: 1.5,
+                }}
+              >
+                <PhoneAndroid sx={{ fontSize: 48, color: '#6093FC' }} />
+                <Typography variant="body1" sx={{ fontWeight: 700, color: '#0F172A', textAlign: 'center' }}>
+                  Mở app Evena để xem QR
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748B', textAlign: 'center', lineHeight: 1.6 }}>
+                  Mã QR chỉ hiển thị trên ứng dụng di động để bảo vệ vé của bạn.
+                </Typography>
               </Box>
 
               <Divider sx={{ mb: 2, borderColor: '#F1F5F9' }} />
