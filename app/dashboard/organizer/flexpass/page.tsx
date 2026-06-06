@@ -235,7 +235,7 @@ function FlexPassOrganizerContent() {
   const [selectedView, setSelectedView] = useState<RightView>('listings');
   const [rejectTarget, setRejectTarget] = useState<{ id: number; eventTitle: string } | null>(null);
 
-  const { data, isLoading, error, refetch } = useGetOrganizerListingsQuery();
+  const { data, isLoading, error, refetch } = useGetOrganizerListingsQuery({ page: 0, size: 1000 });
   const [approveListing, { isLoading: approveLoading }] = useApproveListingMutation();
   const [rejectListing, { isLoading: rejectLoading }] = useRejectListingMutation();
 
@@ -258,7 +258,7 @@ function FlexPassOrganizerContent() {
     if (flexpassEvents.includes(lastEvent.type)) refetch();
   }, [lastEvent, refetch]);
 
-  const listings = data?.data ?? [];
+  const listings = data?.data?.content ?? [];
 
   // Filter by status + search
   const filtered = useMemo(() => {
