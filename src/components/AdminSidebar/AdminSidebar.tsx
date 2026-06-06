@@ -34,7 +34,6 @@ import { useAuth } from '@/src/hooks/auth/useAuth';
 import { useGetOrganizationsQuery } from '@/src/stores/services/OrganizerApi';
 import { useGetOrganizerRefundRequestsQuery } from '@/src/stores/services/RefundRequestApi';
 import { useGetOrganizerListingsQuery } from '@/src/stores/services/FlexPassApi';
-import { FlexPassListingStatus } from '@/src/stores/types/flexpass';
 import { ADMIN } from '@/src/utils/constants/adminBrand';
 
 const SIDEBAR_W = 240;
@@ -47,10 +46,10 @@ interface AdminSidebarProps {
 function useBadgeCounts() {
   const { data: orgsData } = useGetOrganizationsQuery({ page: 0, size: 200 });
   const { data: refundsData } = useGetOrganizerRefundRequestsQuery({ page: 0, size: 100, status: 'PENDING' });
-  const { data: flexPassData } = useGetOrganizerListingsQuery();
+  const { data: flexPassData } = useGetOrganizerListingsQuery({ page: 0, size: 1, status: 'PENDING_APPROVAL' });
   const pendingOrgs = (orgsData?.data?.content ?? []).filter((o) => !o.verified).length;
   const pendingRefunds = refundsData?.data?.totalElements ?? 0;
-  const pendingFlexPass = (flexPassData?.data ?? []).filter((l) => l.status === FlexPassListingStatus.PENDING_APPROVAL).length;
+  const pendingFlexPass = flexPassData?.data?.totalElements ?? 0;
   return { pendingOrgs, pendingRefunds, pendingFlexPass };
 }
 
