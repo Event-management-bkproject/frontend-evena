@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box, Card, Typography, Chip, TextField, InputAdornment,
   Table, TableHead, TableBody, TableRow, TableCell, TableContainer,
-  CircularProgress, ToggleButtonGroup, ToggleButton,
+  CircularProgress, ToggleButtonGroup, ToggleButton, Pagination,
 } from '@mui/material';
 import { Search as SearchIcon, ShoppingCart as OrdersIcon } from '@mui/icons-material';
 import AdminLayout from '@/src/components/layout/AdminLayout';
@@ -28,41 +28,27 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
 
 export default function AdminOrdersPage() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
+  const [page, setPage] = useState(0);
 
-  const { data, isLoading } = useGetOrganizerOrdersQuery({ page: 0, size: 200 });
-  const allOrders = data?.data?.content ?? [];
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(0); }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const filtered = useMemo(() => {
-    let list = filter !== 'all' ? allOrders.filter((o) => o.status === filter) : allOrders;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter((o) =>
-        (o.userEmail ?? '').toLowerCase().includes(q) ||
-        String(o.id).includes(q) ||
-        (o.eventSnapshot?.title ?? '').toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [allOrders, filter, search]);
+  const { data, isLoading } = useGetOrganizerOrdersQuery({
+    page,
+    size: 20,
+    status: filter !== 'all' ? filter : undefined,
+    keyword: debouncedSearch || undefined,
+  });
 
-  const confirmedOrders = useMemo(() => allOrders.filter((o) => o.status === OrderStatus.CONFIRMED), [allOrders]);
-  const totalRevenue = useMemo(() => confirmedOrders.reduce((s, o) => s + o.totalAmount, 0), [confirmedOrders]);
-
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { all: allOrders.length };
-    Object.values(OrderStatus).forEach((s) => { c[s] = allOrders.filter((o) => o.status === s).length; });
-    return c;
-  }, [allOrders]);
+  const orders = data?.data?.content ?? [];
+  const totalPages = data?.data?.totalPages ?? 1;
+  const totalElements = data?.data?.totalElements ?? 0;
 
   const fmt = (n: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
-
-  const summaryCards = [
-    { label: 'Total Orders', value: allOrders.length, color: ADMIN.primary },
-    { label: 'Confirmed', value: confirmedOrders.length, color: ADMIN.success },
-    { label: 'Pending', value: counts[OrderStatus.PENDING] ?? 0, color: ADMIN.warning },
-    { label: 'Total Revenue', value: fmt(totalRevenue), color: ADMIN.info },
-  ];
 
   return (
     <RoleGuard allowedRoles={['ADMIN']}>
@@ -71,18 +57,6 @@ export default function AdminOrdersPage() {
           title="Orders & Revenue"
           breadcrumbs={[{ label: 'Admin', href: '/dashboard/admin' }, { label: 'Orders' }]}
         >
-          {/* Summary row */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2, mb: 3 }}>
-            {summaryCards.map((s) => (
-              <Card key={s.label} sx={{ p: 2, borderRadius: '12px', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: s.color }}>
-                  {isLoading ? <CircularProgress size={18} /> : s.value}
-                </Typography>
-                <Typography variant="body2" sx={{ color: ADMIN.textSecondary, fontSize: 12 }}>{s.label}</Typography>
-              </Card>
-            ))}
-          </Box>
-
           <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
             <TextField
               size="small"
@@ -92,14 +66,25 @@ export default function AdminOrdersPage() {
               sx={{ minWidth: 280, bgcolor: ADMIN.cardBg, borderRadius: '8px' }}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: ADMIN.textMuted }} /></InputAdornment> }}
             />
-            <ToggleButtonGroup value={filter} exclusive onChange={(_, v) => v && setFilter(v)} size="small" sx={{ flexWrap: 'wrap' }}>
-              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 12 }}>All ({counts.all})</ToggleButton>
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(_, v) => { if (v) { setFilter(v); setPage(0); } }}
+              size="small"
+              sx={{ flexWrap: 'wrap' }}
+            >
+              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 12 }}>All</ToggleButton>
               {Object.values(OrderStatus).map((s) => (
                 <ToggleButton key={s} value={s} sx={{ textTransform: 'none', fontSize: 12 }}>
-                  {STATUS_META[s].label} ({counts[s] ?? 0})
+                  {STATUS_META[s].label}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>
+            {!isLoading && (
+              <Typography variant="body2" sx={{ color: ADMIN.textMuted, ml: 'auto' }}>
+                {totalElements} result{totalElements !== 1 ? 's' : ''}
+              </Typography>
+            )}
           </Box>
 
           <Card sx={{ borderRadius: '12px', overflow: 'hidden', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -107,7 +92,7 @@ export default function AdminOrdersPage() {
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                 <CircularProgress sx={{ color: ADMIN.primary }} />
               </Box>
-            ) : filtered.length === 0 ? (
+            ) : orders.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 6 }}>
                 <OrdersIcon sx={{ fontSize: 48, color: ADMIN.border, mb: 1 }} />
                 <Typography sx={{ color: ADMIN.textSecondary }}>No orders found</Typography>
@@ -123,7 +108,7 @@ export default function AdminOrdersPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filtered.map((order) => {
+                    {orders.map((order) => {
                       const meta = STATUS_META[order.status as OrderStatus];
                       return (
                         <TableRow key={order.id} sx={{ '&:hover': { bgcolor: ADMIN.surfaceBg } }}>
@@ -145,6 +130,12 @@ export default function AdminOrdersPage() {
               </TableContainer>
             )}
           </Card>
+
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination count={totalPages} page={page + 1} onChange={(_, v) => setPage(v - 1)} shape="rounded" color="primary" />
+            </Box>
+          )}
         </AdminPageShell>
       </AdminLayout>
     </RoleGuard>

@@ -85,7 +85,7 @@ export const OrderAPI = createApi({
     // Get orders for all events managed by current organizer (paginated)
     getOrganizerOrders: builder.query<
       ApiResponse<PaginatedResponse<OrderResponse>>,
-      { page?: number; size?: number; status?: string }
+      { page?: number; size?: number; status?: string; keyword?: string }
     >({
       query: (params = {}) => ({
         url: '/orders/organizer',
@@ -94,6 +94,7 @@ export const OrderAPI = createApi({
           page: params.page ?? 0,
           size: params.size ?? 20,
           ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
+          ...(params.keyword ? { keyword: params.keyword } : {}),
         },
       }),
       providesTags: ['Order'],
@@ -109,13 +110,18 @@ export const OrderAPI = createApi({
     }),
 
     // Get all tickets (admin only)
-    getAdminTickets: builder.query<ApiResponse<PaginatedResponse<TicketResponse>>, { page?: number; size?: number }>({
+    getAdminTickets: builder.query<
+      ApiResponse<PaginatedResponse<TicketResponse>>,
+      { page?: number; size?: number; status?: string; keyword?: string }
+    >({
       query: (params = {}) => ({
         url: '/orders/admin/tickets',
         method: 'GET',
         params: {
           page: params.page ?? 0,
-          size: params.size ?? 200,
+          size: params.size ?? 20,
+          ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
+          ...(params.keyword ? { keyword: params.keyword } : {}),
         },
       }),
       providesTags: ['Ticket'],
