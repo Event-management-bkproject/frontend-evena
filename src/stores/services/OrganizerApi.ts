@@ -19,17 +19,19 @@ export const OrganizerAPI = createApi({
   // refetchOnReconnect: true, // Refetch when connection is restored
   // refetchOnFocus: true, // Refetch when window regains focus
   endpoints: (builder) => ({
-    // Get all organizers with pagination
+    // Get all organizers with server-side pagination + filtering
     getOrganizations: builder.query<
       ApiResponse<PaginatedResponse<OrganizationResponse>>,
-      { page?: number; size?: number }
+      { page?: number; size?: number; keyword?: string; verified?: boolean }
     >({
       query: (params = {}) => ({
         url: '/organizations',
         method: 'GET',
         params: {
-          page: params.page || 0,
-          size: params.size || 10,
+          page: params.page ?? 0,
+          size: params.size ?? 20,
+          ...(params.keyword ? { keyword: params.keyword } : {}),
+          ...(params.verified !== undefined ? { verified: params.verified } : {}),
         },
       }),
       providesTags: ['Organizer'],
