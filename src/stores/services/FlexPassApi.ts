@@ -11,7 +11,7 @@ import {
   FlexPassListingDecisionRequest,
   FlexPassCheckoutRequest,
 } from '../types/flexpass';
-import { ApiResponse } from '../types';
+import { ApiResponse, PaginatedResponse } from '../types';
 
 export const FlexPassAPI = createApi({
   reducerPath: 'FlexPassAPI',
@@ -72,8 +72,20 @@ export const FlexPassAPI = createApi({
 
     // ─── Organizer endpoints ──────────────────────────────────────────────────
 
-    getOrganizerListings: builder.query<ApiResponse<FlexPassListingResponse[]>, void>({
-      query: () => ({ url: '/flexpass/organizer/listings', method: 'GET' }),
+    getOrganizerListings: builder.query<
+      ApiResponse<PaginatedResponse<FlexPassListingResponse>>,
+      { page?: number; size?: number; status?: string; keyword?: string }
+    >({
+      query: (params = {}) => ({
+        url: '/flexpass/organizer/listings',
+        method: 'GET',
+        params: {
+          page: params.page ?? 0,
+          size: params.size ?? 20,
+          ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
+          ...(params.keyword ? { keyword: params.keyword } : {}),
+        },
+      }),
       providesTags: ['FlexPassListing'],
     }),
 
@@ -135,8 +147,19 @@ export const FlexPassAPI = createApi({
 
     // ─── Admin endpoints ──────────────────────────────────────────────────────
 
-    getAdminSaleWindows: builder.query<ApiResponse<FlexPassSaleWindowResponse[]>, void>({
-      query: () => ({ url: '/flexpass/admin/sale-windows', method: 'GET' }),
+    getAdminSaleWindows: builder.query<
+      ApiResponse<PaginatedResponse<FlexPassSaleWindowResponse>>,
+      { page?: number; size?: number; status?: string }
+    >({
+      query: (params = {}) => ({
+        url: '/flexpass/admin/sale-windows',
+        method: 'GET',
+        params: {
+          page: params.page ?? 0,
+          size: params.size ?? 20,
+          ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
+        },
+      }),
       providesTags: ['FlexPassSaleWindow'],
     }),
   }),
