@@ -100,13 +100,18 @@ export const EventAPI = createApi({
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Event', id }, 'Event'],
     }),
-    getMyEvents: builder.query<ApiResponse<PaginatedResponse<EventListResponse>>, { page?: number; size?: number }>({
+    getMyEvents: builder.query<
+      ApiResponse<PaginatedResponse<EventListResponse>>,
+      { page?: number; size?: number; keyword?: string; status?: string }
+    >({
       query: (params = {}) => ({
         url: '/events/my-events',
         method: 'GET',
         params: {
-          page: params.page || 0,
-          size: params.size || 10,
+          page: params.page ?? 0,
+          size: params.size ?? 20,
+          ...(params.keyword ? { keyword: params.keyword } : {}),
+          ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
         },
       }),
       providesTags: ['Event'],
