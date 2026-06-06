@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -18,6 +18,7 @@ import {
   Avatar,
   ToggleButtonGroup,
   ToggleButton,
+  Pagination,
 } from '@mui/material';
 import { Search as SearchIcon, Event as EventIcon } from '@mui/icons-material';
 import AdminLayout from '@/src/components/layout/AdminLayout';
@@ -40,30 +41,24 @@ const STATUS_META: Record<EventStatus, { label: string; bg: string; color: strin
 
 export default function AdminEventsPage() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
+  const [page, setPage] = useState(0);
 
-  const { data, isLoading } = useGetMyEventsQuery({ page: 0, size: 200 });
-  const allEvents = data?.data?.content ?? [];
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(0); }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const filtered = useMemo(() => {
-    let list = filter !== 'all' ? allEvents.filter((e) => e.status === filter) : allEvents;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter((e) =>
-        e.title.toLowerCase().includes(q) ||
-        e.organizerName?.toLowerCase().includes(q) ||
-        e.categoryName?.toLowerCase().includes(q) ||
-        e.city?.toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [allEvents, filter, search]);
+  const { data, isLoading } = useGetMyEventsQuery({
+    page,
+    size: 20,
+    keyword: debouncedSearch || undefined,
+    status: filter !== 'all' ? filter : undefined,
+  });
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { all: allEvents.length };
-    Object.values(EventStatus).forEach((s) => { c[s] = allEvents.filter((e) => e.status === s).length; });
-    return c;
-  }, [allEvents]);
+  const events = data?.data?.content ?? [];
+  const totalPages = data?.data?.totalPages ?? 1;
 
   const fmt = (n: number) => n > 0 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n) : 'Free';
 
@@ -83,11 +78,17 @@ export default function AdminEventsPage() {
               sx={{ minWidth: 240, bgcolor: ADMIN.cardBg, borderRadius: '8px' }}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: ADMIN.textMuted }} /></InputAdornment> }}
             />
-            <ToggleButtonGroup value={filter} exclusive onChange={(_, v) => v && setFilter(v)} size="small" sx={{ flexWrap: 'wrap' }}>
-              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 12 }}>All ({counts.all})</ToggleButton>
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(_, v) => { if (v) { setFilter(v); setPage(0); } }}
+              size="small"
+              sx={{ flexWrap: 'wrap' }}
+            >
+              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 12 }}>All</ToggleButton>
               {Object.values(EventStatus).map((s) => (
                 <ToggleButton key={s} value={s} sx={{ textTransform: 'none', fontSize: 12 }}>
-                  {STATUS_META[s].label} ({counts[s] ?? 0})
+                  {STATUS_META[s].label}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>
@@ -98,7 +99,7 @@ export default function AdminEventsPage() {
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                 <CircularProgress sx={{ color: ADMIN.primary }} />
               </Box>
-            ) : filtered.length === 0 ? (
+            ) : events.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 6 }}>
                 <EventIcon sx={{ fontSize: 48, color: ADMIN.border, mb: 1 }} />
                 <Typography sx={{ color: ADMIN.textSecondary }}>No events found</Typography>
@@ -114,17 +115,13 @@ export default function AdminEventsPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filtered.map((event) => {
+                    {events.map((event) => {
                       const meta = STATUS_META[event.status as EventStatus];
                       return (
                         <TableRow key={event.id} sx={{ '&:hover': { bgcolor: ADMIN.surfaceBg } }}>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Avatar
-                                src={event.coverUrl}
-                                variant="rounded"
-                                sx={{ width: 36, height: 36, bgcolor: ADMIN.infoBg, flexShrink: 0 }}
-                              >
+                              <Avatar src={event.coverUrl} variant="rounded" sx={{ width: 36, height: 36, bgcolor: ADMIN.infoBg, flexShrink: 0 }}>
                                 <EventIcon sx={{ color: ADMIN.primary, fontSize: 18 }} />
                               </Avatar>
                               <Typography variant="body2" sx={{ fontWeight: 600, color: ADMIN.heading, maxWidth: 180 }} noWrap>
@@ -154,7 +151,12 @@ export default function AdminEventsPage() {
                               {Math.round(event.soldPercentage ?? 0)}%
                             </Typography>
                             <Box sx={{ width: 56, height: 4, borderRadius: 2, bgcolor: ADMIN.border, overflow: 'hidden' }}>
-                              <Box sx={{ height: '100%', width: `${Math.min(event.soldPercentage ?? 0, 100)}%`, bgcolor: (event.soldPercentage ?? 0) >= 90 ? ADMIN.error : (event.soldPercentage ?? 0) >= 60 ? ADMIN.warning : ADMIN.success, borderRadius: 2 }} />
+                              <Box sx={{
+                                height: '100%',
+                                width: `${Math.min(event.soldPercentage ?? 0, 100)}%`,
+                                bgcolor: (event.soldPercentage ?? 0) >= 90 ? ADMIN.error : (event.soldPercentage ?? 0) >= 60 ? ADMIN.warning : ADMIN.success,
+                                borderRadius: 2,
+                              }} />
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -165,6 +167,12 @@ export default function AdminEventsPage() {
               </TableContainer>
             )}
           </Card>
+
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination count={totalPages} page={page + 1} onChange={(_, v) => setPage(v - 1)} shape="rounded" color="primary" />
+            </Box>
+          )}
         </AdminPageShell>
       </AdminLayout>
     </RoleGuard>
