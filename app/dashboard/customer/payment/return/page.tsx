@@ -130,7 +130,7 @@ export default function PaymentReturnPage() {
 
           <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: 15, lineHeight: 1.6 }}>
             {isFlexPass && result === 'success'
-              ? 'Vé FlexPass đã được chuyển thành công vào tài khoản của bạn.'
+              ? 'Your FlexPass ticket has been successfully transferred to your account.'
               : t(descKey)}
           </Typography>
 
@@ -223,7 +223,7 @@ export default function PaymentReturnPage() {
                   '&:hover': { background: 'linear-gradient(135deg, #475569, #334155)' },
                 }}
               >
-                Quay lại FlexPass Marketplace
+                Back to FlexPass Marketplace
               </Button>
             )}
 

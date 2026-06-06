@@ -96,7 +96,7 @@ export function EventFilters({
       <Box sx={{ display: 'flex', gap: 1.5, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         {/* Search */}
         <TextField
-          placeholder={t('searchBar.searchEvents') || 'Tìm kiếm sự kiện...'}
+          placeholder={t('searchBar.searchEvents') || 'Search events...'}
           value={searchTerm}
           onChange={handleSearchChange}
           disabled={disabled || loading}

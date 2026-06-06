@@ -5,8 +5,8 @@ import { validationMessages } from './validationMessages';
 export const registerValidationSchema = Yup.object({
   name: Yup.string()
     .required(validationMessages.required)
-    .min(2, 'Tên phải có ít nhất 2 ký tự')
-    .max(100, 'Tên không được vượt quá 100 ký tự'),
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must not exceed 100 characters'),
 
   email: Yup.string().email(validationMessages.email).required(validationMessages.required),
 

@@ -817,7 +817,7 @@ export default function MyBookingsPage() {
                   />
                 </Box>
                 <Typography variant="caption" sx={{ mt: 1.5, color: '#64748B' }}>
-                  Xuất trình mã QR này tại cửa vào
+                  Present this QR code at the venue entrance
                 </Typography>
               </Box>
 
