@@ -49,7 +49,7 @@ export const RefundRequestAPI = createApi({
     // Organizer: list refund requests for their events
     getOrganizerRefundRequests: builder.query<
       ApiResponse<PaginatedResponse<RefundRequestResponse>>,
-      { page?: number; size?: number; status?: string }
+      { page?: number; size?: number; status?: string; keyword?: string }
     >({
       query: (params = {}) => ({
         url: '/refund-requests/organizer',
@@ -58,6 +58,7 @@ export const RefundRequestAPI = createApi({
           page: params.page ?? 0,
           size: params.size ?? 20,
           ...(params.status && params.status !== 'ALL' ? { status: params.status } : {}),
+          ...(params.keyword ? { keyword: params.keyword } : {}),
         },
       }),
       providesTags: ['RefundRequest'],

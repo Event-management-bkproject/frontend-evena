@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box, Card, Typography, Chip, TextField, InputAdornment,
   Table, TableHead, TableBody, TableRow, TableCell, TableContainer,
-  CircularProgress, IconButton, Tooltip, ToggleButtonGroup, ToggleButton,
+  CircularProgress, IconButton, Tooltip, ToggleButtonGroup, ToggleButton, Pagination,
 } from '@mui/material';
-import { Search as SearchIcon, AssignmentReturn as RefundIcon, CheckCircle as ApproveIcon, Cancel as RejectIcon } from '@mui/icons-material';
+import { Search as SearchIcon, AssignmentReturn as RefundIcon, CheckCircle as ApproveIcon } from '@mui/icons-material';
+
 import AdminLayout from '@/src/components/layout/AdminLayout';
 import AdminPageShell from '@/src/components/AdminSidebar/AdminPageShell';
 import RoleGuard from '@/src/components/RoleGuard';
@@ -20,44 +21,38 @@ import dayjs from 'dayjs';
 type FilterMode = 'all' | RefundRequestStatus;
 
 const STATUS_META: Record<RefundRequestStatus, { label: string; bg: string; color: string }> = {
-  [RefundRequestStatus.PENDING]:           { label: 'Pending',      bg: ADMIN.warningBg, color: ADMIN.warningText },
-  [RefundRequestStatus.APPROVED]:          { label: 'Approved',     bg: ADMIN.successBg, color: ADMIN.successText },
-  [RefundRequestStatus.REJECTED]:          { label: 'Rejected',     bg: ADMIN.errorBg,   color: ADMIN.errorText },
-  [RefundRequestStatus.REFUND_PROCESSING]: { label: 'Processing',   bg: ADMIN.infoBg,    color: ADMIN.infoText },
-  [RefundRequestStatus.REFUND_FAILED]:     { label: 'Failed',       bg: ADMIN.errorBg,   color: ADMIN.errorText },
-  [RefundRequestStatus.REFUNDED]:          { label: 'Refunded',     bg: ADMIN.pageBg,    color: ADMIN.textSecondary },
+  [RefundRequestStatus.PENDING]:           { label: 'Pending',    bg: ADMIN.warningBg, color: ADMIN.warningText },
+  [RefundRequestStatus.APPROVED]:          { label: 'Approved',   bg: ADMIN.successBg, color: ADMIN.successText },
+  [RefundRequestStatus.REJECTED]:          { label: 'Rejected',   bg: ADMIN.errorBg,   color: ADMIN.errorText },
+  [RefundRequestStatus.REFUND_PROCESSING]: { label: 'Processing', bg: ADMIN.infoBg,    color: ADMIN.infoText },
+  [RefundRequestStatus.REFUND_FAILED]:     { label: 'Failed',     bg: ADMIN.errorBg,   color: ADMIN.errorText },
+  [RefundRequestStatus.REFUNDED]:          { label: 'Refunded',   bg: ADMIN.pageBg,    color: ADMIN.textSecondary },
 };
 
 export default function AdminRefundsPage() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
+  const [page, setPage] = useState(0);
   const [reviewTarget, setReviewTarget] = useState<RefundRequestResponse | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  const { data, isLoading } = useGetOrganizerRefundRequestsQuery({ page: 0, size: 200 });
-  const allRefunds = data?.data?.content ?? [];
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(search); setPage(0); }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const filtered = useMemo(() => {
-    let list = filter !== 'all' ? allRefunds.filter((r) => r.status === filter) : allRefunds;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter((r) =>
-        r.requesterEmail.toLowerCase().includes(q) ||
-        r.requesterName.toLowerCase().includes(q) ||
-        r.eventName.toLowerCase().includes(q) ||
-        String(r.orderId).includes(q),
-      );
-    }
-    return list;
-  }, [allRefunds, filter, search]);
+  const { data, isLoading } = useGetOrganizerRefundRequestsQuery({
+    page,
+    size: 20,
+    status: filter !== 'all' ? filter : undefined,
+    keyword: debouncedSearch || undefined,
+  });
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { all: allRefunds.length };
-    Object.values(RefundRequestStatus).forEach((s) => { c[s] = allRefunds.filter((r) => r.status === s).length; });
-    return c;
-  }, [allRefunds]);
+  const refunds = data?.data?.content ?? [];
+  const totalPages = data?.data?.totalPages ?? 1;
+  const totalElements = data?.data?.totalElements ?? 0;
 
-  const pendingCount = counts[RefundRequestStatus.PENDING] ?? 0;
   const fmt = (n: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
   return (
@@ -67,21 +62,6 @@ export default function AdminRefundsPage() {
           title="Refund Requests"
           breadcrumbs={[{ label: 'Admin', href: '/dashboard/admin' }, { label: 'Refunds' }]}
         >
-          {/* Summary */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr 1fr', md: '1fr 1fr 1fr 1fr 1fr 1fr' }, gap: 2, mb: 3 }}>
-            {Object.values(RefundRequestStatus).map((s) => {
-              const meta = STATUS_META[s];
-              return (
-                <Card key={s} sx={{ p: 2, borderRadius: '12px', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: meta.color }}>
-                    {isLoading ? <CircularProgress size={16} /> : (counts[s] ?? 0)}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: ADMIN.textSecondary, fontSize: 11 }}>{meta.label}</Typography>
-                </Card>
-              );
-            })}
-          </Box>
-
           <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
             <TextField
               size="small"
@@ -91,18 +71,25 @@ export default function AdminRefundsPage() {
               sx={{ minWidth: 280, bgcolor: ADMIN.cardBg, borderRadius: '8px' }}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: ADMIN.textMuted }} /></InputAdornment> }}
             />
-            <ToggleButtonGroup value={filter} exclusive onChange={(_, v) => v && setFilter(v)} size="small" sx={{ flexWrap: 'wrap' }}>
-              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 12 }}>All ({counts.all})</ToggleButton>
-              <ToggleButton value={RefundRequestStatus.PENDING} sx={{ textTransform: 'none', fontSize: 12 }}>
-                Pending
-                {pendingCount > 0 && <Chip label={pendingCount} size="small" sx={{ ml: 0.5, height: 16, fontSize: 10, bgcolor: ADMIN.error, color: '#fff' }} />}
-              </ToggleButton>
-              {Object.values(RefundRequestStatus).filter((s) => s !== RefundRequestStatus.PENDING).map((s) => (
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(_, v) => { if (v) { setFilter(v); setPage(0); } }}
+              size="small"
+              sx={{ flexWrap: 'wrap' }}
+            >
+              <ToggleButton value="all" sx={{ textTransform: 'none', fontSize: 12 }}>All</ToggleButton>
+              {Object.values(RefundRequestStatus).map((s) => (
                 <ToggleButton key={s} value={s} sx={{ textTransform: 'none', fontSize: 12 }}>
-                  {STATUS_META[s].label} ({counts[s] ?? 0})
+                  {STATUS_META[s].label}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>
+            {!isLoading && (
+              <Typography variant="body2" sx={{ color: ADMIN.textMuted, ml: 'auto' }}>
+                {totalElements} result{totalElements !== 1 ? 's' : ''}
+              </Typography>
+            )}
           </Box>
 
           <Card sx={{ borderRadius: '12px', overflow: 'hidden', border: `1px solid ${ADMIN.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -110,7 +97,7 @@ export default function AdminRefundsPage() {
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                 <CircularProgress sx={{ color: ADMIN.primary }} />
               </Box>
-            ) : filtered.length === 0 ? (
+            ) : refunds.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 6 }}>
                 <RefundIcon sx={{ fontSize: 48, color: ADMIN.border, mb: 1 }} />
                 <Typography sx={{ color: ADMIN.textSecondary }}>No refund requests found</Typography>
@@ -126,7 +113,7 @@ export default function AdminRefundsPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filtered.map((r) => {
+                    {refunds.map((r) => {
                       const meta = STATUS_META[r.status as RefundRequestStatus];
                       const isPending = r.status === RefundRequestStatus.PENDING;
                       return (
@@ -150,13 +137,11 @@ export default function AdminRefundsPage() {
                           <TableCell><Typography variant="body2" sx={{ fontSize: 12, color: ADMIN.body }}>{dayjs(r.createdAt).format('DD/MM/YY HH:mm')}</Typography></TableCell>
                           <TableCell>
                             {isPending && (
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <Tooltip title="Approve / Reject">
-                                  <IconButton size="small" onClick={() => setReviewTarget(r)} sx={{ color: ADMIN.primary, '&:hover': { bgcolor: ADMIN.infoBg } }}>
-                                    <ApproveIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
+                              <Tooltip title="Approve / Reject">
+                                <IconButton size="small" onClick={() => setReviewTarget(r)} sx={{ color: ADMIN.primary, '&:hover': { bgcolor: ADMIN.infoBg } }}>
+                                  <ApproveIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
                             )}
                           </TableCell>
                         </TableRow>
@@ -167,6 +152,12 @@ export default function AdminRefundsPage() {
               </TableContainer>
             )}
           </Card>
+
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination count={totalPages} page={page + 1} onChange={(_, v) => setPage(v - 1)} shape="rounded" color="primary" />
+            </Box>
+          )}
         </AdminPageShell>
 
         {reviewTarget && (
