@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Box, Typography, Container, CircularProgress, Alert, Grid, Pagination } from '@mui/material';
 import { LocalFireDepartment, EventNote } from '@mui/icons-material';
 import { useGetEventsSearchQuery } from '@/src/stores/services/EventApi';
@@ -13,6 +13,7 @@ import Footer from '@/src/components/Footer';
 import { calculateHotEvents } from '@/src/utils/hotEventsAlgorithm';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/hooks/auth/useAuth';
+import { useRouter } from 'next/navigation';
 
 const PAGE_SIZE = 6;
 const HOT_POOL_SIZE = 50;
@@ -48,6 +49,8 @@ function getDateRange(period: TimePeriod, specificDate?: string): { startDate?: 
 export default function CustomerDashboard() {
   const { t } = useTranslation();
   const { auth } = useAuth();
+  const router = useRouter();
+  const upcomingSectionRef = useRef<HTMLDivElement>(null);
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchCity, setSearchCity] = useState('');
@@ -213,7 +216,7 @@ export default function CustomerDashboard() {
           </Box>
 
           {/* Upcoming / search results */}
-          <Box>
+          <Box ref={upcomingSectionRef}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
               <EventNote sx={{ color: '#6093FC', fontSize: 26 }} />
               <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', fontSize: 20 }}>
@@ -253,9 +256,26 @@ export default function CustomerDashboard() {
                 <Pagination
                   count={totalPages}
                   page={page + 1}
-                  onChange={(_, v) => { setPage(v - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onChange={(_, v) => { setPage(v - 1); upcomingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
                   sx={{ '& .Mui-selected': { bgcolor: '#6093FC !important', color: 'white' } }}
                 />
+              </Box>
+            )}
+
+            {!isFiltering && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Box
+                  onClick={() => router.push('/dashboard/customer/events')}
+                  sx={{
+                    px: 4, py: 1.5, borderRadius: '12px', cursor: 'pointer',
+                    border: '1.5px solid #6093FC', color: '#6093FC',
+                    fontWeight: 700, fontSize: 14,
+                    transition: 'all 0.15s',
+                    '&:hover': { bgcolor: '#6093FC', color: '#fff' },
+                  }}
+                >
+                  Browse all events →
+                </Box>
               </Box>
             )}
           </Box>
