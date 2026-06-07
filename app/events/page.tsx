@@ -81,7 +81,7 @@ export default function PublicEventsPage() {
   const totalPages = data?.data?.totalPages ?? 0;
   const totalElements = data?.data?.totalElements ?? 0;
   const categories = categoriesRes?.data ?? [];
-  const cities: string[] = (citiesRes as unknown as string[] | undefined) ?? [];
+  const cities: string[] = citiesRes?.data ?? [];
 
   const handleSearch = useCallback(() => {
     setKeyword(inputKeyword);
