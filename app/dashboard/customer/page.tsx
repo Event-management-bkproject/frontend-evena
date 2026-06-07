@@ -14,7 +14,7 @@ import { calculateHotEvents } from '@/src/utils/hotEventsAlgorithm';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/hooks/auth/useAuth';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 6;
 const HOT_POOL_SIZE = 50;
 
 type TimePeriod = 'today' | 'week' | 'month' | 'all';
