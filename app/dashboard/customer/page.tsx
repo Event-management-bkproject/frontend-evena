@@ -54,12 +54,14 @@ export default function CustomerDashboard() {
   const [searchDate, setSearchDate] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
   const [page, setPage] = useState(0);
 
   const { data: categoriesResponse, isLoading: categoriesLoading } = useGetCategoriesQuery();
   const categories = categoriesResponse?.data ?? [];
 
-  const isFiltering = !!(searchKeyword || searchCity || searchDate || selectedCategory || timePeriod !== 'all');
+  const isFiltering = !!(searchKeyword || searchCity || searchDate || selectedCategory || timePeriod !== 'all' || minPrice !== undefined || maxPrice !== undefined);
   const dateRange = getDateRange(timePeriod, searchDate);
 
   // Pool for hot events algorithm — fetch top 50 upcoming events, only when not filtering
@@ -73,6 +75,8 @@ export default function CustomerDashboard() {
     keyword: searchKeyword || undefined,
     categoryId: selectedCategory ?? undefined,
     city: searchCity || undefined,
+    minPrice,
+    maxPrice,
     sortBy: 'startAt',
     sortDirection: 'ASC',
     page,
@@ -204,6 +208,7 @@ export default function CustomerDashboard() {
               categories={categories}
               onCategoryChange={handleCategoryChange}
               onTimePeriodChange={handleTimePeriodChange}
+              onPriceChange={(min, max) => { setMinPrice(min); setMaxPrice(max); setPage(0); }}
             />
           </Box>
 
