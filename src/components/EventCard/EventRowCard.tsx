@@ -132,6 +132,7 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
             flexShrink: 0,
             position: 'relative',
             overflow: 'hidden',
+            alignSelf: 'stretch',
           }}
         >
           <Box
@@ -139,13 +140,15 @@ const EventRowCard: React.FC<EventRowCardProps> = ({ event, onEdit, onDelete, on
             src={getCoverUrl()}
             alt={event.title}
             sx={{
-              width: '100%',
-              height: '100%',
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              right: 16,
+              bottom: 16,
+              width: 'calc(100% - 32px)',
+              height: 'calc(100% - 32px)',
               objectFit: 'cover',
               borderRadius: '20px',
-              m: 2,
-              maxWidth: 'calc(100% - 32px)',
-              maxHeight: 'calc(100% - 32px)',
             }}
             onError={(e: any) => {
               e.target.src = 'https://static.vecteezy.com/system/resources/thumbnails/041/388/388/small/ai-generated-concert-crowd-enjoying-live-music-event-photo.jpg';
