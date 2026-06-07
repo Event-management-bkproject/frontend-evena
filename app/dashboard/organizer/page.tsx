@@ -252,11 +252,7 @@ export default function OrganizerDashboard() {
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                       <CircularProgress sx={{ color: BRAND.primary }} />
                     </Box>
-                  ) : eventsError ? (
-                    <Box sx={{ p: 3, m: 2, bgcolor: BRAND.errorBg, borderRadius: '12px' }}>
-                      <Typography sx={{ color: BRAND.error, fontSize: 14 }}>{t('messages.error.loadFailed', { item: t('common.entities.event') })}</Typography>
-                    </Box>
-                  ) : events.length === 0 ? (
+                  ) : (eventsError || events.length === 0) ? (
                     <Box sx={{ p: 6, textAlign: 'center' }}>
                       <EventIcon sx={{ fontSize: 48, color: '#D1D5DB', mb: 1.5 }} />
                       <Typography sx={{ fontWeight: 700, color: BRAND.dark, mb: 0.5 }}>{t('organizer.noEventsYet')}</Typography>
