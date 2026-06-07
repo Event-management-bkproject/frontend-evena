@@ -81,6 +81,8 @@ export interface EventSearchRequest {
   startDate?: string;
   endDate?: string;
   status?: EventStatus;
+  minPrice?: number;
+  maxPrice?: number;
   page?: number;
   size?: number;
   sortBy?: string;
